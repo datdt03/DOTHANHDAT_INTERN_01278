@@ -1,0 +1,30 @@
+/* Customer Mobile Link View Styles */
+
+.customer-mobile-container {
+  max-width: 460px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #f8faff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 30px rgba(15, 23, 42, 0.06);
+}
+
+.customer-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 460px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
