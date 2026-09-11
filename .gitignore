@@ -43,3 +43,5 @@ pnpm-debug.log*
 *.sqlite3
 uploads/
 storage/
+*.zip
+tmp/
