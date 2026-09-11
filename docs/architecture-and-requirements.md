@@ -578,3 +578,7 @@ Các nguyên tắc dữ liệu:
 ## 13. Tài liệu UX/UI liên quan
 
 Chi tiết yêu cầu giao diện, luồng người dùng, danh sách màn hình MVP và tiêu chí nghiệm thu được tách riêng tại [docs/ui-requirements.md](./ui-requirements.md).
+
+## 14. Tài liệu Database liên quan
+
+Chi tiết schema, kiểu dữ liệu, khóa chính/khóa ngoại, cardinality, index, transaction, quy tắc toàn vẹn và các sơ đồ ERD được tách riêng tại [docs/database-requirements.md](./database-requirements.md).
