@@ -1,314 +1,269 @@
 # RepairFlow
 
-## Personal Device Repair Workflow Management
+RepairFlow is a workflow management system for personal device repair shops and independent technicians. This README is the review entry point: it explains the product first, then records what has actually been implemented and how it was verified.
 
-RepairFlow is a lightweight web application for small phone and laptop repair shops, as well as independent technicians. It helps them manage the complete repair journey with clear evidence and customer approval at every important step.
+## Part 1 — Product overview
 
-The product is designed around one simple promise:
+### Product goal
 
-> Make the condition before repair, the proposed work, the customer’s decision, and the final handover clear to everyone.
+RepairFlow manages a repair order from device intake through diagnosis, quotation, customer approval, repair, quality control, handover, and warranty.
 
-RepairFlow is not intended to decide repair prices automatically. The technician remains responsible for the diagnosis, repair plan, parts, labor cost, and estimated completion time. RepairFlow makes those decisions easy to record, explain, approve, and review later.
+The product creates a clear evidence trail for four questions:
 
-## Product Overview
+1. What condition was the device in when it was received?
+2. What did the technician diagnose and propose?
+3. Which quotation version did the customer approve?
+4. What work, quality checks, handover details, and warranty were recorded?
 
-### The problem
+RepairFlow does not diagnose faults automatically or decide prices automatically. The technician remains responsible for the diagnosis, repair plan, parts, labor, and estimated completion time. The system records, explains, approves, and preserves those decisions.
 
-Small repair businesses often manage jobs through paper notes, chat messages, phone calls, or memory. This creates several recurring problems:
+### Problem being solved
 
-- Customers and technicians disagree about the device condition before repair.
-- Customers do not know whether a device is waiting for diagnosis, approval, repair, or pickup.
-- A quotation does not clearly explain which parts and labor are included.
-- Technicians forget to record scratches, accessories, or existing faults.
-- There is no reliable repair history when a customer returns with the same device.
-- Warranty information is easily lost after the device is handed back.
+Small repair businesses often rely on paper notes, chat messages, phone calls, or memory. This creates several risks:
 
-### The proposed solution
+- Disagreement about the device condition before repair.
+- Unclear status and next action for customers and staff.
+- Quotations that do not clearly explain parts, labor, or replacement reasons.
+- Missing repair history by customer or device.
+- Lost handover details and warranty information.
 
-RepairFlow creates one repair record for each job. The record follows the device through the full process:
+### Main product flow
 
-1. Receive the device and record the customer’s reported issue.
-2. Document the initial condition, accessories, and visual evidence.
-3. Record the technician’s diagnosis and recommended repair plan.
-4. Present a transparent quotation for parts and labor.
-5. Let the customer approve or reject the quotation through a shareable link.
-6. Track repair work with an execution checklist.
-7. Complete a quality check before handover.
-8. Record the handover and start the warranty period.
+```text
+Intake
+  → Record condition and photos
+  → Diagnose
+  → Create quotation
+  → Customer approves or rejects through a customer link
+  → Perform repair
+  → Quality check
+  → Handover
+  → Activate warranty
+```
 
-## Product Structure
+### Main users
 
-The following diagram summarizes the product scope and the main capability areas:
+| User | Main purpose |
+| --- | --- |
+| Receptionist / Front Desk | Create orders, record customer/device details, intake condition, accessories, photos, and handover. |
+| Technician | Diagnose, create quotations, record repair work, complete checklists, and perform quality checks. |
+| Manager / Owner | Monitor the dashboard, assign staff, handle overdue orders, and review history/audit data. |
+| Customer | Open a link without an account, review the diagnosis and quotation, and approve or reject the proposal. |
+
+### MVP scope
+
+The MVP focuses on one workspace or repair shop and one complete repair scenario:
+
+- Customer, device, and repair order management.
+- Intake checklist, accessories, and before-repair evidence.
+- Diagnosis and versioned quotations.
+- Time-limited customer links and customer approval/rejection.
+- Repair checklist, quality check, handover, and warranty.
+- Timeline, audit trail, and customer/device history.
+
+The MVP does not include inventory, payment/accounting, AI diagnosis, automatic price recommendations, multi-branch management, or long-lived customer accounts.
+
+---
+
+## Part 2 — Current implementation status
+
+The database foundation and FastAPI health-check foundation have been implemented and verified:
+
+| Area | Current result |
+| --- | --- |
+| PostgreSQL image | `postgres:18-alpine` |
+| PostgreSQL volume | `/var/lib/postgresql` |
+| Database migrations | 6 versioned SQL files |
+| Database schema | 20 tables created successfully |
+| Migration rerun | Idempotent; the second run does not create duplicate tables or migration records |
+| API framework | FastAPI + Uvicorn |
+| Health endpoint | HTTP 200 |
+| Automated tests | `pytest`: 4 tests passed |
+
+The business API is not complete yet. Authentication, customer/device endpoints, repair-order endpoints, quotations, customer approval, repair execution, quality control, handover, and warranty APIs remain to be implemented.
+
+## 3. Implemented changes
+
+### 3.1. PostgreSQL 18
+
+Docker Compose uses:
+
+    image: postgres:18-alpine
+
+The PostgreSQL 18 volume is mounted at:
+
+    /var/lib/postgresql
+
+Configuration file: [docker-compose.yml](docker-compose.yml)
+
+### 3.2. SQL migrations
+
+The current schema source of truth is the following directory:
+
+[src/db/migrations/versions](src/db/migrations/versions)
+
+| Version | Responsibility |
+| --- | --- |
+| `0001_identity.sql` | Workspaces, users, and memberships |
+| `0002_customers_devices_orders.sql` | Customers, devices, and repair orders |
+| `0003_evidence_diagnosis_quotes.sql` | Evidence, diagnosis, quotations, and quotation items |
+| `0004_public_links_decisions.sql` | Customer links and customer decisions |
+| `0005_execution_handover.sql` | Work logs, checklists, handover, and warranty |
+| `0006_status_audit_indexes.sql` | Status history, audit logs, constraints, and indexes |
+
+The Python migration runner only discovers and executes these SQL files. It records applied versions in `schema_migrations`, uses an advisory lock, and skips versions that have already been applied.
+
+Migration runner: [src/db/migrate.py](src/db/migrate.py)
+
+### 3.3. FastAPI health endpoint
+
+The current API source is in [src/app](src/app).
+
+Current endpoint:
+
+    GET /health
+
+Expected success envelope:
+
+    {
+      "data": {
+        "status": "ok",
+        "service": "repairflow-api",
+        "apiVersion": "v1"
+      },
+      "meta": {
+        "requestId": "req_<uuid>"
+      }
+    }
+
+## 4. Run and verification instructions
+
+### 4.1. Install Python dependencies
+
+    python -m venv .venv
+
+    # PowerShell
+    .venv\\Scripts\\Activate.ps1
+
+    pip install -r requirements-dev.txt
+
+Do not commit `.env` or real passwords. Use [.env.example](.env.example) for local configuration.
+
+### 4.2. Start PostgreSQL
+
+    docker compose up -d db
+    docker compose ps
+
+The database is ready when the container reports `healthy`.
+
+### 4.3. Run migrations
+
+    python -m src.db.migrate
+
+The first run applies the six SQL migrations. A later run must report that the database is already up to date and must not create duplicate migration records.
+
+### 4.4. Start the API
+
+    python -m src.app
+
+The API runs at `http://127.0.0.1:8000` by default.
+
+Verify the health endpoint at:
+
+    GET http://127.0.0.1:8000/health
+
+### 4.5. Run tests
+
+    pytest
+
+Verified result:
+
+    4 passed
+
+Current test coverage:
+
+- [tests/test_health.py](tests/test_health.py): health response, request ID, and error envelope.
+- [tests/test_migrations.py](tests/test_migrations.py): migration ordering and PostgreSQL DDL checks.
+
+## 5. Review documentation
+
+| Order | Document | Review purpose |
+| ---: | --- | --- |
+| 1 | [docs/usecase.md](docs/usecase.md) | User stories, actors, main flows, alternative flows, and acceptance criteria. |
+| 2 | [docs/architecture-and-requirements.md](docs/architecture-and-requirements.md) | Architecture, roles, state machine, security, and audit rules. |
+| 3 | [docs/database-requirements.md](docs/database-requirements.md) | ERD, tables, constraints, indexes, and transaction rules. |
+| 4 | [docs/api-contract.md](docs/api-contract.md) | Frozen API Contract v1. |
+| 5 | [docs/api-handoff.md](docs/api-handoff.md) | API/UI readiness, known gaps, and integration checklist. |
+| 6 | [docs/ui-requirements.md](docs/ui-requirements.md) | UI flows and acceptance criteria. |
+| 7 | [plans/001-repairflow-dual-track.md](plans/001-repairflow-dual-track.md) | Implementation phases G0–G9 and workstream ownership. |
+
+## 6. Repository structure
+
+```text
+.
+├── README.md
+├── docker-compose.yml
+├── requirements.txt
+├── requirements-dev.txt
+├── src/
+│   ├── app/                         # FastAPI application
+│   └── db/
+│       ├── database.py              # SQLAlchemy engine and session
+│       ├── migrate.py               # SQL migration runner
+│       └── migrations/versions/     # Six versioned SQL migrations
+├── tests/                           # pytest tests
+├── docs/                            # Business, database, UI, and API documentation
+├── plans/                           # Implementation plans
+├── server/                          # Previous scaffold; not the current FastAPI entrypoint
+├── src/ui/                          # UI prototype and mock data
+└── assets/                          # Product and prototype assets
+```
+
+The current FastAPI entrypoint is [src/app/__main__.py](src/app/__main__.py). The `server/` directory is not the active FastAPI entrypoint.
+
+## 7. Evidence images
+
+These images are embedded directly for product and UI review:
+
+### Product scope
 
 ![RepairFlow product scope](assets/images/topdownapproach.png)
 
-The diagram contains six connected areas:
+### Internal UI screen 1
 
-### 1. Repair record management
+![RepairFlow internal UI screen 1](docs/images/screen_1.png)
 
-- Create and manage repair orders.
-- Track the current processing status.
-- Search and review past repair records.
+### Internal UI screen 2
 
-### 2. Customer and device management
+![RepairFlow internal UI screen 2](docs/images/screen_2.png)
 
-- Maintain the customer profile.
-- Record device information such as type, brand, model, serial number, and identifying details.
-- View repair history by customer and by device.
+### Customer approval screen
 
-### 3. Condition records and evidence
+![RepairFlow customer approval screen](docs/images/user_accept.png)
 
-- Use a checklist to record the device condition at intake.
-- Record scratches, dents, existing faults, and missing or included accessories.
-- Upload photos as evidence.
-- Compare the condition before repair with the condition after repair.
+The images represent the UI prototype. PostgreSQL, migration, test, and FastAPI results are verified by the commands and test output described in Section 4.
 
-### 4. Diagnosis and quotation
+## 8. Not completed yet
 
-- Create a technical diagnosis record.
-- Add replacement parts and labor charges manually.
-- Record the reason for each recommended repair.
-- Add an expected completion time.
-- Explain the proposed repair plan in language the customer can understand.
+The following areas are not production-ready:
 
-### 5. Customer confirmation and coordination
+- Authentication and session management.
+- Workspace isolation and API-enforced RBAC.
+- Customer, device, and repair-order endpoints.
+- Diagnosis, quotation versioning, and customer approval APIs.
+- Repair work logs, quality checks, handover, and warranty APIs.
+- UI integration with the real API instead of mock data.
+- CI/CD, staging, production secrets, backups, and monitoring.
 
-- Send the quotation through a shareable customer link.
-- Allow the customer to approve or reject the proposal without creating an account.
-- Show the customer the relevant repair information and current status.
-- Preserve the customer’s decision as part of the repair record.
+## 9. Current review checklist
 
-### 6. Repair, handover, and warranty
-
-- Track repair execution with a technician checklist.
-- Perform and record a post-repair quality check.
-- Create a handover record for the device.
-- Store the warranty start date and warranty period.
-
-## Target Users
-
-### Technician or shop operator
-
-The technician or operator manages the repair record from intake to handover. They can:
-
-- Register customers and devices.
-- Record the initial condition and upload photos.
-- Diagnose the problem and prepare a quotation.
-- Share the quotation for customer approval.
-- Update repair status and checklists.
-- Record the final quality check, handover, and warranty.
-
-### Customer
-
-The customer interacts through a secure shareable link. They can:
-
-- Review the reported device and its condition record.
-- Read the diagnosis and quotation.
-- See parts, labor, reasons, and estimated completion time.
-- Approve or reject the proposed repair.
-- Follow the repair status.
-
-The customer does not need to create an account for the MVP.
-
-## End-to-End Business Flow
-
-### 1. Intake
-
-The technician creates a repair order and records:
-
-- Customer name and contact information.
-- Device type, brand, model, and identifying information.
-- The issue as described by the customer.
-- The expected accessories received with the device.
-- The intake date and any initial notes.
-
-### 2. Initial condition and evidence
-
-Before any repair work starts, the technician completes the condition checklist and takes photos where useful. The record should make it clear what was already present when the device was received.
-
-Examples include:
-
-- Scratches, dents, cracks, or cosmetic damage.
-- Screen, camera, speaker, button, charging, or connectivity issues.
-- Missing accessories or accessories received with the device.
-- Device power state and other relevant observations.
-
-### 3. Diagnosis
-
-After inspection, the technician creates a diagnosis record containing:
-
-- The suspected or confirmed fault.
-- The inspection result.
-- The proposed repair approach.
-- The reason a part or action is needed.
-- The expected repair duration.
-
-The diagnosis is a professional record of the technician’s findings. It is not an automated decision made by the system.
-
-### 4. Quotation and customer decision
-
-The technician manually adds quotation items, including:
-
-- Parts or components.
-- Labor charges.
-- Quantity and price where applicable.
-- The reason for replacement or repair.
-- Expected completion time.
-
-RepairFlow calculates and displays the quotation clearly, but does not generate or recommend the price.
-
-The customer receives a link and chooses one of two decisions:
-
-- **Approve**: the repair can proceed according to the approved proposal.
-- **Reject**: the technician can stop, revise, or discuss the proposal with the customer.
-
-The decision, date, and related quotation version must remain visible in the repair record.
-
-### 5. Repair execution
-
-Once the repair is approved, the technician updates the repair status and works through an execution checklist. The checklist provides a simple record of what was done and helps reduce missed steps.
-
-The repair record should distinguish between:
-
-- Work that was proposed.
-- Work that was approved.
-- Work that was performed.
-- Work that was verified during quality control.
-
-### 6. Quality check
-
-Before handover, the technician completes a post-repair checklist based on the device and the reported issue. The result should show whether the repair is ready for delivery or needs additional work.
-
-The technician may record:
-
-- The original issue after repair.
-- Basic functional checks.
-- New observations.
-- The final device condition.
-- Any remaining limitation disclosed to the customer.
-
-### 7. Handover and warranty
-
-At handover, the technician records that the device was returned and confirms the final condition. The record includes:
-
-- Handover date.
-- Customer or recipient confirmation.
-- Returned accessories.
-- Final notes.
-- Warranty start date.
-- Warranty duration or end date.
-
-This information becomes part of the customer and device history for future reference.
-
-## MVP Scope
-
-The MVP should support one technician or one small repair shop and one complete repair scenario. It includes:
-
-- Creating a repair order.
-- Managing customer information.
-- Managing device information.
-- Recording the customer’s reported issue.
-- Completing an initial condition checklist.
-- Recording accessories and visible damage.
-- Uploading intake photos.
-- Creating a diagnosis record.
-- Creating a manual quotation for parts and labor.
-- Sharing the quotation through a customer link.
-- Capturing customer approval or rejection.
-- Updating the repair status.
-- Completing a repair execution checklist.
-- Completing a post-repair quality checklist.
-- Creating a handover record.
-- Recording the warranty start date and duration.
-- Viewing repair history by customer and device.
-
-## Suggested Repair Statuses
-
-The status should make the next expected action clear to both the technician and the customer:
-
-1. **Received** — the device has been accepted and recorded.
-2. **Diagnosing** — the technician is inspecting the device.
-3. **Waiting for approval** — a quotation is ready and the customer must decide.
-4. **Approved** — the customer has approved the quotation.
-5. **In repair** — the technician is performing the approved work.
-6. **Quality checking** — the repair is complete and being verified.
-7. **Ready for pickup** — the device has passed the required checks.
-8. **Handed over** — the device has been returned to the customer.
-9. **Rejected or cancelled** — the customer rejected the proposal or the repair was stopped.
-
-The product may use fewer statuses internally, but the customer-facing status should remain easy to understand.
-
-## Important Business Rules
-
-- Initial condition evidence should be recorded before repair work begins.
-- A quotation must identify the parts and labor included in the proposed price.
-- The technician must explain the reason for a recommended replacement or repair.
-- Repair work should not be treated as approved until the customer confirms it.
-- A customer’s approval or rejection must be stored with the quotation it refers to.
-- Any change to an approved quotation should require a new customer decision.
-- The final condition and handover details should be recorded before closing the repair order.
-- The warranty start date should be based on the actual handover, unless the shop explicitly chooses another policy.
-- The system records technician decisions; it does not automatically diagnose faults or set prices.
-
-## Demo Scenario
-
-The MVP can be demonstrated with one realistic case:
-
-> A customer brings in a laptop with a faulty display.
-
-1. The technician creates a repair order for the customer and laptop.
-2. The technician records the display problem as described by the customer.
-3. The technician documents scratches, accessories, and the initial condition with photos.
-4. The technician diagnoses a damaged display component and explains the recommended replacement.
-5. The technician enters the replacement part, labor charge, reason, and estimated completion time.
-6. The customer opens the quotation link and approves the repair.
-7. The technician updates the order to **In repair** and completes the repair checklist.
-8. The technician tests the display and completes the quality checklist.
-9. The technician records the handover, returned accessories, and warranty start date.
-10. The completed repair appears in the customer’s and laptop’s repair history.
-
-This scenario demonstrates the product’s central value: a continuous evidence trail from the condition before repair to the customer-approved quotation and final handover.
-
-## Out of Scope for the MVP
-
-To keep the first version focused and achievable, the following are not required:
-
-- Automatic diagnosis or AI-generated repair decisions.
-- Automatic price recommendations.
-- Inventory or warehouse management.
-- Payment gateway or bank integration.
-- E-commerce or marketplace integration.
-- Accounting and tax reporting.
-- Multi-branch enterprise management.
-- Customer account registration.
-- Native mobile applications.
-- Complex staff scheduling.
-
-These capabilities may be considered later if they support the core repair evidence and approval workflow.
-
-## Product Success Criteria
-
-The MVP should make it possible for a technician to complete a repair order without relying on separate paper notes or chat history. A successful demo should show that:
-
-- The initial condition is visible and understandable.
-- The quotation clearly explains what the customer is approving.
-- The customer’s decision is recorded and traceable.
-- The technician can see the next step in the workflow.
-- The final quality check and handover are documented.
-- The customer and device have a reusable repair history.
-- Warranty information can be found after the job is closed.
-
-## Product Positioning
-
-RepairFlow is a workflow and evidence tool for small repair operations. Its value comes from improving clarity and accountability across the repair journey—not from replacing the technician’s judgment.
-
-The product helps the technician answer:
-
-- What condition was the device in when we received it?
-- What did we diagnose?
-- What did the customer approve?
-- What work was actually completed?
-- Did the device pass the final checks?
-- When was it handed over, and when did the warranty begin?
-
-It helps the customer answer the same questions with confidence.
+- [x] PostgreSQL `18-alpine` starts healthy.
+- [x] Volume mount uses `/var/lib/postgresql`.
+- [x] Six versioned SQL migrations are present.
+- [x] Twenty tables are created successfully.
+- [x] Rerunning the migration runner does not create duplicates.
+- [x] `pytest` passes four tests.
+- [x] FastAPI `/health` returns HTTP 200.
+- [ ] Business API and authentication are complete.
+- [ ] UI is connected to the real API.
+- [ ] Staging and production deployment are complete.
