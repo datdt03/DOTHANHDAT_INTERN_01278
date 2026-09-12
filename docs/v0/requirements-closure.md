@@ -6,6 +6,15 @@
 >
 > API contract chưa được freeze trong v0. Các API/DTO/response shape trong giai đoạn này chỉ là working draft hoặc fixture phục vụ phân tích; chỉ tạo tài liệu contract riêng sau khi Product yêu cầu và chốt đủ nghiệp vụ.
 
+## Current status
+
+- **Gate D0:** `OPEN — chưa đạt`.
+- **Decision backlog:** 73 dòng, gồm 44 P0 và 29 P1 chưa được đóng chính thức.
+- **Product sign-off:** chưa có decision log hoàn tất với owner, ngày chốt và tác động server/UI/database/test.
+- **Implementation boundary:** chỉ được hoàn thiện C0 foundation, fixture, adapter skeleton và test harness; chưa mở C1–C10 business flow.
+- **Access direction đã xác nhận:** chỉ Owner/Manager đăng nhập; Customer, Receptionist và Technician không có account/session riêng. Các chính sách chi tiết như identifier, session expiry, reset, brute-force và staff attribution vẫn là câu hỏi cần chốt.
+- **Next gate:** Product đóng các decision P0, Codex/Antigravity ghi impact và acceptance scenario, sau đó mới xác nhận Gate D0.
+
 ## 1. Vì sao cần phase này
 
 Master plan v1 hiện tại đã đủ để chia work giữa Codex và Antigravity, nhưng chưa đủ để triển khai toàn bộ sản phẩm mà không phát sinh quyết định ngầm. Các cluster hiện mới mô tả “làm chức năng gì”, chưa khóa hết:

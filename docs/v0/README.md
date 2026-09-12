@@ -11,9 +11,14 @@ quy trình LLM phải tuân thủ khi đọc/viết tài liệu.
 
 ## Trạng thái v0
 
-- Sản phẩm đang ở giai đoạn phân tích và chốt yêu cầu.
+- **Phase status:** `OPEN — Gate D0 chưa đạt`.
+- Sản phẩm đang ở giai đoạn phân tích và chốt yêu cầu; chưa mở business cluster C1–C10.
 - FastAPI, PostgreSQL và SQL migration hiện tại mới là nền tảng kỹ thuật local.
-- Chưa chốt đủ business flow, access implementation, public flow và các boundary tích hợp.
+- C0 đã có health endpoint, PostgreSQL 18-alpine, 6 SQL migrations và test baseline 4 test pass.
+- C0 còn thiếu shared fixture convention, UI adapter boundary và mock/runtime boundary.
+- C1–C10 chưa triển khai business flow; UI vẫn đang ở prototype/mock baseline.
+- Decision backlog hiện có 73 dòng: 44 P0 và 29 P1 chưa được đóng chính thức.
+- Định hướng access cấp cao đã rõ: chỉ Owner/Manager đăng nhập; Customer, Receptionist và Technician không có tài khoản riêng. Các policy chi tiết vẫn cần chốt trong decision backlog.
 - Không được tự tạo API contract, API handoff hoặc release documentation mới khi chưa có yêu cầu và quyết định tương ứng.
 
 ## Tài liệu active

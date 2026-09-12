@@ -71,20 +71,38 @@ The MVP does not include inventory, payment/accounting, AI diagnosis, automatic 
 
 ## Part 2 — Current implementation status
 
-The database foundation and FastAPI health-check foundation have been implemented and verified:
+### 2.1. Đã hoàn thành
 
-| Area | Current result |
+| Hạng mục | Tiến độ hiện tại |
 | --- | --- |
-| PostgreSQL image | `postgres:18-alpine` |
-| PostgreSQL volume | `/var/lib/postgresql` |
-| Database migrations | 6 versioned SQL files |
-| Database schema | 20 tables created successfully |
-| Migration rerun | Idempotent; the second run does not create duplicate tables or migration records |
-| API framework | FastAPI + Uvicorn |
-| Health endpoint | HTTP 200 |
-| Automated tests | `pytest`: 4 tests passed |
+| Runtime server | FastAPI + Uvicorn foundation tại `src/app/` |
+| Database | PostgreSQL `18-alpine` chạy bằng Docker Compose |
+| Migration | 6 migration versioned bằng SQL tại `src/db/migrations/versions/` |
+| Schema baseline | 20 bảng được tạo theo migration hiện tại |
+| Migration rerun | Idempotent; chạy lại không tạo bản ghi migration/trùng bảng |
+| Health endpoint | `GET /health` trả HTTP 200 |
+| Test baseline | 4 test hiện có đều pass khi chạy đúng `PYTHONPATH` |
+| UI baseline | Prototype và mock flow hiện có được giữ làm baseline |
+| Access direction | Owner/Manager đăng nhập; Customer, Receptionist, Technician không có tài khoản riêng |
 
-The business API is not complete yet. Owner/Manager authentication and management session handling, customer/device endpoints, repair-order endpoints, quotations, customer approval, repair execution, quality control, handover, and warranty APIs remain to be implemented.
+### 2.2. Đang bị chặn
+
+| Mức | Blocker | Ảnh hưởng |
+| --- | --- | --- |
+| P0 | Gate D0 chưa đạt; decision backlog còn 44 P0 và 29 P1 | Chưa được tự chốt business rule để build toàn bộ flow |
+| P0 | API contract chưa freeze | Server/UI chỉ dùng working fixture và semantics đã được chốt; chưa tích hợp theo contract chính thức |
+| P0 | Business API chưa có | Chưa có login/session, customer/device/order, quote, public decision, repair, QC, handover và warranty endpoint |
+| P0 | UI chưa nối server thật | Dashboard, detail và customer flow vẫn còn phụ thuộc mock |
+| P1 | Shared fixture và seed demo chưa hoàn thiện | Chưa thể kiểm thử end-to-end nhất quán giữa Codex và Antigravity |
+| P1 | Deployment ngoài local chưa thuộc v0 | Chưa có release, staging/production status hoặc runbook |
+
+### 2.3. Gate tiếp theo
+
+Hiện tại chỉ nên hoàn thiện C0: fixture dùng chung, UI adapter boundary và test
+harness. Chỉ mở C1 sau khi Product chốt các decision P0 trong
+[`docs/v0/requirements-closure.md`](docs/v0/requirements-closure.md) và Gate D0
+đạt. Sau đó triển khai từng cặp server/UI theo
+[`plans/000-repairflow-v1-implementation.md`](plans/000-repairflow-v1-implementation.md).
 
 ## 3. Implemented changes
 
@@ -178,6 +196,9 @@ Verify the health endpoint at:
 
 ### 4.5. Run tests
 
+PowerShell trong môi trường hiện tại:
+
+    $env:PYTHONPATH = (Get-Location).Path
     pytest
 
 Verified result:
@@ -272,6 +293,7 @@ Các phần sau chưa nằm trong baseline local hiện tại:
 - [x] Rerunning the migration runner does not create duplicates.
 - [x] `pytest` passes four tests.
 - [x] FastAPI `/health` returns HTTP 200.
+- [ ] Gate D0 requirements closure is complete.
 - [ ] Business API and Owner/Manager authentication are complete.
 - [ ] UI is connected to the real API.
 - [ ] Deployment ngoài local chưa thuộc phạm vi v0.
