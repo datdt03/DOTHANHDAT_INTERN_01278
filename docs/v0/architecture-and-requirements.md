@@ -46,16 +46,34 @@ Public Customer Link ───┘                   │
 - Các thao tác quan trọng như duyệt báo giá, đổi trạng thái và bàn giao phải chạy trong transaction.
 - Dùng migration có version để quản lý thay đổi schema.
 
+### Baseline công nghệ triển khai
+
+- **API**: Python 3.12+, FastAPI và Uvicorn; mã nguồn đặt tại `src/app/`.
+- **Database access**: SQLAlchemy 2.x và driver `psycopg`.
+- **Schema migration**: SQL versioned migrations; runner và các version đặt tại `src/db/`.
+- **Local database**: PostgreSQL 18 Alpine chạy bằng Docker Compose; cấu hình qua biến môi trường, không commit secret.
+
 ## 3. Vai trò và phân quyền
+
+### Mô hình truy cập MVP
+
+RepairFlow phục vụ một cửa hàng nhỏ nên không tạo tài khoản riêng cho mọi nhân viên:
+
+- Chỉ **Owner/Manager** đăng nhập để mở giao diện nội bộ và gọi API quản lý.
+- **Receptionist** và **Technician** chỉ là hồ sơ nhân sự để phân công và truy vết; không có password, credential hoặc session riêng trong MVP.
+- Người đang đăng nhập chịu trách nhiệm cho thao tác API; `staff_id`/hồ sơ nhân sự ghi nhận người thực hiện nghiệp vụ thực tế.
+- Khách hàng không đăng nhập; chỉ dùng public link token có hạn dùng và có thể thu hồi.
+- Không mở dashboard/API nội bộ công khai. Môi trường deploy phải có session Owner/Manager hoặc lớp bảo vệ tương đương.
 
 ### Vai trò
 
-#### Owner/Admin
+#### Owner/Manager (Admin mở rộng)
 
 - Quản lý thông tin cửa hàng và nhân viên.
 - Xem và chỉnh sửa toàn bộ phiếu sửa chữa.
 - Xem báo cáo toàn cửa hàng.
 - Thu hồi link khách hàng và xử lý các trường hợp ngoại lệ.
+- Owner là access principal mặc định của cửa hàng; `Admin` chỉ là vai trò mở rộng khi cần.
 
 #### Manager
 
@@ -63,6 +81,7 @@ Public Customer Link ───┘                   │
 - Theo dõi tiến độ và báo cáo vận hành.
 - Điều chỉnh quy trình theo chính sách của cửa hàng.
 - Không được quản lý tài khoản Owner nếu không được cấp quyền riêng.
+- Manager có thể đăng nhập và thao tác trong phạm vi workspace.
 
 #### Receptionist/Front Desk
 
@@ -70,6 +89,7 @@ Public Customer Link ───┘                   │
 - Tạo phiếu, ghi nhận hiện trạng, phụ kiện và hình ảnh.
 - Gửi link báo giá và cập nhật bàn giao.
 - Không tự ý sửa chẩn đoán hoặc báo giá đã được duyệt nếu không có quyền.
+- Không có tài khoản đăng nhập riêng trong MVP; thao tác được thực hiện trong phiên Owner/Manager.
 
 #### Technician
 
@@ -77,6 +97,7 @@ Public Customer Link ───┘                   │
 - Chẩn đoán, lập báo giá và ghi nhận công việc sửa chữa.
 - Hoàn thành checklist sửa chữa và kiểm tra chất lượng.
 - Chỉ được sửa dữ liệu trong phạm vi phiếu và quyền được cấp.
+- Không có tài khoản đăng nhập riêng trong MVP; được chọn bằng hồ sơ nhân sự khi phân công.
 
 #### Customer
 
@@ -89,9 +110,10 @@ Public Customer Link ───┘                   │
 
 - Quyền phải được kiểm tra ở Backend/API, không chỉ ẩn nút trên giao diện.
 - Mọi truy vấn dữ liệu nghiệp vụ phải lọc theo `workspace_id`.
-- Nhân viên bị vô hiệu hóa không được đăng nhập hoặc nhận phiếu mới, nhưng lịch sử thao tác cũ vẫn phải giữ lại.
+- Hồ sơ nhân sự bị vô hiệu hóa không được nhận phiếu mới; lịch sử thao tác cũ vẫn phải giữ lại.
 - Không ghi đè `user_id` của người đã thực hiện một hành động.
-- Owner/Admin có thể xem toàn bộ; Technician mặc định chỉ xem phiếu được phân công hoặc được chia sẻ.
+- Chỉ access principal Owner/Manager được gọi API nội bộ; Technician/Receptionist không có session riêng.
+- Owner/Manager có thể xem toàn bộ; Technician chỉ là hồ sơ được gán trong assignment, không phải scope đăng nhập.
 
 ## 4. Xác định người chịu trách nhiệm
 
@@ -156,26 +178,25 @@ workspaces
     timezone
     created_at
 
-users
+staff_profiles (logical model; current SQL table is `users`)
     id
     name
-    email
     phone
+    email             # liên hệ tùy chọn, không mặc định là credential
     status
-    last_login_at
     created_at
 
 workspace_memberships
     id
     workspace_id
-    user_id
+    user_id           # ID hồ sơ nhân sự
     role
     status
     invited_at
     joined_at
 ```
 
-Tách `workspace_memberships` khỏi `users` để một tài khoản có thể được mời vào nhiều workspace trong tương lai.
+Giữ `workspace_memberships` để xác định hồ sơ nhân sự thuộc workspace và vai trò vận hành. Trong MVP, membership không tự động có quyền đăng nhập. Credential/session chỉ áp dụng cho Owner/Manager và được quản lý bởi access module riêng; không lưu password trong `users`.
 
 ### Khách hàng và thiết bị
 
@@ -409,18 +430,19 @@ Một số luật cần áp dụng:
 - Không chuyển sang `repairing` nếu chưa có quyết định `approved` cho đúng phiên bản báo giá.
 - Không chuyển sang `ready_for_pickup` nếu chưa hoàn thành checklist chất lượng.
 - Không chuyển sang `handed_over` nếu chưa có biên bản bàn giao.
-- Không kích hoạt bảo hành trước thời điểm bàn giao, trừ khi Owner/Admin ghi rõ lý do.
+- Không kích hoạt bảo hành trước thời điểm bàn giao, trừ khi Owner/Manager ghi rõ lý do.
 - Mọi chuyển trạng thái phải ghi `changed_by`, thời gian và lý do khi là ngoại lệ.
 
 ## 7. Bảo mật và quyền riêng tư
 
-### Nhân viên
+### Quyền truy cập nội bộ
 
-- Đăng nhập bằng tài khoản riêng; không dùng tài khoản chung cho cả tiệm.
-- Mật khẩu phải được xử lý bởi hệ thống xác thực chuẩn và không lưu dạng plaintext.
-- Có thể bổ sung MFA cho Owner/Admin sau MVP.
-- Session có thời hạn và có cơ chế đăng xuất tất cả thiết bị.
-- Nhân viên bị khóa phải mất quyền truy cập ngay nhưng không làm mất lịch sử cũ.
+- Owner/Manager đăng nhập bằng credential riêng của người quản lý; không dùng một credential chung cho cả tiệm nếu hệ thống đã triển khai qua Internet.
+- Mật khẩu/PIN phải được hash và không lưu plaintext.
+- Session có thời hạn, cookie `HttpOnly`, bật `Secure` khi chạy qua HTTPS và có cơ chế đăng xuất.
+- Receptionist/Technician không có credential/session riêng trong MVP; quản lý chọn hồ sơ nhân sự khi nhập dữ liệu hoặc phân công.
+- Hồ sơ nhân sự bị vô hiệu hóa mất quyền được phân công mới nhưng không làm mất lịch sử cũ.
+- Nếu chạy hoàn toàn local/offline, có thể giữ session quản lý lâu hơn nhưng vẫn không được mở API nội bộ không bảo vệ.
 
 ### Link khách hàng
 
@@ -537,8 +559,8 @@ Các nguyên tắc dữ liệu:
 
 ### Nên có ngay
 
-- Đăng nhập nhân viên và workspace.
-- Quản lý nhân viên, vai trò và trạng thái hoạt động.
+- Đăng nhập Owner/Manager và xác định workspace.
+- Quản lý hồ sơ nhân sự, vai trò vận hành và trạng thái hoạt động; không tạo credential cho Technician/Receptionist.
 - Phân công kỹ thuật viên cho từng phiếu.
 - Ghi nhận người tạo, người chẩn đoán, người sửa, người kiểm tra và người bàn giao.
 - Phiếu sửa chữa, khách hàng và thiết bị.
@@ -549,7 +571,7 @@ Các nguyên tắc dữ liệu:
 - Checklist sửa chữa và kiểm tra chất lượng.
 - Bàn giao, bảo hành và lịch sử.
 - Dashboard cơ bản theo trạng thái và kỹ thuật viên.
-- RBAC, audit log, kiểm soát file và backup.
+- Quyền Owner/Manager, audit log, kiểm soát file và backup.
 
 ### Có thể để sau MVP
 
@@ -577,8 +599,8 @@ Các nguyên tắc dữ liệu:
 
 ## 13. Tài liệu UX/UI liên quan
 
-Chi tiết yêu cầu giao diện, luồng người dùng, danh sách màn hình MVP và tiêu chí nghiệm thu được tách riêng tại [docs/ui-requirements.md](./ui-requirements.md).
+Chi tiết yêu cầu giao diện, luồng người dùng, danh sách màn hình MVP và tiêu chí nghiệm thu được tách riêng tại [docs/v0/ui-requirements.md](./ui-requirements.md).
 
 ## 14. Tài liệu Database liên quan
 
-Chi tiết schema, kiểu dữ liệu, khóa chính/khóa ngoại, cardinality, index, transaction, quy tắc toàn vẹn và các sơ đồ ERD được tách riêng tại [docs/database-requirements.md](./database-requirements.md).
+Chi tiết schema, kiểu dữ liệu, khóa chính/khóa ngoại, cardinality, index, transaction, quy tắc toàn vẹn và các sơ đồ ERD được tách riêng tại [docs/v0/database-requirements.md](./database-requirements.md).

@@ -17,6 +17,13 @@ Mỗi phiếu sửa chữa là một workspace trung tâm. Mọi thông tin liê
 
 ## 3. Vai trò và điểm vào chính
 
+### Mô hình truy cập MVP
+
+- Chỉ Owner/Manager nhìn thấy màn hình đăng nhập và sử dụng phiên nội bộ.
+- Receptionist/Technician không có tài khoản riêng; quản lý thao tác trên giao diện và chọn đúng hồ sơ nhân sự cho từng bước.
+- Không hiển thị “Đăng nhập kỹ thuật viên”. “Việc của kỹ thuật viên” là bộ lọc theo hồ sơ được phân công.
+- Customer vẫn truy cập public link bằng token, không cần tài khoản.
+
 ### Receptionist/Front Desk
 
 Ưu tiên các tác vụ:
@@ -25,6 +32,7 @@ Mỗi phiếu sửa chữa là một workspace trung tâm. Mọi thông tin liê
 - Ghi nhận hiện trạng.
 - Gửi link báo giá.
 - Bàn giao thiết bị.
+- Các thao tác được thực hiện trong phiên Owner/Manager; không có login riêng trong MVP.
 
 ### Technician
 
@@ -35,6 +43,7 @@ Mỗi phiếu sửa chữa là một workspace trung tâm. Mọi thông tin liê
 - Lập và cập nhật báo giá.
 - Ghi nhận sửa chữa.
 - Kiểm tra chất lượng.
+- Kỹ thuật viên là hồ sơ được gán vào phiếu; không có login riêng trong MVP.
 
 ### Manager/Owner
 
@@ -304,7 +313,7 @@ Khi khách duyệt, hiển thị bước xác nhận gồm tên người xác nh
 
 #### Sửa chữa
 
-Màn hình dành cho kỹ thuật viên gồm:
+Màn hình quản lý công việc kỹ thuật gồm:
 
 - Danh sách công việc đã được duyệt.
 - Checklist thực hiện.
@@ -366,7 +375,7 @@ UX phải có trạng thái và thông báo rõ cho các trường hợp:
 
 ## 8. Danh sách màn hình MVP
 
-1. Đăng nhập.
+1. Đăng nhập Owner/Manager.
 2. Dashboard.
 3. Danh sách phiếu sửa chữa.
 4. Tạo phiếu sửa chữa.
@@ -385,8 +394,8 @@ UX phải có trạng thái và thông báo rõ cho các trường hợp:
 ## 9. Tiêu chí nghiệm thu UX/UI
 
 - Người dùng luôn nhìn thấy trạng thái hiện tại và bước tiếp theo của phiếu.
-- Receptionist có thể tạo phiếu và hoàn tất ghi nhận hiện trạng mà không cần rời khỏi luồng.
-- Technician chỉ nhìn thấy hoặc thực hiện được hành động phù hợp với vai trò và phiếu được phân công.
+- Owner/Manager có thể hoàn tất luồng tạo phiếu và ghi nhận staff profile Receptionist mà không cần rời khỏi luồng.
+- Quản lý chỉ chọn và ghi nhận Technician trong phạm vi hồ sơ nhân sự đang active; Technician không có session riêng trong MVP.
 - Khách hàng có thể xem báo giá, hiểu nội dung cần duyệt và đưa ra quyết định không cần tài khoản.
 - Không thể bắt đầu sửa nếu chưa có quyết định `approved` cho đúng phiên bản báo giá.
 - Không thể bàn giao nếu checklist chất lượng chưa đạt.
@@ -395,5 +404,5 @@ UX phải có trạng thái và thông báo rõ cho các trường hợp:
 
 ## 10. Tài liệu liên quan
 
-- [README sản phẩm](../README.md)
+- [README sản phẩm](../../README.md)
 - [Kiến trúc và yêu cầu hệ thống](./architecture-and-requirements.md)

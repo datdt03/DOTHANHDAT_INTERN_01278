@@ -68,14 +68,23 @@ Quy ước khác:
 - Không dùng `NULL` để biểu diễn trạng thái; dùng enum/status rõ ràng.
 - Cột chứa dữ liệu định danh hoặc liên hệ không ghi vào URL public.
 
+### 2.2. Mô hình truy cập và nhân sự trong MVP
+
+- Một workspace đại diện cho một cửa hàng nhỏ trong MVP.
+- Chỉ Owner/Manager có access credential và session để sử dụng API nội bộ.
+- `users` là bảng hồ sơ nhân sự dùng chung cho Owner, Manager, Receptionist và Technician; bảng này không lưu password.
+- Receptionist/Technician không có credential/session riêng; `user_id` trong assignment, work log, diagnosis, QC và audit được hiểu là ID hồ sơ nhân sự.
+- Khách hàng không có bản ghi đăng nhập; quyền public được cấp bằng token hash trong `customer_links`.
+- Nếu dùng auth provider bên ngoài, database chỉ lưu mapping access principal với workspace; không lưu secret plaintext.
+
 ## 3. Enum và miền giá trị
 
 Có thể triển khai bằng PostgreSQL `ENUM` hoặc `CHECK constraint`. Với MVP, dùng `CHECK constraint` giúp migration dễ mở rộng hơn.
 
-### 3.1. Người dùng và workspace
+### 3.1. Nhân sự và workspace
 
 ```text
-user_status:
+staff_profile_status:
     active | inactive | locked
 
 membership_role:
@@ -84,6 +93,8 @@ membership_role:
 membership_status:
     invited | active | suspended | removed
 ```
+
+`owner`, `manager` là các role có thể đăng nhập trong MVP. `receptionist`, `technician` là role vận hành của hồ sơ nhân sự và không có credential riêng.
 
 ### 3.2. Phiếu sửa chữa
 
@@ -201,24 +212,26 @@ erDiagram
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 | `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật gần nhất |
 
-### 5.2. `users`
+### 5.2. `users` — hồ sơ nhân sự
 
-Đại diện cho tài khoản nhân viên. Không lưu mật khẩu plaintext; xác thực có thể do identity provider hoặc module auth riêng xử lý.
+Đại diện cho hồ sơ nhân sự của cửa hàng, không mặc định là tài khoản đăng nhập. Không lưu password hoặc credential trong bảng này. Access credential/session của Owner/Manager thuộc access module riêng.
 
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
 | --- | --- | --- | --- | --- |
 | `id` | `uuid` | Không | — | PK |
 | `name` | `varchar(160)` | Không | — | Tên hiển thị |
-| `email` | `citext` hoặc `varchar(320)` | Có | `NULL` | Email đăng nhập; unique nếu hệ thống auth dùng email toàn cục |
+| `email` | `citext` hoặc `varchar(320)` | Có | `NULL` | Email liên hệ; chỉ dùng làm login identifier nếu access module chọn email |
 | `phone` | `varchar(32)` | Có | `NULL` | Số điện thoại nhân viên |
 | `status` | `varchar(16)` | Không | `'active'` | `active`, `inactive`, `locked` |
-| `last_login_at` | `timestamptz` | Có | `NULL` | Lần đăng nhập gần nhất |
+| `last_login_at` | `timestamptz` | Có | `NULL` | Legacy/optional; không áp dụng cho Technician/Receptionist không có login |
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 | `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật |
 
 ### 5.3. `workspace_memberships`
 
-Liên kết user với workspace và lưu vai trò trong từng workspace.
+Liên kết hồ sơ nhân sự với workspace và lưu vai trò vận hành.
+
+Membership không đồng nghĩa với việc nhân sự có thể đăng nhập. Chỉ Owner/Manager được cấp access credential trong MVP.
 
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
 | --- | --- | --- | --- | --- |
@@ -1006,18 +1019,33 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 10. `status_history`, `audit_logs`.
 11. Index, unique constraint và partial index.
 
+### Trạng thái triển khai migration
+
+MVP hiện dùng SQL versioned migrations với runner tại `src/db/migrate.py`; các version đã triển khai tại `src/db/migrations/versions/`:
+
+| Version | Phạm vi |
+| --- | --- |
+| `0001_identity` | Workspace, user và membership |
+| `0002_customers_devices_orders` | Customer, device, repair order và staff assignment |
+| `0003_evidence_diagnosis_quotes` | Evidence, diagnosis, quote và quote item |
+| `0004_public_links_decisions` | Customer link và customer decision |
+| `0005_execution_handover` | Work log, checklist, handover và warranty |
+| `0006_status_audit_indexes` | Status history, audit log và index/unique index |
+
+Migration tiếp theo (khi triển khai access module) phải ghi rõ mapping credential/session của Owner/Manager. Không tạo credential cho hồ sơ Technician/Receptionist.
+
+Lệnh nâng schema local: `python -m src.db.migrate`.
+
 ### Seed tối thiểu cho môi trường demo
 
 - Một workspace demo.
-- Một Owner/Admin.
-- Một Manager.
-- Một Receptionist.
-- Một Technician.
+- Một Owner/Manager access principal.
+- Các hồ sơ Receptionist và Technician để dùng cho assignment; không tạo tài khoản đăng nhập cho các hồ sơ này.
 - Một customer.
 - Một device.
 - Một repair order hoàn chỉnh theo demo scenario trong README.
 
-Seed không được dùng token public cố định trong môi trường production.
+Seed không được dùng token public cố định trong môi trường thật.
 
 ## 13. Các quyết định cần giữ nhất quán
 
@@ -1026,7 +1054,8 @@ Seed không được dùng token public cố định trong môi trường produc
 - Quyết định khách luôn tham chiếu đến một quote version và một customer link.
 - Người thực hiện từng giai đoạn được lưu bằng FK riêng, không ghi đè lịch sử.
 - `status_history` phục vụ timeline; `audit_logs` phục vụ bảo mật và truy vết.
-- Bảo hành bắt đầu từ ngày bàn giao, trừ khi Owner/Admin ghi nhận ngoại lệ.
+- Bảo hành bắt đầu từ ngày bàn giao, trừ khi Owner/Manager ghi nhận ngoại lệ.
+- Chỉ Owner/Manager có access credential; `users`/membership không mặc định là tài khoản đăng nhập.
 - MVP không dùng các trường “doanh thu đã thu”, “COD” hoặc “thanh toán” nếu chưa có module thanh toán.
 
 ## 14. Tiêu chí nghiệm thu database
@@ -1046,6 +1075,6 @@ Seed không được dùng token public cố định trong môi trường produc
 
 ## 15. Tài liệu liên quan
 
-- [README sản phẩm](../README.md)
+- [README sản phẩm](../../README.md)
 - [Kiến trúc và yêu cầu hệ thống](./architecture-and-requirements.md)
 - [Yêu cầu UX/UI](./ui-requirements.md)

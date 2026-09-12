@@ -45,10 +45,14 @@ Intake
 
 | User | Main purpose |
 | --- | --- |
-| Receptionist / Front Desk | Create orders, record customer/device details, intake condition, accessories, photos, and handover. |
-| Technician | Diagnose, create quotations, record repair work, complete checklists, and perform quality checks. |
-| Manager / Owner | Monitor the dashboard, assign staff, handle overdue orders, and review history/audit data. |
+| Receptionist / Front Desk | Business responsibility for creating orders, recording customer/device details, intake condition, accessories, photos, and handover; no separate login in MVP. |
+| Technician | Business responsibility for diagnosis, quotations, repair work, checklists, and quality checks; represented by a staff profile, not a separate login in MVP. |
+| Manager / Owner | Login through the management session, monitor the dashboard, assign staff, handle overdue orders, and review history/audit data. |
 | Customer | Open a link without an account, review the diagnosis and quotation, and approve or reject the proposal. |
+
+### MVP access model
+
+Only Owner/Manager can log in and call the internal management API. Receptionist and Technician remain operational staff profiles used for assignment and audit attribution; they do not receive passwords, credentials, or sessions in the MVP. Customers use an expiring/revocable public link token and do not create an account.
 
 ### MVP scope
 
@@ -80,7 +84,7 @@ The database foundation and FastAPI health-check foundation have been implemente
 | Health endpoint | HTTP 200 |
 | Automated tests | `pytest`: 4 tests passed |
 
-The business API is not complete yet. Authentication, customer/device endpoints, repair-order endpoints, quotations, customer approval, repair execution, quality control, handover, and warranty APIs remain to be implemented.
+The business API is not complete yet. Owner/Manager authentication and management session handling, customer/device endpoints, repair-order endpoints, quotations, customer approval, repair execution, quality control, handover, and warranty APIs remain to be implemented.
 
 ## 3. Implemented changes
 
@@ -189,13 +193,16 @@ Current test coverage:
 
 | Order | Document | Review purpose |
 | ---: | --- | --- |
-| 1 | [docs/usecase.md](docs/usecase.md) | User stories, actors, main flows, alternative flows, and acceptance criteria. |
-| 2 | [docs/architecture-and-requirements.md](docs/architecture-and-requirements.md) | Architecture, roles, state machine, security, and audit rules. |
-| 3 | [docs/database-requirements.md](docs/database-requirements.md) | ERD, tables, constraints, indexes, and transaction rules. |
-| 4 | [docs/api-contract.md](docs/api-contract.md) | Frozen API Contract v1. |
-| 5 | [docs/api-handoff.md](docs/api-handoff.md) | API/UI readiness, known gaps, and integration checklist. |
-| 6 | [docs/ui-requirements.md](docs/ui-requirements.md) | UI flows and acceptance criteria. |
-| 7 | [plans/001-repairflow-dual-track.md](plans/001-repairflow-dual-track.md) | Implementation phases G0–G9 and workstream ownership. |
+| 1 | [docs/README.md](docs/README.md) | Quy tắc để LLM đọc/viết tài liệu đúng phase và đúng phạm vi. |
+| 2 | [docs/v0/README.md](docs/v0/README.md) | Mục lục và quy tắc tài liệu của phase v0. |
+| 3 | [docs/v0/requirements-closure.md](docs/v0/requirements-closure.md) | Các điểm nghiệp vụ/cơ chế còn mở, scenario và Gate D0. |
+| 4 | [docs/v0/usecase.md](docs/v0/usecase.md) | User story, actor, main flow, alternative flow và acceptance criteria. |
+| 5 | [docs/v0/architecture-and-requirements.md](docs/v0/architecture-and-requirements.md) | Kiến trúc, role, state machine, security và audit rule. |
+| 6 | [docs/v0/database-requirements.md](docs/v0/database-requirements.md) | ERD, bảng, constraint, index và transaction rule. |
+| 7 | [docs/v0/ui-requirements.md](docs/v0/ui-requirements.md) | UI flow, màn hình, trạng thái và acceptance criteria. |
+| 8 | [plans/000-repairflow-v1-implementation.md](plans/000-repairflow-v1-implementation.md) | Plan triển khai v1 theo cluster, chỉ dùng khi Product đã yêu cầu. |
+| 9 | [plans/002-api-server-codex.md](plans/002-api-server-codex.md) | Task packet triển khai server cho Codex. |
+| 10 | [plans/003-ui-antigravity.md](plans/003-ui-antigravity.md) | Task packet triển khai UI cho Antigravity. |
 
 ## 6. Repository structure
 
@@ -212,8 +219,9 @@ Current test coverage:
 │       ├── migrate.py               # SQL migration runner
 │       └── migrations/versions/     # Six versioned SQL migrations
 ├── tests/                           # pytest tests
-├── docs/                            # Business, database, UI, and API documentation
-├── plans/                           # Implementation plans
+├── docs/
+│   └── v0/                          # Tài liệu thảo luận/chốt của phase hiện tại
+├── plans/                           # Chỉ chứa LLM implementation tasks khi được yêu cầu
 ├── server/                          # Previous scaffold; not the current FastAPI entrypoint
 ├── src/ui/                          # UI prototype and mock data
 └── assets/                          # Product and prototype assets
@@ -231,29 +239,29 @@ These images are embedded directly for product and UI review:
 
 ### Internal UI screen 1
 
-![RepairFlow internal UI screen 1](docs/images/screen_1.png)
+![RepairFlow internal UI screen 1](docs/v0/images/screen_1.png)
 
 ### Internal UI screen 2
 
-![RepairFlow internal UI screen 2](docs/images/screen_2.png)
+![RepairFlow internal UI screen 2](docs/v0/images/screen_2.png)
 
 ### Customer approval screen
 
-![RepairFlow customer approval screen](docs/images/user_accept.png)
+![RepairFlow customer approval screen](docs/v0/images/user_accept.png)
 
 The images represent the UI prototype. PostgreSQL, migration, test, and FastAPI results are verified by the commands and test output described in Section 4.
 
-## 8. Not completed yet
+## 8. Chưa triển khai trong local MVP
 
-The following areas are not production-ready:
+Các phần sau chưa nằm trong baseline local hiện tại:
 
-- Authentication and session management.
-- Workspace isolation and API-enforced RBAC.
+- Owner/Manager authentication and management session management.
+- Workspace isolation and API-enforced management permissions.
 - Customer, device, and repair-order endpoints.
 - Diagnosis, quotation versioning, and customer approval APIs.
 - Repair work logs, quality checks, handover, and warranty APIs.
 - UI integration with the real API instead of mock data.
-- CI/CD, staging, production secrets, backups, and monitoring.
+- Deployment ngoài local, backup/restore và monitoring; các nội dung này để phase sau.
 
 ## 9. Current review checklist
 
@@ -264,6 +272,6 @@ The following areas are not production-ready:
 - [x] Rerunning the migration runner does not create duplicates.
 - [x] `pytest` passes four tests.
 - [x] FastAPI `/health` returns HTTP 200.
-- [ ] Business API and authentication are complete.
+- [ ] Business API and Owner/Manager authentication are complete.
 - [ ] UI is connected to the real API.
-- [ ] Staging and production deployment are complete.
+- [ ] Deployment ngoài local chưa thuộc phạm vi v0.

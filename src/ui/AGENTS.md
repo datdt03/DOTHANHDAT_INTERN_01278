@@ -49,7 +49,7 @@ src/ui/
 - Mỗi form phải có label, trạng thái lỗi và trạng thái loading rõ ràng.
 - Không dùng `div` thay cho button/link nếu phần tử có hành vi tương tác.
 - Không dùng inline style và không dùng inline event handler như `onclick`.
-- Nội dung hiển thị cho người dùng phải dùng thuật ngữ trong `docs/ui-requirements.md`, không hiển thị mã trạng thái nội bộ nếu không cần.
+- Nội dung hiển thị cho người dùng phải dùng thuật ngữ trong `docs/v0/ui-requirements.md`, không hiển thị mã trạng thái nội bộ nếu không cần.
 
 ## 3. Quy tắc CSS
 
