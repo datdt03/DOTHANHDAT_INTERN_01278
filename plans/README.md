@@ -1,34 +1,39 @@
-# Plan Writing Standard
+# Plans — LLM implementation tasks
 
-Use this folder for implementation plans before large changes. Plans must be concrete enough that another engineer can implement them without deciding the scope again.
+Thư mục này chỉ chứa kế hoạch triển khai dành cho LLM. Chỉ tạo hoặc cập nhật
+file trong `plans/` sau khi Product yêu cầu rõ ràng.
 
-## Required Sections
+## Quy tắc phạm vi
 
-- **Title**: Use a numbered filename, such as `001-land-law-rag-pipeline.md`.
-- **Goal**: Explain the outcome in one short paragraph.
-- **Scope**: List the exact data, files, features, and behavior included.
-- **Out of Scope**: List what must not be built in this plan.
-- **Input Files**: List source data and config files the implementation reads.
-- **Output Files**: List generated files, indexes, reports, or persisted data.
-- **Files To Write**: List code, docs, tests, scripts, and fixtures expected before implementation starts.
-- **Step-By-Step Implementation**: Use bullet points. Each step must be small and direct.
-- **Testing Plan**: Include unit tests, integration tests, and manual QA where relevant.
-- **Acceptance Criteria**: Define how the task is considered complete.
+- Thảo luận nghiệp vụ, quyết định đã chốt, câu hỏi còn mở và context sản phẩm nằm trong `docs/v0/`.
+- `plans/` chỉ chứa mục tiêu triển khai, task cards, file được phép sửa, test và acceptance criteria.
+- Mỗi task phải đủ nhỏ để một LLM thực hiện và kiểm chứng được.
+- Với task full-stack, chia theo cluster: một nhánh Codex xử lý server và một nhánh Antigravity xử lý UI trong cùng cluster; không chờ hoàn thành toàn bộ server mới làm UI.
+- Không tạo API contract, API handoff, release note hoặc tài liệu production trong thư mục này nếu Product chưa yêu cầu riêng.
+- Không dùng nội dung trong `docs/v0/archive/` làm nguồn sự thật.
 
-## Style Rules
+## Plan đang hiệu lực
 
-- Keep the plan bullet-point and step-by-step.
-- Name exact files and folders when they affect implementation.
-- Keep scope narrow and do not include unrelated refactors.
-- Identify dependencies before adding them.
-- Prefer testable pipeline milestones over broad descriptions.
-- Include out-of-scope items to prevent accidental expansion.
-- Every step need a checkbox point and checking when they are done.
+- [000 — RepairFlow v1 implementation](./000-repairflow-v1-implementation.md): bản đồ triển khai lớn theo cluster và gate.
+- [002 — API server Codex](./002-api-server-codex.md): task packet phía FastAPI/PostgreSQL.
+- [003 — UI Antigravity](./003-ui-antigravity.md): task packet phía UI.
 
-## MVP Defaults
+## Nguồn đầu vào bắt buộc
 
-- Dataset scope starts with `dataset/luat_dat_dai_1.txt` only.
-- No multi-document ingestion until a later plan.
-- No reranker in Phase 1.
-- No heavy OCR or encoding repair in Phase 1.
-- No authentication or production UI in Phase 1.
+- [Product docs v0](../docs/v0/README.md).
+- [Requirements closure](../docs/v0/requirements-closure.md), nếu task còn phụ thuộc quyết định chưa hoàn tất.
+- `README.md`, `AGENTS.md` và `src/ui/AGENTS.md` khi task chạm khu vực tương ứng.
+
+## Cấu trúc tối thiểu của một plan
+
+- Goal
+- Scope
+- Out of scope
+- Input files
+- Output files
+- Files to write
+- Step-by-step implementation
+- Testing plan
+- Acceptance criteria
+
+Mọi checklist phải ghi rõ trạng thái; không ghi kết quả triển khai hoặc nhật ký thảo luận dài vào plan.

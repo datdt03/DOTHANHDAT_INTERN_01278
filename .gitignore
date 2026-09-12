@@ -45,4 +45,4 @@ uploads/
 storage/
 *.zip
 tmp/
-plans/
+docs/v0/archive

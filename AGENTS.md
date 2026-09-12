@@ -7,8 +7,13 @@ Giữ mã nguồn nhỏ, dễ tìm, dễ thay đổi và dễ cung cấp cho LLM
 ## 2. Nguồn sự thật của sản phẩm
 
 - `README.md`: mục tiêu sản phẩm, phạm vi MVP và nghiệp vụ tổng thể.
-- `docs/architecture-and-requirements.md`: kiến trúc, vai trò, dữ liệu và business rules.
-- `docs/ui-requirements.md`: luồng UX/UI, màn hình, trạng thái và tiêu chí nghiệm thu.
+- `docs/README.md`: quy tắc phân phase và quy trình LLM khi đọc/viết tài liệu.
+- `docs/v0/README.md`: quy tắc và mục lục tài liệu của phase hiện tại.
+- `docs/v0/requirements-closure.md`: decision backlog, câu hỏi còn mở và điều kiện mở build.
+- `docs/v0/usecase.md`: user story, main flow, alternative flow và acceptance baseline.
+- `docs/v0/architecture-and-requirements.md`: kiến trúc, vai trò, dữ liệu và business rules đã thảo luận/chốt trong v0.
+- `docs/v0/database-requirements.md`: schema, constraint, index và transaction rules đã thảo luận/chốt trong v0.
+- `docs/v0/ui-requirements.md`: luồng UX/UI, màn hình, trạng thái và tiêu chí nghiệm thu của v0.
 - `src/ui/AGENTS.md`: quy tắc riêng cho HTML, CSS và JavaScript của giao diện.
 
 Khi tài liệu và mã nguồn mâu thuẫn, không tự đoán. Nêu rõ mâu thuẫn, chỉ ra file liên quan và hỏi trước khi đổi nghiệp vụ.
@@ -66,4 +71,3 @@ Tiêu chí hoàn thành: [các điều kiện kiểm chứng được]
 ```
 
 Không nạp toàn bộ repository vào một task. Chỉ đọc rule gốc, rule của thư mục đang làm và các file liên quan trực tiếp.
-
