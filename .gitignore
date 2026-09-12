@@ -45,3 +45,4 @@ uploads/
 storage/
 *.zip
 tmp/
+plans/

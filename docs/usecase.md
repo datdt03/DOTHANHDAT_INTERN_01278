@@ -1,0 +1,861 @@
+# RepairFlow — Đặc tả Use Case và luồng người dùng
+
+## 1. Mục đích và phạm vi
+
+Tài liệu này mô tả các use case quan trọng nhất của RepairFlow ở mức nghiệp vụ và mức tương tác người dùng. Mục tiêu là làm rõ:
+
+- Ai thực hiện từng hành động và được phép làm đến đâu.
+- Dữ liệu nào phải có trước khi chuyển bước.
+- Luồng chính, luồng thay thế, lỗi và ngoại lệ.
+- Trạng thái phiếu thay đổi như thế nào sau mỗi hành động.
+- Bằng chứng, quyết định của khách và lịch sử audit nào phải được lưu.
+- Tiêu chí nghiệm thu để QA, Product và Developer có thể dùng chung.
+
+Phạm vi bao gồm hai bề mặt sử dụng:
+
+1. **Giao diện nội bộ** cho Owner/Admin, Manager, Receptionist và Technician.
+2. **Giao diện public qua customer link** cho Customer, không yêu cầu tài khoản trong MVP.
+
+Tài liệu này không mở rộng phạm vi MVP sang thanh toán, tồn kho, AI chẩn đoán, định giá tự động, tài khoản khách hàng dài hạn hoặc tích hợp SMS/Zalo/email tự động.
+
+## 2. Nguồn yêu cầu và cách đọc tài liệu
+
+| Nguồn | Vai trò trong đặc tả này |
+| --- | --- |
+| [`README.md`](../README.md) | Mục tiêu sản phẩm, giá trị cốt lõi, demo scenario và phạm vi MVP. |
+| [`architecture-and-requirements.md`](./architecture-and-requirements.md) | Vai trò, phân quyền, trạng thái, transaction, audit, bảo mật và dữ liệu nghiệp vụ. |
+| [`ui-requirements.md`](./ui-requirements.md) | Màn hình, hành vi UI, luồng nội bộ/public và tiêu chí nghiệm thu UX/UI. |
+| [`database-requirements.md`](./database-requirements.md) | Enum, quan hệ dữ liệu, constraint và các điều kiện toàn vẹn API/database. |
+| `src/ui/features/**` | Đối chiếu phạm vi prototype hiện tại, không thay thế cho business rule phía backend. |
+
+### 2.1. Quy ước quan trọng
+
+- `repair order`/`phiếu sửa chữa` là đối tượng trung tâm của toàn bộ quy trình.
+- `overdue` trong UI hiện tại là **cờ vận hành quá hạn**, không nên coi là trạng thái nghiệp vụ terminal nếu backend vẫn dùng `repair_order_status` theo database requirements.
+- Báo giá đã `sent`, `approved` hoặc `rejected` là snapshot bất biến. Mọi thay đổi phải tạo version mới.
+- Customer link trong prototype đang dùng route dạng `#/customer/:id`; triển khai thật phải dùng token ngẫu nhiên, chỉ lưu hash, có hạn dùng và có thể thu hồi.
+- Mọi quy tắc chuyển trạng thái, quyền truy cập, tính tổng tiền và ghi nhận quyết định phải được kiểm tra ở Backend/API; UI chỉ hỗ trợ hiển thị và gọi hành động.
+
+## 3. Actors và persona
+
+### 3.1. Bảng actor
+
+| Actor | Mục tiêu | Quyền và trách nhiệm chính | Không được tự ý |
+| --- | --- | --- | --- |
+| **Owner/Admin** | Kiểm soát vận hành và dữ liệu của workspace. | Quản lý cửa hàng, nhân viên, quyền, toàn bộ phiếu, link public, báo cáo và ngoại lệ. | Xóa audit log hoặc xóa cứng bằng chứng/quyết định/lịch sử. |
+| **Manager** | Điều phối công việc và xử lý phiếu trễ. | Phân công nhân viên, theo dõi dashboard, báo cáo, xử lý ngoại lệ theo chính sách. | Quản lý tài khoản Owner nếu chưa được cấp quyền riêng. |
+| **Receptionist/Front Desk** | Tiếp nhận thiết bị và điều phối giao tiếp với khách. | Tạo phiếu, nhập khách/thiết bị, ghi hiện trạng, ảnh/phụ kiện, gửi link, bàn giao. | Sửa chẩn đoán hoặc báo giá đã duyệt nếu không có quyền. |
+| **Technician** | Chẩn đoán và thực hiện sửa chữa đúng phạm vi được phân công. | Chẩn đoán, lập báo giá, ghi work log, checklist sửa, QC. | Xem/sửa phiếu ngoài workspace hoặc ngoài phạm vi phân công. |
+| **Customer** | Hiểu thiết bị, chẩn đoán, chi phí và quyết định sửa. | Mở link hợp lệ, xem thông tin được phép, duyệt hoặc từ chối đúng quote version. | Truy cập phiếu khác, sửa nội dung báo giá hoặc duyệt quote cũ. |
+| **System/API** | Bảo đảm toàn vẹn, bảo mật và truy vết. | Xác thực, RBAC, transaction, tính tổng, đổi trạng thái, tạo link, audit, signed URL. | Tự chẩn đoán hoặc tự quyết định giá thay cho Technician. |
+| **Object Storage** | Lưu ảnh/tài liệu không public mặc định. | Lưu file private, trả signed URL có hạn. | Cho truy cập trực tiếp không qua kiểm tra quyền. |
+
+### 3.2. Ma trận quyền theo nhóm use case
+
+Ký hiệu: `P` = thực hiện chính, `S` = hỗ trợ/xem, `A` = chỉ được thực hiện khi có quyền ngoại lệ, `-` = không thuộc luồng.
+
+| Use case | Owner/Admin | Manager | Receptionist | Technician | Customer |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Đăng nhập và chọn workspace | P | P | P | P | - |
+| Xem dashboard/danh sách | P | P | S | S | - |
+| Tạo phiếu và tiếp nhận | P | S | P | A | - |
+| Ghi hiện trạng/bằng chứng | P | S | P | P | S |
+| Chẩn đoán | P | S | A | P | S |
+| Lập/sửa nháp báo giá | P | A | A | P | - |
+| Gửi/revoke customer link | P | P | P | A | - |
+| Duyệt/từ chối báo giá | S | S | - | - | P |
+| Xác nhận thay khách qua điện thoại | P | A | A | - | - |
+| Ghi nhận sửa chữa | P | S | - | P | - |
+| QC và kết luận đạt/không đạt | P | S | - | P | S |
+| Bàn giao và kích hoạt bảo hành | P | S | P | A | S |
+| Xem lịch sử/timeline | P | P | S | S | S theo link |
+| Phân công nhân viên | P | P | - | - | - |
+
+## 4. Đối tượng nghiệp vụ và dữ liệu được tạo
+
+| Đối tượng | Ý nghĩa | Dữ liệu tối thiểu | Được tạo/cập nhật ở use case |
+| --- | --- | --- | --- |
+| `workspace` | Phạm vi tenant của cửa hàng. | Tên, timezone, thông tin liên hệ. | UC-01, quản trị workspace. |
+| `customer` | Người sở hữu/người gửi thiết bị. | Tên, phone, email tùy chọn, ghi chú. | UC-03, lịch sử. |
+| `device` | Thiết bị gắn với customer. | Loại, hãng, model, serial/IMEI/mã nhận diện. | UC-03, lịch sử. |
+| `repair_order` | Phiếu xuyên suốt vòng đời sửa chữa. | `order_code`, customer/device, issue, status, người tạo, thời gian nhận/dự kiến trả. | UC-03 và các UC sau. |
+| `repair_order_staff` | Người chịu trách nhiệm theo từng giai đoạn. | User, responsibility, primary, assigned/completed time. | UC-03, UC-04, UC-05, UC-09, UC-10, UC-11. |
+| `repair_evidence` | Ảnh/tài liệu chứng minh hiện trạng hoặc kết quả. | Stage, object key, metadata file, mô tả, người chụp, thời gian. | UC-04, UC-09, UC-10, UC-11. |
+| `diagnosis` | Kết quả kiểm tra kỹ thuật. | Findings, cause, recommendation, estimated duration, diagnosed by. | UC-05. |
+| `quote` | Một phiên bản báo giá. | Version, status, subtotal, total, note, created/sent time. | UC-05, UC-06, UC-08. |
+| `quote_item` | Một linh kiện/công sửa/dịch vụ trong quote. | Loại, mô tả, số lượng, đơn giá, lý do, thời gian dự kiến. | UC-05. |
+| `customer_link` | Quyền truy cập public có giới hạn. | Quote/order, purpose, token hash, expiry, revoke/access time. | UC-06, UC-07. |
+| `customer_decision` | Quyết định của Customer đối với đúng quote version. | Decision, tên/liên hệ snapshot, thời gian, source link. | UC-08. |
+| `repair_work_log` | Nhật ký công việc thực tế. | Technician, summary, start/end, note. | UC-09. |
+| `checklist` | Bộ kiểm tra theo stage. | Type, content, completed by/time. | UC-04, UC-09, UC-10, UC-11. |
+| `handover_record` | Biên bản trả thiết bị. | Người nhận, phụ kiện trả, tình trạng cuối, xác nhận, người bàn giao. | UC-11. |
+| `warranty` | Cam kết sau bàn giao. | Start/end, terms, status. | UC-11. |
+| `status_history` | Timeline nghiệp vụ. | From/to status, actor, reason, created time. | Mọi UC đổi trạng thái. |
+| `audit_log` | Truy vết bảo mật và hành động nhạy cảm. | Actor, entity, action, metadata, thời gian. | Mọi UC nhạy cảm. |
+
+## 5. Business rules dùng chung
+
+| Mã | Quy tắc | Hệ quả khi vi phạm |
+| --- | --- | --- |
+| BR-01 | Mọi truy vấn nghiệp vụ phải được lọc theo `workspace_id`. | Từ chối request; không được để UI tự che dữ liệu khác tenant. |
+| BR-02 | Một phiếu phải gắn đúng customer và device trong cùng workspace. | Không cho tạo liên kết chéo workspace hoặc chéo chủ thiết bị. |
+| BR-03 | Hiện trạng tối thiểu phải được ghi trước khi bắt đầu chẩn đoán/sửa. | Không cho chuyển `received` → `diagnosing` nếu checklist/bằng chứng chưa đủ. |
+| BR-04 | Diagnosis phải nêu kết quả, nguyên nhân, đề xuất và thời gian dự kiến trước khi gửi quote. | Không cho chuyển sang `waiting_for_approval`. |
+| BR-05 | Quote phải có ít nhất một item hợp lệ; subtotal/total tính lại ở backend. | Không cho `draft` → `sent`; không tin tổng tiền do client gửi. |
+| BR-06 | Quote đã gửi hoặc đã quyết định không được sửa trực tiếp. | Tạo quote version mới, quote cũ giữ nguyên lịch sử. |
+| BR-07 | Decision luôn tham chiếu đúng `quote_id` và `source_link_id`. | Không chấp nhận approve quote cũ hoặc link của phiếu khác. |
+| BR-08 | Chỉ quote hiện hành ở trạng thái `approved` mới mở khóa sửa chữa. | Không cho chuyển sang `repairing`. |
+| BR-09 | Một request approve/reject phải idempotent. | Click lặp không tạo quyết định thứ hai hoặc đổi quyết định đã ghi. |
+| BR-10 | Nếu QC không đạt, phiếu phải quay lại `repairing`, không được nhảy thẳng đến bàn giao. | Khóa `ready_for_pickup`. |
+| BR-11 | Chỉ được bàn giao khi QC đã `passed` và có biên bản bàn giao. | Từ chối transaction bàn giao. |
+| BR-12 | Bảo hành mặc định bắt đầu từ ngày/giờ bàn giao thực tế. | Không được kích hoạt trước bàn giao, trừ ngoại lệ của Owner/Admin có lý do. |
+| BR-13 | Không lưu mật khẩu/mã mở khóa thiết bị trong MVP. | Từ chối trường nhạy cảm hoặc lưu theo chính sách mã hóa riêng ở giai đoạn sau. |
+| BR-14 | File ảnh/tài liệu private; chỉ hiển thị qua signed URL. | Không đưa object storage URL public trực tiếp vào response. |
+| BR-15 | Audit log, bằng chứng, customer decision và status history không bị xóa cứng trong luồng thường. | Chỉ cho phép archive/retention theo chính sách được phê duyệt. |
+| BR-16 | `overdue` là điều kiện tính từ `expected_completed_at` và status hiện tại. | Dashboard phải cảnh báo và ghi nhận xử lý, không tự ý làm mất trạng thái nghiệp vụ. |
+
+## 6. Vòng đời phiếu và điều kiện chuyển trạng thái
+
+| Trạng thái hiện tại | Hành động hợp lệ | Điều kiện bắt buộc | Trạng thái sau | Người chính |
+| --- | --- | --- | --- | --- |
+| `received` | Bắt đầu chẩn đoán | Có customer/device, issue và intake evidence/checklist tối thiểu. | `diagnosing` | Receptionist/Technician |
+| `diagnosing` | Hoàn tất diagnosis và phát hành quote | Có diagnosis hợp lệ, quote có item và tổng được tính lại. | `waiting_for_approval` | Technician |
+| `waiting_for_approval` | Customer duyệt quote hiện hành | Link hợp lệ, quote `sent`, chưa có decision. | `approved` | Customer |
+| `waiting_for_approval` | Customer từ chối | Link hợp lệ hoặc quy trình exception được audit. | `rejected` | Customer/nhân viên được cấp quyền |
+| `waiting_for_approval` | Tạo quote mới do thay đổi nội dung | Quote cũ immutable, version mới được tạo và gửi lại. | `waiting_for_approval` | Technician/Manager |
+| `approved` | Bắt đầu sửa | Decision approved gắn đúng quote version. | `repairing` | Technician |
+| `repairing` | Hoàn tất công việc để kiểm tra | Có work log/checklist repair và ghi nhận linh kiện thực tế nếu có. | `quality_check` | Technician |
+| `quality_check` | QC đạt | Checklist QC hoàn thành, kết luận `passed`, có kết quả/ảnh cần thiết. | `ready_for_pickup` | Quality checker |
+| `quality_check` | QC không đạt | Có note lỗi/ảnh và hướng xử lý lại. | `repairing` | Quality checker |
+| `ready_for_pickup` | Bàn giao | Có recipient, phụ kiện, tình trạng cuối và xác nhận bàn giao. | `handed_over` | Receptionist/Handover |
+| `handed_over` | Kích hoạt bảo hành | Handover transaction thành công. | `warranty_active` | System |
+| Bất kỳ trạng thái mở | Dừng phiếu vì lý do cửa hàng | Có quyền Owner/Admin/Manager theo policy và ghi reason. | `cancelled` | Manager/Owner/Admin |
+
+### 6.1. Trạng thái hiển thị và cờ vận hành
+
+| Cờ/hiển thị | Cách tính | Không được hiểu là |
+| --- | --- | --- |
+| Quá hạn | `now > expected_completed_at` và phiếu chưa hoàn tất/bàn giao. | Một trạng thái thay thế cho `repairing` hoặc `quality_check`. |
+| Đang chờ khách | `repair_order.status = waiting_for_approval` và quote hiện hành `sent`. | Đã được khách duyệt. |
+| Sẵn sàng bàn giao | `status = ready_for_pickup`, QC đạt. | Đã bàn giao. |
+| Bảo hành hoạt động | `status = warranty_active`, trong khoảng start/end. | Đã thanh toán hoặc đã thu tiền. |
+
+## 7. Danh mục use case ưu tiên
+
+| ID | Use case | Actor chính | Mức độ | Kết quả nghiệp vụ chính | Màn hình/feature liên quan |
+| --- | --- | --- | --- | --- | --- |
+| UC-01 | Đăng nhập và vào workspace | Nhân viên | Must | Tạo session hợp lệ và giới hạn dữ liệu theo workspace/quyền. | Login, app shell |
+| UC-02 | Xem dashboard và danh sách việc | Manager/Owner | Must | Biết phiếu đang ở đâu, chờ ai, phiếu nào trễ/sẵn sàng. | Dashboard |
+| UC-03 | Tạo phiếu và tiếp nhận thiết bị | Receptionist | Must | Tạo order code, gắn customer/device, ghi issue và trạng thái `received`. | Create repair order |
+| UC-04 | Ghi hiện trạng và bằng chứng | Receptionist/Technician | Must | Khóa mốc “trước khi sửa”, tạo checklist và ảnh private. | Condition/evidence |
+| UC-05 | Chẩn đoán và lập báo giá nháp | Technician | Must | Lưu diagnosis, quote items, tổng tiền và thời gian dự kiến. | Diagnosis/quote |
+| UC-06 | Gửi quote và cấp customer link | Receptionist/Technician | Must | Quote `sent`, link có hạn, order `waiting_for_approval`. | Quote detail/customer link |
+| UC-07 | Customer mở link và xem thông tin | Customer | Must | Xem đúng phiếu/quote được cấp, không cần account. | Customer link |
+| UC-08 | Customer duyệt hoặc từ chối quote | Customer | Must | Lưu decision gắn quote version, đổi trạng thái order. | Customer link |
+| UC-09 | Bắt đầu và thực hiện sửa chữa | Technician | Must | Chỉ thực hiện work đã duyệt, lưu log/checklist và ảnh sau sửa. | Repair execution |
+| UC-10 | Kiểm tra chất lượng và xử lý rework | Technician/QC | Must | QC đạt thì sẵn sàng bàn giao; không đạt thì quay lại sửa. | Quality check |
+| UC-11 | Bàn giao và kích hoạt bảo hành | Receptionist | Must | Tạo handover, khóa dữ liệu chính, tạo warranty từ ngày bàn giao. | Handover/warranty |
+| UC-12 | Tra cứu lịch sử và timeline | Mọi nhân viên được quyền | Must | Truy ngược customer/device/order và người thực hiện từng bước. | History/timeline/audit |
+| UC-13 | Phân công và thay đổi người phụ trách | Manager/Owner | Should | Tách rõ intake/diagnosis/repair/QC/handover; giữ lịch sử người cũ. | Assignment/settings |
+| UC-14 | Xử lý link lỗi, quote mới và phiếu trễ | Staff/Manager | Should | Revoke/reissue link, tạo version mới, ghi lý do và thông báo. | Notifications/detail |
+
+Các use case UC-01–UC-12 được đặc tả chi tiết dưới đây. UC-13–UC-14 được đặc tả ở mức nghiệp vụ vì phụ thuộc module quản trị/thông báo mở rộng.
+
+### 7.1. User story theo persona
+
+Mỗi user story dưới đây có thể dùng làm đầu vào cho backlog. Một story chỉ được coi là hoàn tất khi các điều kiện nghiệm thu liên quan trong mục 12 đạt và business rule được kiểm tra ở Backend/API.
+
+| ID | Persona | User story | Vì sao cần | Tiêu chí chấp nhận tóm tắt |
+| --- | --- | --- | --- | --- |
+| US-01 | Nhân viên | Là một nhân viên cửa hàng, tôi muốn đăng nhập đúng workspace để chỉ thấy dữ liệu và hành động mình được phép dùng. | Bảo vệ dữ liệu giữa các cửa hàng và vai trò. | User inactive/locked không login; query luôn lọc workspace; role được kiểm tra ở API. |
+| US-02 | Manager/Owner | Là người quản lý, tôi muốn xem dashboard theo status, người phụ trách và hạn trả để biết việc nào cần xử lý trước. | Điều phối năng lực và phiếu trễ. | KPI/filter dẫn tới danh sách đúng; overdue là cờ tính từ deadline; có loading/empty/error. |
+| US-03 | Receptionist | Là lễ tân, tôi muốn tìm hoặc tạo customer/device trong lúc lập phiếu để không nhập trùng và không bỏ sót thông tin nhận máy. | Tạo dữ liệu đầu vào sạch và truy được lịch sử. | Có duplicate check theo phone/device; order code unique; trạng thái ban đầu là `received`. |
+| US-04 | Receptionist/Technician | Là người nhận máy, tôi muốn ghi checklist, phụ kiện và ảnh hiện trạng trước sửa để hai bên có cùng bằng chứng baseline. | Giảm tranh chấp về tình trạng và tài sản đi kèm. | Không qua diagnosis nếu intake chưa đủ; ảnh private có stage/người/thời gian. |
+| US-05 | Technician | Là kỹ thuật viên, tôi muốn ghi findings, cause và recommendation để giải thích chẩn đoán trước khi báo giá. | Bảo đảm quyết định kỹ thuật có trách nhiệm rõ ràng. | Diagnosis có người/time; không tự động chẩn đoán; có thể đính kèm note/evidence. |
+| US-06 | Technician | Là kỹ thuật viên, tôi muốn lập quote theo từng linh kiện/công/dịch vụ và nêu lý do để khách hiểu mình đang duyệt gì. | Minh bạch giá và phạm vi công việc. | Item có loại/mô tả/số lượng/đơn giá/lý do; total do backend tính. |
+| US-07 | Receptionist/Technician | Là nhân viên được cấp quyền, tôi muốn gửi một customer link có hạn dùng để khách xem đúng phiếu và quote hiện hành. | Trao quyền xem/duyệt có giới hạn. | Quote `sent`, order `waiting_for_approval`, token lưu hash, link có expiry/revoke. |
+| US-08 | Customer | Là khách hàng, tôi muốn mở link không cần tài khoản để xem hiện trạng, diagnosis, quote và thời gian dự kiến. | Ra quyết định mà không phải cài app/đăng ký. | Link chỉ đọc đúng public DTO; link lỗi/hết hạn/revoke có thông báo rõ. |
+| US-09 | Customer | Là khách hàng, tôi muốn duyệt hoặc từ chối chính xác quote version đang xem để cửa hàng biết quyết định của tôi. | Tránh sửa chữa khi chưa được đồng ý và tránh tranh chấp version. | Decision gắn `quote_id`/`source_link_id`; approve/reject idempotent; nút bị khóa sau quyết định. |
+| US-10 | Technician | Là kỹ thuật viên, tôi muốn chỉ bắt đầu sửa sau khi quote đúng version được duyệt và ghi work log/checklist để chứng minh việc đã làm. | Bảo đảm work thực tế khớp work được đồng ý. | Chưa approved thì API chặn; có started/ended, work items, actual parts và after evidence. |
+| US-11 | Quality checker | Là người kiểm tra, tôi muốn đối chiếu lỗi ban đầu, chức năng và tình trạng sau sửa để kết luận đạt hoặc yêu cầu sửa lại. | Không giao thiết bị khi chưa đạt. | QC pass mới được `ready_for_pickup`; fail luôn quay về `repairing` với lý do. |
+| US-12 | Receptionist/Customer | Là nhân viên bàn giao, tôi muốn ghi người nhận, phụ kiện và tình trạng cuối để khách nhận đúng thiết bị. | Hoàn tất evidence chain trước khi đóng phiếu. | Không handover nếu QC chưa pass; có handover record và xác nhận. |
+| US-13 | Customer/Owner | Là khách hàng, tôi muốn biết điều khoản và thời điểm bắt đầu bảo hành để có thể tra cứu khi quay lại. | Bảo đảm cam kết sau sửa không bị thất lạc. | Warranty bắt đầu từ handover theo mặc định; terms/end date hiển thị và truy được từ device history. |
+| US-14 | Manager/Owner | Là người quản lý, tôi muốn phân công riêng người tiếp nhận, chẩn đoán, sửa, QC và bàn giao để biết ai chịu trách nhiệm ở từng giai đoạn. | Một `assigned_technician_id` duy nhất không đủ cho audit. | Assignment không ghi đè lịch sử; user inactive không nhận phiếu mới. |
+| US-15 | Manager/Owner | Là người quản lý, tôi muốn tạo quote version mới hoặc thu hồi link khi thông tin thay đổi/lộ link để giữ an toàn và yêu cầu khách duyệt lại. | Bảo vệ tính bất biến của quote và quyền public. | Quote cũ `superseded`; link cũ revoke; version mới có decision mới và audit reason. |
+| US-16 | Mọi nhân viên được quyền | Là nhân viên, tôi muốn xem lịch sử theo customer/device/order để trả lời khách và xử lý tranh chấp bằng dữ liệu thật. | Giảm phụ thuộc vào giấy/chat cá nhân. | Timeline nối được status, decision, evidence, work, QC, handover, warranty; audit không sửa/xóa thường. |
+
+## 8. Luồng người dùng theo persona
+
+### 8.1. Receptionist/Front Desk
+
+| Bước | Hành động | Kết quả mong đợi |
+| ---: | --- | --- |
+| 1 | Đăng nhập và chọn workspace. | Chỉ thấy dữ liệu đúng cửa hàng và quyền. |
+| 2 | Tìm customer bằng phone hoặc tạo customer mới. | Tránh tạo hồ sơ trùng. |
+| 3 | Chọn/tạo device, nhập serial/IMEI và issue khách mô tả. | Có phiếu với mã dễ đọc, status `received`. |
+| 4 | Ghi phụ kiện, nguồn/bật máy, ghi chú và ảnh hiện trạng. | Có bằng chứng trước sửa; không bỏ sót phụ kiện. |
+| 5 | Gửi customer link sau khi Technician tạo quote. | Quote chuyển `sent`, order chờ khách duyệt. |
+| 6 | Theo dõi dashboard, xử lý khách từ chối hoặc phiếu trễ. | Có lý do, timeline và link/version đúng. |
+| 7 | Khi QC đạt, kiểm tra người nhận/phụ kiện/tình trạng cuối. | Tạo handover record và chuyển `handed_over`. |
+| 8 | Gửi/xuất thông tin bảo hành theo chính sách cửa hàng. | Warranty active từ ngày bàn giao; order vào lịch sử. |
+
+### 8.2. Technician
+
+| Bước | Hành động | Kết quả mong đợi |
+| ---: | --- | --- |
+| 1 | Mở “Việc của tôi” hoặc order được phân công. | Chỉ thấy phiếu đúng workspace/phân công. |
+| 2 | Kiểm tra intake evidence trước khi thao tác. | Xác nhận baseline condition. |
+| 3 | Ghi findings, cause, recommendation, estimated duration. | Diagnosis có người thực hiện và timestamp. |
+| 4 | Tạo quote gồm part/labor/service, quantity, price, reason. | Tổng tiền backend tính đúng; quote nháp có version. |
+| 5 | Phát hành quote sau khi kiểm tra nội dung. | Order `waiting_for_approval`; không sửa trực tiếp quote cũ. |
+| 6 | Chỉ bắt đầu khi decision đúng version là `approved`. | Order `repairing`; các hạng mục được duyệt là checklist đầu vào. |
+| 7 | Ghi work log, checklist thực hiện, linh kiện thực tế và ảnh sau sửa. | Phân biệt proposed/approved/performed/verified. |
+| 8 | Chạy QC và kết luận đạt/không đạt. | Đạt → `ready_for_pickup`; không đạt → `repairing`. |
+
+### 8.3. Manager/Owner/Admin
+
+| Bước | Hành động | Kết quả mong đợi |
+| ---: | --- | --- |
+| 1 | Xem KPI, pipeline và danh sách cảnh báo. | Biết việc đang chờ khách, quá hạn, sẵn sàng giao. |
+| 2 | Lọc theo status, technician, ngày nhận, quá hạn. | Danh sách phản ánh dữ liệu thật trong workspace. |
+| 3 | Phân công hoặc thay đổi người chịu trách nhiệm. | Không ghi đè người đã hoàn thành bước trước; audit đầy đủ. |
+| 4 | Xử lý link lộ/hết hạn, quote cần sửa, phiếu bị khách từ chối. | Revoke/version/cancel theo policy và ghi reason. |
+| 5 | Kiểm tra timeline/audit khi có tranh chấp. | Truy được quote version, decision, ảnh, người và thời gian. |
+
+### 8.4. Customer
+
+| Bước | Hành động | Kết quả mong đợi |
+| ---: | --- | --- |
+| 1 | Mở link được cửa hàng gửi. | Hệ thống xác thực token, hiển thị đúng order/quote. |
+| 2 | Kiểm tra thông tin thiết bị, hiện trạng, ảnh và diagnosis. | Hiểu thiết bị nhận vào và phương án đề xuất. |
+| 3 | Xem từng quote item, lý do, bảo hành và estimated completion. | Biết chính xác nội dung mình sắp duyệt. |
+| 4 | Chọn duyệt hoặc từ chối. | Có bước xác nhận, lưu tên/liên hệ snapshot và timestamp. |
+| 5 | Nếu cần trao đổi, dùng kênh hỗ trợ của cửa hàng. | Không tạo decision giả hoặc duyệt nhầm version. |
+| 6 | Mở lại link để theo dõi status. | Chỉ xem phần public được phép; link hết hạn/revoke hiển thị rõ. |
+
+## 9. Đặc tả use case chi tiết
+
+### UC-01 — Đăng nhập và truy cập workspace
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Cho nhân viên truy cập đúng workspace và đúng quyền. |
+| Actor chính | Owner/Admin, Manager, Receptionist, Technician. |
+| Trigger | Nhân viên mở ứng dụng hoặc gửi thông tin đăng nhập. |
+| Tiền điều kiện | Tài khoản tồn tại; membership thuộc workspace; user/membership đang active. |
+| Dữ liệu vào | Email/phone/username theo cơ chế auth, password/SSO, workspace context nếu có nhiều workspace. |
+| Hậu điều kiện thành công | Tạo session có thời hạn; tải role, membership và workspace; redirect về Dashboard hoặc màn hình được phép. |
+| Hậu điều kiện thất bại | Không tạo session; không tiết lộ tài khoản/workspace nào tồn tại. |
+| Quy tắc liên quan | BR-01, BR-15; xác thực phải ở backend, không chỉ ẩn menu. |
+
+#### Luồng chính
+
+| Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Nhân viên | Mở màn hình login. | Hiển thị form và trạng thái loading/error rõ ràng. |
+| 2 | Nhân viên | Nhập thông tin và submit. | Client kiểm tra rỗng; backend nhận request qua HTTPS. |
+| 3 | System | Xác thực credential. | Kiểm tra user active/locked và membership active. |
+| 4 | System | Tạo session/access token. | Không trả password; session có expiry và cơ chế logout. |
+| 5 | System | Nạp workspace, role và quyền. | Mọi query tiếp theo gắn `workspace_id`. |
+| 6 | System | Ghi audit login thành công nếu policy yêu cầu. | Lưu actor, thời gian, user agent/IP hash theo chính sách. |
+| 7 | System | Điều hướng về Dashboard. | Menu/hành động hiển thị theo role, không dùng menu làm cơ chế bảo mật. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Sai credential | Hiển thị lỗi chung; không nói rõ email hay password sai; áp dụng rate limit. |
+| A2 | User `inactive`/`locked` hoặc membership `suspended` | Từ chối đăng nhập, hướng dẫn liên hệ Owner/Admin; không tạo session. |
+| A3 | Một user thuộc nhiều workspace | Hiển thị bước chọn workspace; mọi request sau đó phải mang workspace context hợp lệ. |
+| A4 | Session hết hạn | Xóa context cục bộ, yêu cầu login lại; không tự giữ quyền bằng cache UI. |
+| A5 | Backend/API lỗi | Hiển thị lỗi có thể thử lại; không chuyển người dùng vào màn hình dữ liệu cũ như thể đã đăng nhập. |
+
+#### Tiêu chí nghiệm thu
+
+- Nhân viên bị khóa không thể truy cập API bằng cách gọi trực tiếp.
+- Technician không thể đọc order ngoài workspace hoặc ngoài phạm vi được cấp.
+- Refresh trang không làm mất session hợp lệ nhưng session hết hạn phải buộc đăng nhập lại.
+
+### UC-02 — Xem Dashboard và danh sách việc
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Giúp người vận hành biết phiếu đang ở đâu, đang chờ ai, phiếu nào quá hạn và phiếu nào sẵn sàng bàn giao. |
+| Actor chính | Manager/Owner; Receptionist/Technician được xem phạm vi được cấp. |
+| Trigger | Mở Dashboard, bấm KPI/pipeline, dùng filter hoặc tìm kiếm. |
+| Tiền điều kiện | Đã đăng nhập; có workspace context; quyền đọc order. |
+| Dữ liệu vào | Filter status, người phụ trách, ngày nhận, overdue, waiting customer, query order/customer/device. |
+| Hậu điều kiện | Hiển thị KPI và danh sách nhất quán với dữ liệu hiện tại; mỗi dòng mở được order đúng quyền. |
+| Quy tắc liên quan | BR-01, BR-16. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kết quả cần có |
+| ---: | --- | --- | --- |
+| 1 | User | Mở Dashboard. | Hiển thị loading, sau đó KPI theo workspace. |
+| 2 | System | Tính nhóm phiếu theo status nghiệp vụ. | Processing, waiting approval, repairing/QC, ready pickup và overdue. |
+| 3 | System | Tải danh sách order. | Mỗi dòng có mã, khách, thiết bị, status, technician, ngày nhận, hạn trả. |
+| 4 | User | Chọn KPI hoặc pipeline step. | Filter danh sách tương ứng, không tạo dữ liệu mới. |
+| 5 | User | Lọc theo status/technician/date/overdue. | Kết quả giữ đúng filter; hiển thị empty state nếu không có dữ liệu. |
+| 6 | User | Mở một dòng order. | Điều hướng đến detail và giữ order id chính xác. |
+| 7 | System | Ghi audit nếu filter/export là hành động cần truy vết theo policy. | Không ghi audit cho mọi lần render nếu không cần. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Không có order | Hiển thị empty state và CTA tạo phiếu nếu role được phép. |
+| A2 | API dashboard lỗi | Giữ layout lỗi rõ ràng; cho retry; không hiển thị KPI cũ như dữ liệu live. |
+| A3 | Phiếu quá hạn | Hiển thị cờ overdue, gợi ý hành động liên hệ khách/điều phối; không tự đổi status thành `overdue`. |
+| A4 | User không có quyền xem một order | API trả 403/404 phù hợp; UI không tiết lộ order tồn tại. |
+| A5 | Export được bấm trong prototype | MVP chỉ được coi là placeholder; không tuyên bố file Excel/PDF đã là nguồn báo cáo chính nếu chưa có backend export. |
+
+#### Tiêu chí nghiệm thu
+
+- KPI bấm được và dẫn đến danh sách lọc đúng.
+- Dashboard không trộn dữ liệu workspace khác.
+- Overdue được tính từ hạn trả và status hiện tại, không dựa vào một field mock tĩnh.
+
+### UC-03 — Tạo phiếu và tiếp nhận thiết bị
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Tạo một repair order đầy đủ để cửa hàng có thể theo dõi thiết bị từ lúc nhận. |
+| Actor chính | Receptionist/Front Desk. |
+| Actor phụ | Manager/Owner, System/API. |
+| Trigger | Bấm “Tạo phiếu sửa chữa”. |
+| Tiền điều kiện | User có quyền tạo; workspace active. |
+| Dữ liệu vào bắt buộc | Customer name, phone; device type/brand/model; serial/IMEI hoặc device identifier; issue customer mô tả. |
+| Dữ liệu vào tùy chọn | Email, note, issue start time, power state, accessories, expected completed time, intake note. |
+| Hậu điều kiện thành công | Tạo customer/device nếu cần, tạo `repair_order` với order code unique và status `received`, ghi creator/intake staff/status history/audit. |
+| Quy tắc liên quan | BR-01, BR-02, BR-13. |
+
+#### Luồng chính
+
+| Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Receptionist | Mở form tạo phiếu. | Form chia rõ Customer → Device → Issue/Intake; có save/cancel. |
+| 2 | Receptionist | Nhập số điện thoại/tìm customer. | System đề xuất customer cùng workspace; không tạo trùng nếu hồ sơ đã tồn tại. |
+| 3 | Receptionist | Chọn customer cũ hoặc tạo customer mới. | Validate tên/phone; lưu workspace_id. |
+| 4 | Receptionist | Tra cứu serial/IMEI/device identifier. | Hiển thị lịch sử thiết bị và cảnh báo order đang mở nếu có. |
+| 5 | Receptionist | Chọn device cũ hoặc tạo device mới. | Device phải thuộc đúng customer/workspace; không lưu passcode/mật khẩu. |
+| 6 | Receptionist | Nhập issue khách mô tả và thông tin nhận máy. | Giữ nguyên lời mô tả, không biến thành diagnosis. |
+| 7 | Receptionist | Chọn người tiếp nhận/phụ trách nếu có. | Tạo `repair_order_staff` responsibility `intake`; người bị inactive không được nhận mới. |
+| 8 | System | Submit transaction. | Tạo customer/device/order, order code unique, status history đầu tiên và audit create. |
+| 9 | System | Trả order detail. | Hiển thị mã phiếu, trạng thái `received`, CTA ghi hiện trạng. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Customer phone đã tồn tại | Hiển thị hồ sơ cũ; user xác nhận dùng hồ sơ đó hoặc sửa theo quyền, không tự nhân bản. |
+| A2 | Device đã có order đang mở | Cảnh báo mã phiếu và status; chỉ tạo phiếu mới khi user có quyền xác nhận lý do. |
+| A3 | Thiếu serial/IMEI | Cho dùng device identifier/note theo chính sách; không tạo giá trị giả. |
+| A4 | Trùng order code do concurrent request | Backend retry/regen code trong transaction; không trả thành công cho hai order cùng mã. |
+| A5 | Submit lỗi giữa transaction | Rollback toàn bộ; không để customer/device tồn tại rời rạc nếu transaction được thiết kế atomic. |
+| A6 | User bỏ form | Không tạo order; giữ cảnh báo unsaved nếu UI hỗ trợ. |
+| A7 | Thiết bị có dữ liệu nhạy cảm | Không đưa passcode/mật khẩu vào field tự do; hiển thị cảnh báo thao tác đúng policy. |
+
+#### Tiêu chí nghiệm thu
+
+- Tạo phiếu xong có thể tra cứu bằng mã phiếu trong workspace.
+- Không thể tạo order nếu thiếu customer/device/issue tối thiểu.
+- Lịch sử device cũ được hiển thị trước khi người dùng xác nhận tạo phiếu mới.
+
+### UC-04 — Ghi hiện trạng và bằng chứng trước sửa
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Tạo baseline có thể đối chiếu để bảo vệ khách và cửa hàng trước khi chẩn đoán/sửa. |
+| Actor chính | Receptionist hoặc Technician được phân công. |
+| Trigger | Mở tab hiện trạng sau khi tạo phiếu hoặc bấm “Hoàn tất hiện trạng”. |
+| Tiền điều kiện | Order ở `received`; có customer/device; user có quyền sửa intake. |
+| Dữ liệu vào | Checklist ngoại hình/chức năng, accessories, power state, note, ảnh mặt trước/sau/cạnh/vùng hỏng, caption/important flag. |
+| Hậu điều kiện thành công | Tạo checklist `intake`, evidence `before_repair`, gắn captured_by/captured_at; order đủ điều kiện sang `diagnosing`. |
+| Quy tắc liên quan | BR-03, BR-14, BR-15. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | User | Mở màn hình hiện trạng. | Hiển thị checklist theo nhóm: ngoại hình, màn hình, camera, loa/mic, nút, cổng, kết nối, nguồn, phụ kiện. |
+| 2 | User | Chọn kết quả từng mục. | Mỗi mục có giá trị rõ ràng: tốt, lỗi, không kiểm tra hoặc ghi chú; không dùng giá trị mơ hồ. |
+| 3 | User | Ghi scratches/dents/cracks/missing accessories. | Note gắn với order; giữ nguyên những gì có trước sửa. |
+| 4 | User | Chụp/upload ảnh. | Kiểm tra MIME, extension, size, checksum; lưu object storage private và metadata DB. |
+| 5 | User | Ghi chú từng ảnh/đánh dấu ảnh quan trọng. | Evidence stage `before_repair`, captured_by và captured_at. |
+| 6 | User | Xác nhận đã kiểm đủ và lưu checklist. | Validate các mục tối thiểu và số ảnh theo policy cửa hàng. |
+| 7 | System | Hoàn tất transaction intake. | Ghi checklist completed, status history/audit; mở CTA “Bắt đầu chẩn đoán”. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Thiếu checklist bắt buộc | Không hoàn tất; hiển thị rõ mục còn thiếu và thông báo “Chưa hoàn tất hiện trạng”. |
+| A2 | Thiếu ảnh tối thiểu hoặc ảnh upload lỗi | Cho retry từng file; không coi ảnh URL ngoài là evidence đã lưu. |
+| A3 | File sai loại/quá lớn/checksum không hợp lệ | Từ chối file, không tạo record rác; audit nếu policy yêu cầu. |
+| A4 | Thiết bị không bật được | Ghi “không thể kiểm tra” kèm lý do, không đánh dấu là “tốt”. |
+| A5 | User không còn quyền hoặc order đã đổi trạng thái | Từ chối update; reload trạng thái hiện tại, không overwrite dữ liệu mới. |
+| A6 | Phát hiện order đang mở trùng device sau khi tạo | Dừng/đưa cảnh báo cho Manager; không xóa evidence đã capture. |
+
+#### Tiêu chí nghiệm thu
+
+- Không có đường dẫn UI/API nào cho phép `received` → `diagnosing` khi intake checklist chưa hoàn tất.
+- Mỗi ảnh có stage, người chụp, thời gian và metadata file.
+- Customer chỉ được xem ảnh baseline qua public link nếu ảnh đó thuộc phạm vi public của quote/order.
+
+### UC-05 — Chẩn đoán và lập báo giá nháp
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Biến hiện trạng thành kết luận kỹ thuật và đề xuất có thể giải thích cho khách. |
+| Actor chính | Technician. |
+| Actor phụ | Manager/Owner theo quyền review. |
+| Trigger | Technician bắt đầu chẩn đoán order đã đủ intake. |
+| Tiền điều kiện | Order ở `diagnosing`; intake evidence/checklist đã hoàn tất; Technician được phân công. |
+| Dữ liệu vào diagnosis | Findings, cause, recommendation, estimated duration, technical note/evidence. |
+| Dữ liệu vào quote | Item type `part`/`labor`/`service`, description, quantity, unit price, replacement reason, estimated duration, warranty note. |
+| Hậu điều kiện | Có diagnosis và quote `draft`; subtotal/total lưu kiểu tiền chính xác; chưa gửi cho khách. |
+| Quy tắc liên quan | BR-04, BR-05, BR-06. |
+
+#### Luồng chính
+
+| Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Technician | Mở order được phân công. | API kiểm tra workspace và responsibility. |
+| 2 | Technician | Đọc issue và baseline evidence. | Không được thay thế lời mô tả gốc bằng diagnosis. |
+| 3 | Technician | Ghi findings/cause/recommendation. | Lưu `diagnosed_by`, `created_at`; diagnosis là quyết định chuyên môn của người dùng. |
+| 4 | Technician | Nhập estimated duration. | Dùng để giải thích cho khách và tính expected completion nếu policy cho phép. |
+| 5 | Technician | Thêm quote items. | Mỗi item có loại, mô tả, quantity, price, reason; không dùng giá âm nếu policy không cho phép. |
+| 6 | System | Tính từng line total, subtotal và total. | Tính lại từ DB/backend; không dùng floating point. |
+| 7 | Technician | Lưu nháp. | Quote version đầu tiên `v1`, status `draft`; có thể sửa trước khi gửi. |
+| 8 | Technician/Manager | Review nội dung. | Kiểm tra item đã phản ánh đúng diagnosis, reason, warranty và thời gian. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Chưa đủ bằng chứng để kết luận | Giữ order `diagnosing`; lưu note cần kiểm tra thêm, không tạo quote gửi khách. |
+| A2 | Quote chưa có item hoặc item thiếu giá/mô tả/lý do | Chỉ cho save draft nếu policy cho phép; không cho phát hành. |
+| A3 | Khách yêu cầu phương án khác | Tạo item/quote mới theo yêu cầu; không sửa mất diagnosis/quote history cũ. |
+| A4 | Cần thay đổi quote đã sent/approved | Dùng UC-14 tạo version mới; quote cũ thành `superseded` sau khi version mới được tạo. |
+| A5 | User không có quyền đổi giá | Cho xem hoặc gửi request review; backend từ chối write trực tiếp. |
+| A6 | Tính tổng backend khác tổng client | Backend là nguồn đúng; trả chi tiết chênh lệch để UI refresh, không ghi theo tổng client. |
+
+#### Tiêu chí nghiệm thu
+
+- Customer có thể hiểu mỗi item cần làm gì và vì sao.
+- Quote draft có thể sửa, nhưng quote đã gửi/duyệt chỉ đọc.
+- Diagnosis không phải kết quả tự động của hệ thống; người chẩn đoán và thời điểm được lưu.
+
+### UC-06 — Gửi báo giá và cấp customer link
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Phát hành một quote snapshot và cung cấp quyền xem/quyết định có giới hạn cho Customer. |
+| Actor chính | Receptionist/Technician được cấp quyền. |
+| Actor phụ | System/API, Object Storage, notification worker nếu có. |
+| Trigger | User bấm “Gửi link khách hàng”. |
+| Tiền điều kiện | Diagnosis hợp lệ; quote hiện hành `draft` có item; customer có phương thức liên hệ; order chưa bị cancel. |
+| Hậu điều kiện thành công | Quote `sent`; customer link có token hash/expiry; order `waiting_for_approval`; status history/audit được ghi trong transaction. |
+| Quy tắc liên quan | BR-05, BR-06, BR-07, BR-14. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | User | Mở quote draft và chọn phát hành. | Hiển thị version, items, subtotal, total, warranty và thời gian dự kiến để review lần cuối. |
+| 2 | System | Khóa quote hiện hành. | Dùng transaction/row lock để tránh hai lần phát hành đồng thời. |
+| 3 | System | Tính lại line total/subtotal/total. | Quote snapshot không phụ thuộc tổng tiền từ browser. |
+| 4 | System | Chuyển quote `draft` → `sent`. | Ghi `sent_at` nếu schema có; quote từ đây chỉ đọc. |
+| 5 | System | Tạo token public ngẫu nhiên và lưu hash. | Link gắn đúng `repair_order_id`, `quote_id`, purpose `quote_review`, expires_at. |
+| 6 | System | Chuyển order → `waiting_for_approval`. | Ghi status history và audit `send_quote/create_link`. |
+| 7 | User | Copy link hoặc gửi qua kênh thủ công. | Không đặt phone/email/total/token trong URL; UI có thể copy link. |
+| 8 | System | Ghi last access khi Customer mở. | Không coi mở link là đã duyệt. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Quote không có item hợp lệ | Từ chối phát hành; chỉ rõ field cần sửa. |
+| A2 | Quote đã sent/approved | Không tạo link mới cho cùng snapshot nếu không có policy; dùng resend link hoặc version mới. |
+| A3 | Link cũ còn active nhưng quote đã superseded | Revoke link cũ hoặc đánh dấu không còn quyết định; tạo link mới cho version hiện hành. |
+| A4 | Gửi thông báo ngoài hệ thống thất bại | Quote/link vẫn được tạo nếu MVP dùng copy thủ công; hiển thị cảnh báo “chưa gửi tin”, không rollback nếu policy đã quy định. |
+| A5 | Concurrent send | Chỉ một transaction thành công; request còn lại nhận trạng thái hiện hành và không tạo duplicate decision scope. |
+| A6 | Link bị lộ/nghi ngờ lộ | Owner/Admin revoke link, tạo link mới và ghi audit reason. |
+
+#### Tiêu chí nghiệm thu
+
+- Một link không thể xem order/quote khác.
+- Quote phát hành hiển thị đúng version và tổng tiền snapshot.
+- Gửi lại link không biến thành một quote version mới nếu nội dung không đổi.
+
+### UC-07 — Customer mở link và xem báo giá/trạng thái
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Cho Customer xem thông tin đủ để hiểu và quyết định, không cần tạo tài khoản. |
+| Actor chính | Customer. |
+| Trigger | Customer mở customer link. |
+| Tiền điều kiện | Token tồn tại sau khi hash; chưa hết hạn; chưa bị revoke; order/quote trong phạm vi public. |
+| Dữ liệu hiển thị | Tên shop, mã phiếu, thiết bị, trạng thái, intake condition/evidence được phép, diagnosis, quote items, total, warranty, expected completion, kênh hỗ trợ. |
+| Hậu điều kiện thành công | Ghi `last_accessed_at`; không thay đổi decision/status chỉ vì xem. |
+| Quy tắc liên quan | BR-01, BR-07, BR-14. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kết quả |
+| ---: | --- | --- | --- |
+| 1 | Customer | Nhấp link. | Trình duyệt gửi token qua HTTPS. |
+| 2 | System | Hash token và tìm link. | Kiểm tra expiry, revoke, purpose, quote/order scope. |
+| 3 | System | Nạp public DTO. | Không trả internal note, token hash, dữ liệu workspace hoặc thông tin không cần thiết. |
+| 4 | System | Ghi access event. | Lưu thời điểm, user agent/IP hash theo policy; không lưu token plaintext. |
+| 5 | Customer | Xem overview/status/condition/diagnosis. | Thuật ngữ dễ hiểu, status current và next step rõ. |
+| 6 | Customer | Mở chi tiết quote. | Thấy version, item, quantity, price, reason, warranty, estimated completion và total. |
+| 7 | Customer | Chọn approve/reject hoặc gọi hỗ trợ. | Điều hướng sang UC-08 hoặc kênh tư vấn; chưa ghi decision nếu chỉ gọi. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Token không tồn tại/sai | Hiển thị “Không tìm thấy liên kết hoặc liên kết không còn hợp lệ”; không tiết lộ order id. |
+| A2 | Link hết hạn | Hiển thị hướng dẫn liên hệ cửa hàng; không cho approve/reject. |
+| A3 | Link bị revoke | Hiển thị link đã thu hồi; nhân viên có thể cấp link mới. |
+| A4 | Quote đã superseded | Hiển thị version mới nếu link mới hợp lệ; quote cũ chỉ đọc/không còn quyết định. |
+| A5 | Order đã handed over/warranty active | Cho xem lịch sử/status theo policy; ẩn nút approve/reject. |
+| A6 | Ảnh/file không tải được | Hiển thị placeholder và retry; không lộ object key/private URL. |
+
+#### Tiêu chí nghiệm thu
+
+- Customer không cần login nhưng không thể dùng link để đọc phiếu khác.
+- Mở link không đổi status thành approved.
+- Customer thấy rõ quote version đang xem và trạng thái link.
+
+### UC-08 — Customer duyệt hoặc từ chối quote
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Ghi nhận quyết định có thể truy vết của Customer đối với đúng báo giá mà họ đã xem. |
+| Actor chính | Customer. |
+| Actor phụ | System/API; nhân viên chỉ xử lý sau khi có decision. |
+| Trigger | Customer chọn “Đồng ý sửa chữa” hoặc “Từ chối/trao đổi”. |
+| Tiền điều kiện | Link hợp lệ; quote `sent`; chưa có decision hợp lệ; quote là version hiện hành của order. |
+| Dữ liệu vào | Decision, customer name, contact snapshot nếu yêu cầu, rejection note nếu từ chối, confirmation action. |
+| Hậu điều kiện approve | Tạo `customer_decision=approved`, quote `approved`, order `approved`, audit actor `customer`. |
+| Hậu điều kiện reject | Tạo `customer_decision=rejected`, quote `rejected`, order `rejected` hoặc chờ xử lý theo policy; ghi lý do nếu có. |
+| Quy tắc liên quan | BR-07, BR-08, BR-09. |
+
+#### Luồng chính: approve
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Customer | Bấm nút duyệt. | UI mở màn hình xác nhận; hiển thị lại version, total và estimated completion. |
+| 2 | Customer | Xác nhận tên/liên hệ và nội dung đồng ý. | Không coi click lần đầu là quyết định cuối nếu còn bước confirmation. |
+| 3 | System | Hash token và khóa quote. | Kiểm tra link chưa hết hạn/revoke, quote `sent`, chưa decision. |
+| 4 | System | Tạo customer decision. | Gắn `quote_id`, `source_link_id`, customer snapshot, `decided_at`. |
+| 5 | System | Cập nhật quote/order. | Quote `approved`; order `approved`; transaction atomic. |
+| 6 | System | Ghi status history/audit. | Actor type `customer`, action approve, quote version, source link. |
+| 7 | Customer | Nhận màn hình thành công. | Nút approve bị khóa; hiển thị “Đã duyệt” và bước tiếp theo. |
+
+#### Luồng chính: reject
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Customer | Chọn từ chối/trao đổi. | Hiển thị form reason tùy chọn hoặc bắt buộc theo policy. |
+| 2 | Customer | Xác nhận từ chối. | Hiển thị version/total đang bị từ chối. |
+| 3 | System | Validate token/quote như approve. | Không cho từ chối quote cũ bằng link đã superseded. |
+| 4 | System | Tạo decision rejected. | Gắn quote/link/time/name/reason. |
+| 5 | System | Cập nhật quote/order. | Quote `rejected`; order `rejected` hoặc flow follow-up theo policy. |
+| 6 | System | Ghi audit/timeline. | Nhân viên có thể thấy reason nhưng không sửa decision gốc. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Customer double-click/refresh sau khi approve | Request thứ hai trả kết quả idempotent; không tạo decision thứ hai. |
+| A2 | Link hết hạn giữa lúc mở form và submit | Từ chối; yêu cầu nhận link mới; không đổi order. |
+| A3 | Quote đã có decision | Khóa nút; hiển thị quyết định đã ghi và version; không cho đổi trực tiếp. |
+| A4 | Quote bị superseded trong lúc Customer đang xem | Submit bị từ chối với lý do version cũ; hiển thị link/version mới nếu có. |
+| A5 | Transaction lỗi | Không được có trạng thái order approved nhưng thiếu customer decision; rollback toàn bộ và cho retry. |
+| A6 | Customer muốn đổi ý sau reject/approve | Không update decision cũ; nhân viên tạo quote version mới hoặc quy trình exception có audit. |
+| A7 | Không thu thập được contact snapshot | Cho phép theo policy nếu token đã xác thực; lưu tối thiểu name/actor và nêu rõ mức tin cậy. |
+
+#### Ngoại lệ: nhân viên xác nhận khách duyệt qua điện thoại
+
+Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây không phải đường chính của MVP public link, nhưng nếu cửa hàng giữ chức năng này thì phải áp dụng các điều kiện sau:
+
+- Chỉ Owner/Admin hoặc role được policy cấp mới được thực hiện.
+- Có modal xác nhận, người xác nhận, thời điểm, quote version, lý do và tham chiếu cuộc gọi/ghi âm nếu policy cho phép.
+- Ghi `actor_type=employee`, không giả mạo thành Customer.
+- Vẫn tạo quyết định gắn đúng `quote_id`; không approve quote cũ.
+- Nếu không có bằng chứng liên hệ hoặc quyền phù hợp, backend phải từ chối dù nút vẫn hiển thị ở UI.
+
+### UC-09 — Bắt đầu và thực hiện sửa chữa
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Thực hiện đúng phần khách đã duyệt và để lại bằng chứng công việc thực tế. |
+| Actor chính | Technician được phân công. |
+| Actor phụ | Manager/Owner, System/API. |
+| Trigger | Technician bấm “Bắt đầu sửa” trên order `approved`. |
+| Tiền điều kiện | Có quote hiện hành `approved` và customer decision approved đúng version; order chưa cancel/handed over. |
+| Dữ liệu vào | Start/end, checklist repair, summary, note, actual parts, before/after photos, exception note. |
+| Hậu điều kiện | Order `repairing` rồi `quality_check`; work log/checklist/evidence sau sửa được lưu; proposed/approved/performed phân biệt rõ. |
+| Quy tắc liên quan | BR-08, BR-14, BR-15. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Technician | Mở order đã approved. | UI hiển thị quote version được duyệt và các hạng mục approved. |
+| 2 | Technician | Bấm bắt đầu sửa. | Backend kiểm tra decision/quote/version trong transaction; order → `repairing`. |
+| 3 | Technician | Bắt đầu work log. | Ghi technician_id, started_at, responsibility `repairer`. |
+| 4 | Technician | Thực hiện checklist repair. | Mỗi mục có pending/done/blocked và note khi cần. |
+| 5 | Technician | Ghi linh kiện thực tế/công việc thực tế. | Nếu khác approved phải dừng và đi qua quote version/exception; không âm thầm thay đổi. |
+| 6 | Technician | Upload ảnh sau sửa và note. | Evidence stage `after_repair`, file private, metadata/checksum hợp lệ. |
+| 7 | Technician | Kết thúc work log. | Có ended_at, summary, note, checklist repair completed. |
+| 8 | System | Chuyển sang QC. | Chỉ khi required work/checklist đủ; ghi status history/audit. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Chưa có approve đúng version | Khóa CTA; trả lỗi nghiệp vụ; không đổi status. |
+| A2 | Cần thêm hạng mục ngoài quote | Dừng hạng mục phát sinh, tạo quote version mới và yêu cầu customer decision lại. |
+| A3 | Linh kiện thực tế khác approved | Ghi discrepancy; không đánh dấu performed hoàn tất cho tới khi được duyệt/exception hợp lệ. |
+| A4 | Sửa thất bại hoặc phát sinh lỗi mới | Ghi note/evidence; chuyển QC hoặc rework theo policy, không tự bàn giao. |
+| A5 | Upload ảnh sau sửa lỗi | Cho retry; không bỏ qua evidence nếu policy yêu cầu ảnh bắt buộc. |
+| A6 | Hai kỹ thuật viên thao tác đồng thời | Lock/assignment policy; không ghi đè work log hoặc responsibility của người khác. |
+| A7 | Mất mạng sau khi bắt đầu | UI cho biết trạng thái chưa đồng bộ; server là nguồn đúng, không tự đánh dấu hoàn tất cục bộ. |
+
+#### Tiêu chí nghiệm thu
+
+- Không có API hợp lệ để bắt đầu sửa khi chưa có decision approved đúng quote version.
+- Work log lưu được ai, bắt đầu/kết thúc khi nào và đã làm gì.
+- UI/API phân biệt đề xuất, đã duyệt, đã thực hiện và đã kiểm tra.
+
+### UC-10 — Kiểm tra chất lượng và xử lý sửa lại
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Xác nhận thiết bị đạt yêu cầu trước khi cho phép bàn giao. |
+| Actor chính | Technician/Quality checker. |
+| Trigger | Work log/checklist repair hoàn tất, order ở `quality_check`. |
+| Tiền điều kiện | Có repair evidence/work log tối thiểu; user có quyền QC. |
+| Dữ liệu vào | Checklist lỗi ban đầu, power boot, chức năng liên quan, lỗi mới, ngoại hình sau sửa, ảnh, limitation note, kết luận pass/fail. |
+| Hậu điều kiện đạt | Checklist `quality_check` completed/pass; order `ready_for_pickup`. |
+| Hậu điều kiện không đạt | Checklist completed/fail; order `repairing`; có reason và hướng rework. |
+| Quy tắc liên quan | BR-10, BR-11, BR-14. |
+
+#### Luồng chính
+
+| Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Quality checker | Mở QC checklist. | Hiển thị issue ban đầu, work đã làm và baseline để so sánh. |
+| 2 | Quality checker | Kiểm tra khởi động/chức năng liên quan. | Ghi pass/fail từng mục, không chỉ ghi kết luận chung. |
+| 3 | Quality checker | Kiểm tra lỗi mới và ngoại hình. | So với before evidence; ghi limitation còn lại nếu có. |
+| 4 | Quality checker | Chụp ảnh sau sửa. | Evidence stage `after_repair`, private object storage. |
+| 5 | Quality checker | Chọn kết luận `passed` hoặc `failed`. | Nếu failed phải có note/reason; nếu passed phải hoàn tất required items. |
+| 6 | System | Lưu checklist và đổi status trong transaction. | Pass → `ready_for_pickup`; fail → `repairing`; ghi actor/time/history/audit. |
+| 7 | System | Cập nhật thông báo nội bộ. | Có thể hiện “sẵn sàng bàn giao” hoặc “cần sửa lại”. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Có mục QC chưa kiểm | Không cho pass; highlight mục thiếu. |
+| A2 | Có lỗi mới | Bắt buộc note, ảnh nếu cần và kết luận fail hoặc limitation được Owner duyệt. |
+| A3 | Không đạt chức năng liên quan | Chuyển `repairing`, mở rework task; không cho handover. |
+| A4 | QC user không phải người được cấp quyền | API trả 403; không tin field role do client gửi. |
+| A5 | QC save thất bại | Không đổi status; cho retry; tránh trạng thái “ready” không có checklist. |
+| A6 | Order đã bị cancel/handover trong lúc QC | Từ chối update, reload trạng thái và yêu cầu xử lý theo exception. |
+
+#### Tiêu chí nghiệm thu
+
+- Không thể chuyển `quality_check` → `ready_for_pickup` khi checklist chưa pass.
+- Không thể chuyển `quality_check` → `handed_over` trực tiếp.
+- QC fail luôn để lại lý do và đưa phiếu về `repairing`.
+
+### UC-11 — Bàn giao thiết bị và kích hoạt bảo hành
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Trả đúng thiết bị/phụ kiện, ghi nhận tình trạng cuối và khởi tạo bảo hành có thể tra cứu. |
+| Actor chính | Receptionist/Front Desk hoặc người có responsibility `handover`. |
+| Actor phụ | Owner/Admin, Customer, System/API. |
+| Trigger | Nhân viên mở phiếu `ready_for_pickup` và bấm “Tạo biên bản bàn giao”. |
+| Tiền điều kiện | QC pass; order ready; chưa có handover record; recipient được xác định. |
+| Dữ liệu vào | Recipient name, handover datetime, returned accessories, final condition, confirmation, warranty duration/end date, note. |
+| Hậu điều kiện thành công | Handover record được tạo; order `handed_over` rồi `warranty_active`; warranty start bằng ngày bàn giao; timeline/audit cập nhật. |
+| Quy tắc liên quan | BR-11, BR-12, BR-15. |
+
+#### Luồng chính
+
+| Bước | Actor/System | Hành động | Kiểm tra và dữ liệu lưu |
+| ---: | --- | --- | --- |
+| 1 | Receptionist | Mở form bàn giao. | Hiển thị quote/đã làm/QC/baseline và accessories nhận vào. |
+| 2 | Receptionist | Xác nhận người nhận. | Nhập recipient name; có thể yêu cầu contact/signature theo policy. |
+| 3 | Receptionist | Đối chiếu và ghi phụ kiện trả. | Cảnh báo thiếu/khác so với intake; không tự xóa dữ liệu nhận vào. |
+| 4 | Receptionist | Ghi final condition và limitation. | So sánh với before/after evidence; đính kèm ảnh handover nếu có. |
+| 5 | Receptionist | Chọn thời hạn bảo hành/terms. | Không dùng “doanh thu/đã thanh toán”; lưu warranty policy. |
+| 6 | System | Chạy transaction bàn giao. | Kiểm tra status ready + QC pass; tạo handover record, evidence `handover`, status `handed_over`. |
+| 7 | System | Tạo warranty. | `start_date` = ngày bàn giao; tính end_date theo policy; status `active`. |
+| 8 | System | Hoàn tất timeline/audit. | Khóa thông tin quan trọng của phiếu; đưa vào lịch sử customer/device. |
+| 9 | Customer/Receptionist | Xác nhận đã nhận máy. | Hiển thị biên bản/tóm tắt bảo hành theo phạm vi public. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | QC chưa pass hoặc thiếu checklist | Không mở submit bàn giao; hiển thị lý do. |
+| A2 | Thiếu phụ kiện so với intake | Bắt buộc note discrepancy và người phê duyệt theo policy; không sửa baseline. |
+| A3 | Người nhận khác customer | Cho phép nếu policy; lưu recipient name và quan hệ/ghi chú nếu cần. |
+| A4 | Khách không ký/xác nhận trực tiếp | Ghi phương thức xác nhận thay thế; Owner/Admin policy quyết định có cho đóng hay không. |
+| A5 | Handover submit bị retry | Transaction idempotent; không tạo hai warranty/handover records. |
+| A6 | Cần kích hoạt bảo hành trước bàn giao | Chỉ Owner/Admin được làm exception, phải ghi reason; mặc định backend từ chối. |
+| A7 | Phiếu đã handed over | Chỉ cho xem/sửa note theo policy; không tạo handover thứ hai hoặc reset warranty âm thầm. |
+
+#### Tiêu chí nghiệm thu
+
+- Không thể bàn giao nếu QC chưa đạt.
+- Warranty start không sớm hơn handover nếu không có exception audit.
+- Customer/device history hiển thị được order, handover và warranty sau khi đóng phiếu.
+
+### UC-12 — Tra cứu lịch sử, timeline và audit
+
+| Trường | Đặc tả |
+| --- | --- |
+| Mục tiêu | Cho nhân viên truy ngược toàn bộ bằng chứng và trách nhiệm khi khách quay lại hoặc có tranh chấp. |
+| Actor chính | Owner/Admin, Manager; Receptionist/Technician trong phạm vi quyền; Customer chỉ xem public subset. |
+| Trigger | Mở customer profile, device profile, order detail hoặc timeline. |
+| Tiền điều kiện | Có quyền đọc entity; query thuộc workspace; public link hợp lệ nếu là Customer. |
+| Dữ liệu hiển thị | Order, status history, work logs, decisions, checklists, evidence, handover, warranty, audit event theo quyền. |
+| Hậu điều kiện | Không chỉnh sửa log gốc; có thể lọc/xem chi tiết/đính kèm signed URL theo hạn. |
+| Quy tắc liên quan | BR-01, BR-14, BR-15. |
+
+#### Luồng chính
+
+| Bước | Actor | Hành động | Kết quả |
+| ---: | --- | --- | --- |
+| 1 | User | Tìm bằng order code, phone, serial/IMEI hoặc customer/device. | Search chỉ trong workspace và theo quyền. |
+| 2 | System | Trả danh sách entity phù hợp. | Không trả phone/email/ảnh ngoài phạm vi quyền. |
+| 3 | User | Mở order detail/timeline. | Timeline chuẩn hóa `occurred_at`, actor, event type, summary, note, attachments. |
+| 4 | System | Tổng hợp dữ liệu từ status history, decision, work log, checklist, evidence, handover, audit. | Sắp xếp theo thời gian và giữ nguồn sự kiện. |
+| 5 | User | Mở ảnh/tài liệu. | Backend cấp signed URL có hạn; không expose object key. |
+| 6 | User | Đối chiếu quote/decision/handover. | Xác định chính xác version khách đã duyệt và người thực hiện. |
+
+#### Luồng thay thế và ngoại lệ
+
+| Mã | Điều kiện | Xử lý |
+| --- | --- | --- |
+| A1 | Không tìm thấy | Empty state không tiết lộ entity khác workspace. |
+| A2 | Nhiều customer trùng tên | Yêu cầu thêm phone/device identifier/order code để chọn đúng. |
+| A3 | Không có quyền xem audit | Hiển thị timeline nghiệp vụ tối thiểu; ẩn metadata nhạy cảm. |
+| A4 | Signed URL hết hạn | Cấp URL mới nếu user còn quyền; không đổi evidence record. |
+| A5 | Dữ liệu timeline thiếu do legacy | Hiển thị nguồn/nhãn dữ liệu chưa đầy đủ; không tự dựng actor/time giả. |
+
+#### Tiêu chí nghiệm thu
+
+- Từ customer/device có thể đi tới các order liên quan.
+- Từ decision có thể truy về đúng link, quote version và order.
+- Timeline không cho phép sửa/xóa trực tiếp event gốc.
+
+## 10. Use case bổ trợ
+
+### UC-13 — Phân công và thay đổi người phụ trách
+
+1. Manager/Owner mở order và chọn trách nhiệm cần phân công: `intake`, `diagnosis`, `primary_technician`, `repairer`, `quality_checker`, `handover`.
+2. System kiểm tra user active, cùng workspace và role phù hợp.
+3. System tạo/cập nhật assignment mới nhưng giữ người đã hoàn thành các bước trước.
+4. Ghi `assigned_at`, `completed_at` và audit; không ghi đè `user_id` của diagnosis/work log/QC/handover đã xảy ra.
+5. Nếu người đang phụ trách bị inactive, order phải xuất hiện ở dashboard cảnh báo để Manager reassign.
+
+### UC-14 — Xử lý link lỗi, quote version mới và phiếu quá hạn
+
+| Tình huống | Hành động chuẩn | Kết quả bắt buộc |
+| --- | --- | --- |
+| Link hết hạn | Revoke link cũ nếu cần, phát hành link mới cho quote hiện hành. | Không tạo decision từ link cũ; audit thời hạn và người tạo. |
+| Link bị lộ | Revoke ngay, báo cho Manager/Owner, tạo link mới. | Link cũ không còn đọc được; không xóa lịch sử access. |
+| Quote cần sửa sau khi gửi/duyệt | Tạo version mới, copy snapshot item rồi chỉnh ở version mới. | Quote cũ immutable/superseded; customer phải quyết định lại. |
+| Khách từ chối nhưng muốn phương án khác | Giữ decision rejected; tạo quote version/trao đổi mới theo policy. | Không đổi decision cũ thành approved. |
+| Phiếu quá hạn | Dashboard gắn cờ, Manager xem nguyên nhân, cập nhật expected time và thông báo khách theo policy. | Có reason/timeline; không tự đổi thành status mới nếu backend không định nghĩa. |
+| Nhân viên bị vô hiệu hóa | Khóa login/nhận phiếu mới; giữ lịch sử cũ; Manager reassign order mở. | Không mất audit và không ghi đè người cũ. |
+
+## 11. Ma trận chức năng và mức độ hỗ trợ của prototype hiện tại
+
+Bảng này giúp phân biệt nghiệp vụ đích với phần UI demo đang có trong `src/ui`.
+
+| Chức năng | Prototype hiện tại | Nghiệp vụ cần có khi triển khai thật | Khoảng cần lưu ý |
+| --- | --- | --- | --- |
+| Dashboard/KPI/filter | Có trong `features/dashboard`; dữ liệu từ mock API. | Query backend theo workspace, status, deadline, technician. | Một số KPI/giá trị đang tĩnh; không coi mock count là dữ liệu thật. |
+| Danh sách và chi tiết order | Có route detail, header, condition, quote, sidebar/timeline. | API detail đầy đủ, RBAC, field động, trạng thái hợp lệ. | `fetchOrderDetail` mock có fallback order đầu tiên; production phải trả not found. |
+| Tạo phiếu | Nút mở modal hướng dẫn và mở phiếu mẫu. | Form customer/device/issue, duplicate check, transaction tạo order. | Chưa phải create flow thực tế. |
+| Ghi hiện trạng/ảnh | Có renderer ảnh mẫu và thông tin hiện trạng. | Checklist intake, upload private, metadata, minimum evidence, khóa trước sửa. | Chưa có form capture/upload hoàn chỉnh. |
+| Diagnosis | Có renderer dữ liệu diagnosis mẫu. | Technician tạo/sửa diagnosis, trách nhiệm, timestamp, evidence. | Chưa có form/API write thật. |
+| Quote | Có bảng item, tổng tiền, version, trạng thái chỉ đọc. | Draft/sent/approved/rejected/superseded, backend recalc, item reason. | Mock có thể tạo version; cần bổ sung luồng phát hành và immutable contract. |
+| Customer link | Có route `#/customer/:id`, customer mobile view. | Token hash, expiry, revoke, rate limit, public DTO. | Route theo order id chỉ phù hợp demo, không đủ an toàn cho production. |
+| Approve/reject | Có action qua public view; có approve qua phone ở detail. | Transaction, idempotency, decision gắn quote/link/version, audit actor. | Mock không thể hiện đầy đủ `quote_id/source_link_id`; cần backend rule. |
+| Repair execution | Có status mẫu trong mock, chưa có màn hình thao tác. | Work log, repair checklist, actual parts, after evidence. | Chưa có use case UI hoàn chỉnh. |
+| Quality check | Có tab/nhãn mẫu trong detail, chưa có form pass/fail. | Checklist QC, required items, fail → repairing. | Chưa có guard chuyển trạng thái thật. |
+| Handover/warranty | Có status/order mẫu và nội dung định hướng trong docs. | Handover transaction, recipient/accessories/final condition, warranty start/end. | Chưa có màn hình và API hoàn chỉnh. |
+| Auth/RBAC/workspace | UI có current user tĩnh trong config. | Auth backend, membership, role, workspace isolation, locked user. | Không được dùng config UI làm cơ chế phân quyền. |
+| Timeline/audit | Có timeline mock trong detail. | Tổng hợp event chuẩn hóa, audit immutable, actor/time/entity. | Mock timeline không phải audit log bảo mật. |
+
+## 12. Bảng acceptance test cấp nghiệp vụ
+
+| ID | Điều kiện kiểm thử | Kết quả mong đợi |
+| --- | --- | --- |
+| AT-01 | Tạo phiếu với customer/device/issue hợp lệ. | Có order code unique, status `received`, intake actor và status history đầu tiên. |
+| AT-02 | Tạo phiếu thiếu issue hoặc device. | Không tạo order; lỗi gắn đúng field. |
+| AT-03 | Chuyển sang diagnosis khi chưa đủ intake. | API từ chối; UI hiển thị mục hiện trạng còn thiếu. |
+| AT-04 | Upload file sai MIME/quá lớn. | File bị từ chối; không tạo evidence giả. |
+| AT-05 | Phát hành quote không có item. | Không chuyển `sent`; không tạo customer link. |
+| AT-06 | Phát hành quote hợp lệ. | Quote `sent`, link hash/expiry tồn tại, order `waiting_for_approval`, audit có send. |
+| AT-07 | Customer mở link hợp lệ. | Xem đúng public DTO; access time được cập nhật; chưa có decision. |
+| AT-08 | Customer mở link hết hạn/revoke. | Không xem/approve; thông báo rõ và không lộ dữ liệu. |
+| AT-09 | Customer approve hai lần. | Chỉ một decision; request lặp idempotent; order chỉ `approved` một lần. |
+| AT-10 | Approve quote version cũ sau khi đã có version mới. | API từ chối; không đổi status order. |
+| AT-11 | Technician bắt đầu sửa khi quote chưa approved. | API từ chối; không tạo work log bắt đầu hoặc không đổi status. |
+| AT-12 | Technician cần thêm hạng mục ngoài approved quote. | Không ghi âm thầm; yêu cầu quote version mới và customer approve lại. |
+| AT-13 | QC chưa hoàn tất nhưng user muốn ready pickup. | API từ chối. |
+| AT-14 | QC fail. | Ghi reason/evidence; order về `repairing`; không được bàn giao. |
+| AT-15 | Handover khi QC pass. | Tạo handover, order `handed_over`, warranty start bằng ngày bàn giao, sau đó `warranty_active`. |
+| AT-16 | Handover retry/concurrent. | Không tạo trùng handover/warranty; transaction idempotent. |
+| AT-17 | Technician gọi API với workspace khác. | 403/404; không đọc/ghi dữ liệu ngoài tenant. |
+| AT-18 | User bị inactive nhưng còn order cũ. | Không login/nhận order mới; lịch sử thao tác cũ vẫn còn; Manager có thể reassign. |
+| AT-19 | Query lịch sử theo serial/device. | Trả đúng các order cùng workspace, sắp xếp theo thời gian, không thiếu handover/warranty hợp lệ. |
+| AT-20 | Phiếu quá hạn nhưng đang `repairing`. | Dashboard gắn cờ overdue và cho xử lý, không làm mất status `repairing`. |
+
+## 13. Các điểm cần giữ nhất quán khi triển khai
+
+1. **Một nguồn dữ liệu trung tâm:** toàn bộ màn hình chỉ đọc từ repair order và các entity liên quan; không tạo state nghiệp vụ độc lập trong từng feature.
+2. **Backend là nơi bảo vệ nghiệp vụ:** frontend không được là nơi duy nhất khóa nút approve, start repair, QC hoặc handover.
+3. **Quote là immutable snapshot:** không update âm thầm quote đã gửi/duyệt; version mới luôn yêu cầu quyết định mới.
+4. **Decision phải truy ngược được:** từ customer decision phải đi được đến source link, quote version và order.
+5. **Evidence có stage:** ảnh trước sửa, chẩn đoán, sau sửa và bàn giao phải phân biệt; không dùng một mảng ảnh chung không có stage.
+6. **Actor không bị ghi đè:** người tiếp nhận, chẩn đoán, sửa, QC và bàn giao phải được lưu riêng theo hành động.
+7. **Public link tối thiểu quyền:** Customer chỉ xem phần cần thiết cho phiếu được cấp; token có expiry/revoke/rate limit.
+8. **Không dùng khái niệm thanh toán trong MVP:** `total` là giá trị báo giá, không phải doanh thu đã thu hoặc COD.
+9. **Cảnh báo quá hạn là dữ liệu dẫn xuất:** dùng để điều phối, không tự thay thế lifecycle status.
+10. **Các màn hình chưa có trong prototype vẫn là phần của target MVP:** tạo phiếu thật, intake checklist, repair checklist, QC, handover/warranty, auth/RBAC và audit phải được thiết kế theo use case trong tài liệu này.
+
+## 14. Tóm tắt luồng end-to-end chuẩn
+
+```text
+Nhân viên đăng nhập
+  → Tạo/tìm customer và device
+  → Tạo repair order (received)
+  → Ghi hiện trạng + ảnh + phụ kiện
+  → Chẩn đoán (diagnosing)
+  → Tạo quote draft
+  → Phát hành quote + customer link (waiting_for_approval)
+  → Customer xem link
+  → Customer approve (approved) hoặc reject (rejected)
+  → Nếu approved: bắt đầu sửa (repairing)
+  → Work log + repair checklist + ảnh sau sửa
+  → QC đạt (ready_for_pickup) hoặc không đạt (quay lại repairing)
+  → Bàn giao + biên bản (handed_over)
+  → Kích hoạt bảo hành (warranty_active)
+  → Customer/device history + timeline/audit
+```
+
+Đây là luồng chuẩn để nghiệm thu MVP. Mọi nhánh rút ngắn, duyệt qua điện thoại, thay đổi báo giá sau khi gửi, phiếu trễ hoặc rework phải được coi là luồng thay thế có quyền, lý do và audit tương ứng.
