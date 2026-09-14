@@ -2,7 +2,7 @@
 
 > Evidence-first repair operations for personal device repair shops.
 
-RepairFlow manages a repair order from device intake through diagnosis, quotation, customer approval, repair, quality control, handover, and warranty. It keeps the evidence trail behind each operational decision visible and reviewable.
+RepairFlow manages a repair order from device intake through diagnosis, quotation, customer approval, repair, quality control, and handover. It keeps the evidence trail behind each operational decision visible and reviewable. Warranty is intentionally deferred to a later module.
 
 [Product workflow](#product-workflow) · [Run RepairFlow yourself](#run-repairflow-yourself) · [v0 documentation](docs/v0/README.md)
 
@@ -17,7 +17,7 @@ The product preserves an evidence trail for four questions:
 1. What condition was the device in when it was received?
 2. What did the technician diagnose and propose?
 3. Which quotation version did the customer approve?
-4. What work, quality checks, handover details, and warranty were recorded?
+4. What work, quality checks, and handover details were recorded?
 
 RepairFlow records and explains operational decisions. It does not diagnose faults automatically or decide prices automatically.
 
@@ -26,7 +26,7 @@ RepairFlow records and explains operational decisions. It does not diagnose faul
 | User | Responsibility in the MVP |
 | --- | --- |
 | Owner / Manager | Monitors operations, assigns staff, handles overdue orders, and reviews history and audit data. |
-| Receptionist / Front Desk | Can receive an optional account with fixed access to assigned intake and handover work; without an account, remains a staff profile. |
+| Receptionist / Front Desk | Can receive an optional account with read-only operational lookup across workspace orders and write access to assigned intake/handover work; without an account, remains a staff profile. |
 | Technician | Can receive an optional account with fixed access to assigned diagnosis, repair, and quality-check work; without an account, remains a staff profile. |
 | Customer | Opens an expiring or revocable public link to review and approve or reject a quotation. No account. |
 
@@ -43,7 +43,6 @@ flowchart LR
     E --> F[Repair]
     F --> G[Quality check]
     G --> H[Handover]
-    H --> I[Warranty]
 ```
 
 ## Key features
@@ -62,7 +61,7 @@ Let customers review, approve, or reject a quotation through a time-limited and 
 
 ### **Repair and quality control**
 
-Track repair work, checklists, rework, quality checks, handover, and warranty information.
+Track repair work, checklists, rework, quality checks, and handover information.
 
 ### **Timeline and audit history**
 
@@ -76,12 +75,12 @@ Keep the customer, device, repair order, and operational history connected throu
 - Intake checklist, accessories, and before-repair evidence.
 - Diagnosis and versioned quotations.
 - Time-limited customer links and customer approval or rejection.
-- Repair checklist, quality check, handover, and warranty.
+- Repair checklist, quality check, and handover.
 - Timeline, audit trail, and customer or device history.
 
 ### Out of scope for v0
 
-Inventory, payment and accounting, AI diagnosis, automatic price recommendations, multi-branch management, and long-lived customer accounts.
+Inventory, payment and accounting, AI diagnosis, automatic price recommendations, multi-branch management, long-lived customer accounts, and warranty/claims. Warranty is deferred to a later module.
 
 ## Current project status
 
@@ -130,7 +129,7 @@ Do not start C1–C10 business implementation until Product closes the required 
 | C5 | Quotation publishing and customer decision | `BLOCKED BY D0` |
 | C6 | Repair execution | `BLOCKED BY D0` |
 | C7 | Quality control and rework | `BLOCKED BY D0` |
-| C8 | Handover, warranty, and history | `BLOCKED BY D0` |
+| C8 | Handover and history | `BLOCKED BY D0` |
 | C9 | Dashboard, filtering, and operational views | `BLOCKED BY D0` |
 | C10 | Local hardening and final verification | `BLOCKED BY D0` |
 
@@ -146,6 +145,7 @@ Read the active v0 documents in order. The status below describes the current do
 | 05 | [Database requirements](docs/v0/05-database-requirements.md) | `ACTIVE — open decisions remain` | Entities, schema, constraints, indexes, and transaction guidance. |
 | 06 | [UI requirements](docs/v0/06-ui-requirements.md) | `ACTIVE — prototype baseline` | Screens, UX flows, UI states, and acceptance criteria. |
 | 07 | [Authentication and authorization](docs/v0/07-authentication-and-authorization.md) | `DECIDED — minimum scope` | Account scope, role permissions, data visibility, and auth boundaries. |
+| 08 | [UI design blueprint and Stitch handoff](docs/v0/08-ui-design-blueprint-and-stitch-handoff.md) | `DECIDED — UI direction and handoff baseline` | Visual screen inventory, Stitch prompt workflow, viewport targets, and Antigravity handoff. |
 
 The [documentation guide](docs/README.md) defines the authority of each document and the required decision labels.
 
@@ -225,7 +225,8 @@ pytest
 │       ├── 04-architecture-c4-arc42.md
 │       ├── 05-database-requirements.md
 │       ├── 06-ui-requirements.md
-│       └── 07-authentication-and-authorization.md
+│       ├── 07-authentication-and-authorization.md
+│       └── 08-ui-design-blueprint-and-stitch-handoff.md
 ├── plans/                            # LLM implementation plans
 ├── scripts/                          # Build and development scripts
 └── assets/                           # Product and prototype assets

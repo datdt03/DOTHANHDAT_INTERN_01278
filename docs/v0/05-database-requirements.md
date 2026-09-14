@@ -9,7 +9,7 @@ Database phải lưu được toàn bộ chuỗi có thể kiểm chứng:
 ```text
 Workspace → Khách hàng → Thiết bị → Phiếu sửa chữa
     → Hiện trạng → Chẩn đoán → Báo giá → Quyết định khách hàng
-    → Sửa chữa → Kiểm tra chất lượng → Bàn giao → Bảo hành
+    → Sửa chữa → Kiểm tra chất lượng → Bàn giao
 ```
 
 Phạm vi bao gồm:
@@ -21,7 +21,7 @@ Phạm vi bao gồm:
 - Chẩn đoán, báo giá theo phiên bản và quyết định của khách.
 - Link public có thời hạn/thu hồi.
 - Nhật ký sửa chữa, checklist, kiểm tra chất lượng.
-- Bàn giao, bảo hành, lịch sử trạng thái và audit log.
+- Bàn giao, lịch sử trạng thái và audit log.
 - Index, constraint, transaction và quy tắc cô lập dữ liệu theo workspace.
 
 Không bao gồm trong MVP:
@@ -109,15 +109,24 @@ repair_order_status:
     waiting_for_approval
     approved
     repairing
+    cancellation_requested
     quality_check
     ready_for_pickup
     handed_over
-    warranty_active
     rejected
+    ready_for_return
+    returned
     cancelled
 ```
 
-`rejected` dùng khi khách từ chối báo giá. `cancelled` dùng khi cửa hàng dừng phiếu vì lý do khác.
+`rejected` dùng khi khách không đồng ý báo giá sau khi đã có kết quả chẩn đoán.
+Customer có thể yêu cầu hủy trước khi Technician bắt đầu sửa chữa thực tế;
+Receptionist ghi nhận và thực hiện trong phạm vi được giao. Khi order đang
+`repairing`, yêu cầu phải qua `cancellation_requested` và được người chịu
+trách nhiệm hiện tại xác nhận.
+`rejected` đi qua `ready_for_return` → `returned` nếu không sửa chữa.
+`cancelled` là trạng thái kết thúc, không có chuyển tiếp `reopen`; nếu khách
+quay lại phải tạo repair order mới.
 
 ### 3.3. Trách nhiệm nhân viên và bằng chứng
 
@@ -148,18 +157,19 @@ customer_decision:
 
 Ghi chú trao đổi hoặc lý do từ chối lưu trong cột `note`, không tạo thêm trạng thái nếu chưa có yêu cầu nghiệp vụ riêng.
 
-### 3.5. Link, audit và bảo hành
+### 3.5. Link và audit
 
 ```text
 customer_link_purpose:
     quote_review | status_tracking
 
-warranty_status:
-    active | expired | void
-
 actor_type:
     employee | customer | system
 ```
+
+Warranty không thuộc schema MVP: không có `warranty_status`, bảng warranty,
+claim hoặc bước kích hoạt. Module này sẽ được thiết kế riêng ở giai đoạn sau
+khi chính sách theo workspace, dịch vụ và linh kiện được chốt.
 
 ## 4. ERD tổng thể
 
@@ -226,7 +236,7 @@ mapping tới staff profile khi nhân sự cần đăng nhập.
 | --- | --- | --- | --- | --- |
 | `id` | `uuid` | Không | — | PK |
 | `name` | `varchar(160)` | Không | — | Tên hiển thị |
-| `email` | `citext` hoặc `varchar(320)` | Có | `NULL` | Email liên hệ; chỉ dùng làm login identifier nếu access module chọn email |
+| `email` | `citext` hoặc `varchar(320)` | Có | `NULL` | Email liên hệ; là login identifier của access principal trong MVP khi account được cấp |
 | `phone` | `varchar(32)` | Có | `NULL` | Số điện thoại nhân viên |
 | `status` | `varchar(16)` | Không | `'active'` | `active`, `inactive`, `locked` |
 | `last_login_at` | `timestamptz` | Có | `NULL` | Legacy/optional; profile chưa được cấp account sẽ không có login |
@@ -308,6 +318,8 @@ Phiếu sửa chữa là entity trung tâm của toàn bộ nghiệp vụ.
 | `received_at` | `timestamptz` | Không | `now()` | Thời điểm tiếp nhận |
 | `expected_completed_at` | `timestamptz` | Có | `NULL` | Thời gian dự kiến hoàn tất |
 | `completed_at` | `timestamptz` | Có | `NULL` | Thời điểm hoàn tất nghiệp vụ |
+| `cancelled_at` | `timestamptz` | Có | `NULL` | Thời điểm hủy; bắt buộc có khi `status = 'cancelled'` |
+| `cancellation_reason` | `text` | Có | `NULL` | Lý do hủy; bắt buộc có khi `status = 'cancelled'` |
 | `created_by` | `uuid` | Không | — | FK → `users.id` |
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 | `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật |
@@ -333,6 +345,11 @@ Ràng buộc đề xuất:
 
 - `unique(repair_order_id, user_id, responsibility)`.
 - Tối đa một bản ghi `is_primary = true` cho mỗi `(repair_order_id, responsibility)`.
+
+Chỉ Owner/Manager được thêm, thay đổi hoặc kết thúc assignment. Có thể thay
+thế trực tiếp người đang xử lý khi không đủ kỹ năng hoặc không phù hợp, nhưng
+phải kết thúc assignment cũ với lý do và tạo assignment mới; không xóa bản ghi
+cũ hoặc lịch sử audit.
 
 ### 5.8. `repair_evidence`
 
@@ -496,28 +513,21 @@ Biên bản bàn giao thiết bị.
 | `id` | `uuid` | Không | — | PK |
 | `repair_order_id` | `uuid` | Không | — | FK → `repair_orders.id` |
 | `recipient_name` | `varchar(160)` | Không | — | Người nhận thiết bị |
+| `recipient_contact` | `varchar(64)` | Có | `NULL` | Thông tin liên hệ cơ bản của người nhận |
 | `returned_accessories` | `jsonb` | Không | `'[]'` | Danh sách phụ kiện trả lại |
 | `final_condition_note` | `text` | Không | — | Tình trạng cuối |
+| `recipient_signature_ref` | `varchar(255)` | Không | — | Tham chiếu chữ ký xác nhận đã nhận máy |
 | `confirmed_at` | `timestamptz` | Không | `now()` | Thời điểm xác nhận |
 | `handed_over_by` | `uuid` | Không | — | FK → `users.id` |
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 
 MVP chỉ cho phép một biên bản bàn giao hợp lệ cuối cùng cho mỗi phiếu; bản sửa đổi phải tạo audit log hoặc version riêng trước khi mở rộng.
 
-### 5.17. `warranties`
+### 5.17. Future module — Warranty (không thuộc schema MVP)
 
-Lưu chính sách và thời hạn bảo hành được kích hoạt khi bàn giao.
-
-| Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
-| --- | --- | --- | --- | --- |
-| `id` | `uuid` | Không | — | PK |
-| `repair_order_id` | `uuid` | Không | — | FK → `repair_orders.id` |
-| `start_date` | `date` | Không | — | Mặc định bằng ngày bàn giao |
-| `end_date` | `date` | Không | — | Phải lớn hơn hoặc bằng `start_date` |
-| `warranty_terms` | `text` | Không | — | Điều khoản hiển thị |
-| `status` | `varchar(16)` | Không | `'active'` | `active`, `expired`, `void` |
-| `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
-| `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật |
+Không tạo bảng `warranties` trong schema MVP và không tạo foreign key từ
+`repair_orders` sang module này. Khi mở rộng, cần đặc tả riêng policy áp dụng,
+thời hạn, điều kiện loại trừ, claim, quyền xem/sửa và ảnh hưởng tới timeline.
 
 ### 5.18. `status_history`
 
@@ -721,7 +731,7 @@ erDiagram
     CUSTOMER_LINKS ||--o{ CUSTOMER_DECISIONS : sources
 ```
 
-### 6.5. Sửa chữa, QC, bàn giao và bảo hành
+### 6.5. Sửa chữa, QC và bàn giao
 
 ```mermaid
 erDiagram
@@ -756,20 +766,12 @@ erDiagram
         varchar recipient_name
         timestamptz confirmed_at
     }
-    WARRANTIES {
-        uuid id PK
-        uuid repair_order_id FK
-        date start_date
-        date end_date
-        varchar status
-    }
     REPAIR_ORDERS ||--o{ REPAIR_WORK_LOGS : records
     USERS ||--o{ REPAIR_WORK_LOGS : performs
     REPAIR_ORDERS ||--o{ CHECKLISTS : uses
     USERS ||--o{ CHECKLISTS : completes
     REPAIR_ORDERS ||--o{ HANDOVER_RECORDS : has
     USERS ||--o{ HANDOVER_RECORDS : hands_over
-    REPAIR_ORDERS ||--o{ WARRANTIES : activates
 ```
 
 ## 7. Bảng quan hệ và chính sách khóa ngoại
@@ -804,7 +806,6 @@ erDiagram
 | `checklists` | `completed_by` | `users` | N:1 | `RESTRICT` | Giữ người hoàn tất |
 | `handover_records` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Bàn giao là bằng chứng |
 | `handover_records` | `handed_over_by` | `users` | N:1 | `RESTRICT` | Giữ người bàn giao |
-| `warranties` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Bảo hành gắn với phiếu |
 | `status_history` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Timeline bất biến |
 | `status_history` | `changed_by` | `users` | N:1 | `SET NULL` | Cho phép giữ log nếu user bị xóa khỏi hệ thống auth |
 | `audit_logs` | `workspace_id` | `workspaces` | N:1 | `RESTRICT` | Audit thuộc tenant |
@@ -914,6 +915,8 @@ Trong một transaction:
 8. Ghi audit log với actor type `customer`.
 
 Không cho phép approve hai lần hoặc approve quote cũ đã bị `superseded`.
+Một customer decision áp dụng cho toàn bộ quote version; không lưu quyết định
+approve/reject riêng cho từng `quote_item` trong MVP.
 
 ### 9.5. Tạo phiên bản báo giá mới
 
@@ -926,6 +929,15 @@ Khi quote đã gửi/duyệt cần thay đổi:
 5. Tạo link mới khi gửi.
 6. Yêu cầu quyết định mới của khách.
 
+Thương lượng giảm giá hoặc bỏ bớt hạng mục sửa chữa vẫn dùng cùng
+`repair_order_id`; không tạo order mới. Quote cũ được giữ nguyên để truy vết.
+Customer trao đổi qua điện thoại hoặc Zalo; Technician điều chỉnh phần kỹ
+thuật/hạng mục và tạo bản nháp version mới, Receptionist chủ yếu điều chỉnh
+giá/chiết khấu và gửi version mới sau khi được kiểm tra theo quyền.
+Nếu quote hiện tại đã `rejected` nhưng order chưa `returned`, cho phép tạo
+version mới trên cùng order và chuyển lại `waiting_for_approval`. Sau khi order
+đã `returned`, không tạo quote version mới trên order cũ.
+
 ### 9.6. Bắt đầu sửa chữa
 
 Chỉ cho phép chuyển sang `repairing` khi:
@@ -935,7 +947,48 @@ Chỉ cho phép chuyển sang `repairing` khi:
 - Quyết định gắn với đúng version quote.
 - Phiếu không ở trạng thái `cancelled` hoặc `handed_over`.
 
-### 9.7. Hoàn tất quality check và bàn giao
+### 9.7. Hủy phiếu và hoàn trả
+
+Trước khi Technician bắt đầu sửa chữa thực tế, cho phép chuyển repair order từ
+`received`, `diagnosing`, `waiting_for_approval` hoặc `approved` sang
+`cancelled`.
+
+Trong một transaction:
+
+1. Khóa repair order và kiểm tra order vẫn ở một trạng thái trước `repairing`.
+2. Kiểm tra yêu cầu đến từ Customer và được Receptionist ghi nhận/thực hiện,
+   hoặc actor nội bộ có quyền xử lý theo trách nhiệm của phiếu. Customer không
+   tự chuyển trạng thái nội bộ nếu chưa qua bước ghi nhận phù hợp.
+3. Kiểm tra `cancellation_reason` không rỗng.
+4. Cập nhật `status = 'cancelled'`, `cancelled_at` và
+   `cancellation_reason`.
+5. Ghi `status_history` và `audit_logs` với actor, thời điểm và lý do.
+
+Nếu order đã ở `repairing`, API không chuyển thẳng sang `cancelled`; phải tạo
+`cancellation_requested` và chờ Technician hoặc Receptionist đang chịu trách
+nhiệm mục tiêu hiện tại xác nhận. Technician phụ trách xác nhận việc dừng sửa;
+Owner có thể xác nhận ngoại lệ. Receptionist không xác nhận quyết định dừng
+sửa. Khi xác nhận, ghi nhận tình trạng hiện tại, chuyển sang
+`ready_for_return`, sau đó tạo biên bản trả máy và chuyển sang `returned`.
+Receptionist hoàn tất bước trả máy; account thực hiện có thể khác người đã
+tiếp nhận hoặc ghi nhận yêu cầu, miễn là cùng role và có quyền phù hợp.
+
+Nếu yêu cầu bị từ chối, order tiếp tục ở `repairing`, phải ghi lý do từ chối
+và không tạo `returned` do hủy.
+
+Nếu order đã ở `quality_check` hoặc xa hơn, không dùng luồng hủy; xử lý theo
+luồng hoàn tất hoặc hoàn trả tương ứng. Không xóa repair order, evidence hoặc
+lịch sử liên quan. Không cho phép cập nhật thêm diagnosis, quote hoặc work log
+vào repair order đã `cancelled` hoặc `returned`.
+
+### 9.8. Hoàn tất hoàn trả
+
+Chỉ cho phép chuyển `ready_for_return` sang `returned` khi đã có
+`handover_records` ghi nhận người nhận, thông tin cơ bản, tình trạng thiết bị,
+lý do hoàn trả, xác nhận Customer đã nhận máy và chữ ký. Người thực hiện có
+thể là Receptionist khác cùng role với người tiếp nhận ban đầu.
+
+### 9.9. Hoàn tất quality check và bàn giao
 
 Chỉ cho phép `ready_for_pickup` khi checklist `quality_check` đã hoàn tất và kết luận là `passed`.
 
@@ -945,9 +998,7 @@ Trong transaction bàn giao:
 2. Tạo `handover_records`.
 3. Tạo bằng chứng giai đoạn `handover` nếu có.
 4. Chuyển phiếu sang `handed_over`.
-5. Tạo `warranties` với `start_date` bằng ngày bàn giao.
-6. Chuyển trạng thái sang `warranty_active` nếu chính sách của cửa hàng kích hoạt ngay.
-7. Ghi timeline và audit log.
+5. Ghi timeline và audit log.
 
 ## 10. Bảo mật dữ liệu
 
@@ -958,7 +1009,7 @@ Trong transaction bàn giao:
 - Không đặt phone, email, quote total hoặc token vào URL.
 - Rate limit endpoint public và endpoint quyết định báo giá.
 - Audit log không cho nhân viên thường update/delete.
-- Ghi audit cho: gửi link, mở link, duyệt/từ chối quote, thu hồi link, tạo quote version, đổi trạng thái ngoại lệ, sửa handover và thay đổi phân quyền.
+- Ghi audit cho: gửi link, mở link, duyệt/từ chối quote, thu hồi link, tạo quote version, hủy phiếu, đổi trạng thái ngoại lệ, sửa handover và thay đổi phân quyền.
 
 ## 11. Query mẫu theo use case
 
@@ -981,7 +1032,8 @@ JOIN repair_order_staff ros
 WHERE ro.workspace_id = :workspace_id
   AND ros.user_id = :user_id
   AND ros.responsibility IN ('primary_technician', 'repairer')
-  AND ro.status NOT IN ('handed_over', 'warranty_active', 'cancelled');
+  AND ro.status NOT IN ('handed_over', 'cancelled',
+                       'rejected', 'ready_for_return', 'returned');
 ```
 
 ### Lịch sử theo thiết bị
@@ -1022,13 +1074,16 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 6. `quotes`, `quote_items`.
 7. `customer_links`, `customer_decisions`.
 8. `repair_work_logs`, `checklists`.
-9. `handover_records`, `warranties`.
+9. `handover_records`.
 10. `status_history`, `audit_logs`.
 11. Index, unique constraint và partial index.
 
 ### Trạng thái triển khai migration
 
-MVP hiện dùng SQL versioned migrations với runner tại `src/db/migrate.py`; các version đã triển khai tại `src/db/migrations/versions/`:
+Phạm vi dưới đây là schema target của MVP. Một số migration/prototype hiện tại
+có thể còn tham chiếu warranty legacy; các tham chiếu đó phải được loại khỏi
+runtime/schema trước khi mở cluster nghiệp vụ. MVP dùng SQL versioned migrations
+với runner tại `src/db/migrate.py`:
 
 | Version | Phạm vi |
 | --- | --- |
@@ -1036,7 +1091,7 @@ MVP hiện dùng SQL versioned migrations với runner tại `src/db/migrate.py`
 | `0002_customers_devices_orders` | Customer, device, repair order và staff assignment |
 | `0003_evidence_diagnosis_quotes` | Evidence, diagnosis, quote và quote item |
 | `0004_public_links_decisions` | Customer link và customer decision |
-| `0005_execution_handover` | Work log, checklist, handover và warranty |
+| `0005_execution_handover` | Work log, checklist và handover |
 | `0006_status_audit_indexes` | Status history, audit log và index/unique index |
 
 Migration access module phải ghi rõ mapping credential/session với staff profile,
@@ -1063,7 +1118,8 @@ Seed không được dùng token public cố định trong môi trường thật
 - Quyết định khách luôn tham chiếu đến một quote version và một customer link.
 - Người thực hiện từng giai đoạn được lưu bằng FK riêng, không ghi đè lịch sử.
 - `status_history` phục vụ timeline; `audit_logs` phục vụ bảo mật và truy vết.
-- Bảo hành bắt đầu từ ngày bàn giao, trừ khi Owner/Manager ghi nhận ngoại lệ.
+- Warranty không thuộc schema hoặc workflow MVP; module riêng sẽ được thiết kế
+  ở giai đoạn sau.
 - Access principal có thể thuộc Owner/Manager/Receptionist/Technician; `users`/
   membership không mặc định là account nếu chưa được cấp mapping.
 - MVP không dùng các trường “doanh thu đã thu”, “COD” hoặc “thanh toán” nếu chưa có module thanh toán.

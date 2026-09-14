@@ -29,7 +29,7 @@ rectangle "RepairFlow" {
             usecase "Phát hành báo giá\nvà cấp customer link" as publish
             usecase "Thực hiện\nsửa chữa" as repair
             usecase "Kiểm tra\nchất lượng" as quality
-            usecase "Bàn giao và kích hoạt\nbảo hành" as handover
+            usecase "Bàn giao" as handover
         }
     }
 

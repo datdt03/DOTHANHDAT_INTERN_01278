@@ -18,6 +18,10 @@ Read [the documentation guide](../README.md) first. It defines the documentation
 - C1–C10 business flows are not implemented; the UI remains a prototype backed by mock data.
 - The decision backlog has 73 items: 44 P0 and 29 P1 items without formal closure.
 - Owner, Manager, Receptionist and Technician may receive accounts with fixed role and assignment access. Staff profiles without accounts have no session; Customer has no long-lived account and uses a public link. Detailed scope is in [07-authentication-and-authorization.md](./07-authentication-and-authorization.md).
+- Warranty is explicitly deferred from the v0 workflow, schema, UI and permission model; it will be designed as a separate module later.
+- UI direction, role-aware navigation, Receptionist operational lookup, viewport
+  targets, and the Stitch/Antigravity handoff process are recorded in
+  [08-ui-design-blueprint-and-stitch-handoff.md](./08-ui-design-blueprint-and-stitch-handoff.md).
 
 Do not create an API contract, API handoff, or release documentation without a specific request and the corresponding Product decision.
 
@@ -34,6 +38,7 @@ Read the active documents in this order:
 | 05 | [Database requirements](./05-database-requirements.md) | `ACTIVE — open decisions remain` | Data model, ERD, constraints, indexes, and transaction guidance. |
 | 06 | [UI requirements](./06-ui-requirements.md) | `ACTIVE — prototype baseline` | Screens, UX flows, UI states, and acceptance criteria. |
 | 07 | [Authentication and authorization](./07-authentication-and-authorization.md) | `DECIDED — minimum scope` | Account scope, role permissions, data visibility, and auth boundaries. |
+| 08 | [UI design blueprint and Stitch handoff](./08-ui-design-blueprint-and-stitch-handoff.md) | `DECIDED — UI direction and handoff baseline` | Visual screen inventory, Stitch prompt workflow, viewport targets, and Antigravity handoff. |
 
 Document status describes the state of the document. Requirement labels inside the documents must still use `DECIDED`, `OPEN`, `PROPOSED`, `DRAFT`, or `ARCHIVED` correctly.
 

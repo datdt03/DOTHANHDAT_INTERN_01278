@@ -8,7 +8,7 @@ Person(owner, "Owner / Manager", "Đăng nhập, quản lý workspace và điề
 Person(receptionist, "Receptionist / Front Desk", "Account tùy chọn; ghi nhận tiếp nhận, hiện trạng, phụ kiện và bàn giao theo quyền")
 Person(technician, "Technician", "Account tùy chọn; chẩn đoán, lập báo giá, sửa chữa và kiểm tra chất lượng theo assignment")
 Person(customer, "Customer", "Xem chẩn đoán, báo giá và duyệt hoặc từ chối qua customer link")
-System(repairflow, "RepairFlow", "Quản lý vòng đời phiếu sửa chữa, evidence, quote, approval, QC, handover, warranty và audit")
+System(repairflow, "RepairFlow", "Quản lý vòng đời phiếu sửa chữa, evidence, quote, approval, QC, handover và audit")
 
 Rel(owner, repairflow, "Quản lý vận hành và dữ liệu")
 Rel(receptionist, repairflow, "Ghi nhận và điều phối")

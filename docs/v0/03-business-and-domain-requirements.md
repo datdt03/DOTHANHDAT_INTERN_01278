@@ -6,7 +6,7 @@ RepairFlow là hệ thống quản lý một chuỗi sửa chữa có thể ki�
 
 ```text
 Tiếp nhận → Ghi nhận hiện trạng → Chẩn đoán → Báo giá → Khách duyệt
-→ Phân công sửa → Kiểm tra chất lượng → Bàn giao → Bảo hành
+→ Phân công sửa → Kiểm tra chất lượng → Bàn giao
 ```
 
 Mỗi phiếu sửa chữa là nguồn dữ liệu trung tâm. Hệ thống phải trả lời được:
@@ -16,7 +16,7 @@ Mỗi phiếu sửa chữa là nguồn dữ liệu trung tâm. Hệ thống ph�
 - Trước khi sửa thiết bị có tình trạng gì?
 - Khách đã duyệt chính xác báo giá phiên bản nào?
 - Công việc nào đã thực hiện và kết quả kiểm tra ra sao?
-- Thiết bị được bàn giao khi nào và bảo hành đến ngày nào?
+- Thiết bị được bàn giao khi nào và tình trạng cuối ra sao?
 
 MVP hỗ trợ một cửa hàng hoặc một kỹ thuật viên độc lập, nhưng dữ liệu được thiết kế theo `workspace` để có thể mở rộng nhiều nhân viên sau này.
 
@@ -69,6 +69,9 @@ quyền cố định và giới hạn theo workspace/assignment:
 - Khách hàng không đăng nhập; chỉ dùng public link token có hạn dùng và có thể thu hồi.
 - Không mở dashboard/API nội bộ công khai. Môi trường deploy phải yêu cầu
   session của access principal hợp lệ.
+- Receptionist được tra cứu operational summary của mọi repair order trong
+  cùng workspace ở chế độ read-only để hỗ trợ khách hàng; quyền ghi vẫn theo
+  assignment/responsibility.
 
 Chi tiết scope account và permission tối thiểu nằm trong
 [07-authentication-and-authorization.md](./07-authentication-and-authorization.md).
@@ -96,6 +99,8 @@ Chi tiết scope account và permission tối thiểu nằm trong
 - Tiếp nhận khách và thiết bị.
 - Tạo phiếu, ghi nhận hiện trạng, phụ kiện và hình ảnh.
 - Gửi link báo giá và cập nhật bàn giao.
+- Tra cứu tiến độ, giai đoạn xử lý, tóm tắt lỗi và thời gian dự kiến của mọi
+  phiếu để trả lời khách; phần tra cứu này không có quyền cập nhật.
 - Không tự ý sửa chẩn đoán hoặc báo giá đã được duyệt nếu không có quyền.
 - Có thể được cấp account với quyền cố định cho order intake/handover được
   giao; nếu chưa có account thì chỉ là staff profile.
@@ -115,6 +120,8 @@ Chi tiết scope account và permission tối thiểu nằm trong
 - Truy cập phiếu thông qua link bảo mật.
 - Xem thông tin cần thiết, báo giá và trạng thái.
 - Đồng ý hoặc từ chối một phiên bản báo giá.
+- Gửi yêu cầu hủy trước khi bắt đầu sửa; Receptionist ghi nhận và thực hiện
+  thay đổi trạng thái theo quy định.
 
 ### Quy tắc phân quyền
 
@@ -124,7 +131,8 @@ Chi tiết scope account và permission tối thiểu nằm trong
 - Không ghi đè `user_id` của người đã thực hiện một hành động.
 - Chỉ access principal active có role và membership hợp lệ được gọi API nội bộ.
 - Owner/Manager có thể xem dữ liệu vận hành trong workspace theo quyền;
-  Receptionist/Technician bị giới hạn bởi role và assignment.
+  Receptionist được xem operational projection toàn workspace nhưng thao tác
+  ghi và dữ liệu kỹ thuật chi tiết vẫn bị giới hạn bởi role/assignment.
 
 ## 4. Xác định người chịu trách nhiệm
 
@@ -140,7 +148,7 @@ Phiếu cần phân biệt:
 - Người kiểm tra chất lượng.
 - Người bàn giao.
 
-Đề xuất dùng bảng `repair_order_staff` để hỗ trợ một hoặc nhiều nhân viên cho một phiếu:
+Dùng bảng `repair_order_staff` để hỗ trợ một hoặc nhiều nhân viên cho một phiếu:
 
 ```text
 repair_order_staff
@@ -154,7 +162,7 @@ repair_order_staff
     note
 ```
 
-`responsibility` có thể gồm:
+Trong MVP, `responsibility` gồm:
 
 ```text
 intake
@@ -164,6 +172,15 @@ repairer
 quality_checker
 handover
 ```
+
+Owner và Manager có quyền phân công, thay đổi người phụ trách và xác định
+responsibility/kết quả cần đạt cho từng phiếu. Owner/Manager được phép thay thế
+người phụ trách trực tiếp khi nhận thấy người hiện tại chưa đủ kỹ năng hoặc
+không phù hợp với task. Việc thay thế phải kết thúc assignment cũ với lý do,
+gán người mới và giữ nguyên assignment, thao tác cùng lịch sử audit trước đó;
+không xóa hoặc ghi đè dữ liệu đã phát sinh. Account hoặc staff profile bị vô
+hiệu hóa không được nhận assignment mới, nhưng mọi assignment và thao tác trong
+quá khứ vẫn được giữ.
 
 Ngoài ra, các bảng `diagnoses`, `checklists`, `repair_work_logs`, `handover_records` và `status_history` đều phải có người thực hiện và thời điểm thực hiện. Như vậy hệ thống có thể hiển thị timeline kiểu:
 
@@ -253,6 +270,8 @@ repair_orders
     received_at
     expected_completed_at
     completed_at
+    cancelled_at
+    cancellation_reason
     created_by
     created_at
     updated_at
@@ -325,6 +344,20 @@ customer_decisions
 ```
 
 Khi báo giá đã gửi hoặc đã được duyệt, không sửa trực tiếp các dòng cũ. Nếu có thay đổi, tạo báo giá mới với `version` mới và yêu cầu khách xác nhận lại.
+Việc thương lượng giảm giá hoặc bỏ bớt hạng mục sửa chữa vẫn thuộc cùng
+repair order; chỉ tạo quote version mới, giữ nguyên quote cũ và yêu cầu
+Customer quyết định lại version mới.
+Customer chỉ duyệt hoặc từ chối toàn bộ quote version hiện hành; không có
+approve từng item trong MVP.
+Trao đổi thương lượng có thể diễn ra qua điện thoại hoặc Zalo. Customer chỉ
+thông báo chưa chấp thuận và yêu cầu thay đổi; Technician điều chỉnh phần kỹ
+thuật/hạng mục khi cần và tạo bản nháp version mới, còn Receptionist là người
+chủ yếu điều chỉnh giá/chiết khấu và gửi version mới cho Customer theo quyền
+được cấp. Nếu quote hiện tại đã `rejected` nhưng thiết bị chưa được hoàn trả,
+cùng repair order vẫn được tạo quote version mới và quay lại
+`waiting_for_approval`; sau khi order đã `returned` thì không tạo quote mới
+trên order cũ. MVP không lưu communication log của phone/Zalo; snapshot item,
+giá, version, actor cập nhật và audit là nguồn ghi nhận chính thức.
 
 ### Link công khai cho khách
 
@@ -343,7 +376,7 @@ customer_links
 
 Link phải giới hạn đúng phạm vi dữ liệu được xem. Không dùng một link chung có quyền truy cập toàn bộ database hoặc toàn bộ workspace.
 
-### Công việc, checklist, bàn giao và bảo hành
+### Công việc, checklist và bàn giao
 
 ```text
 repair_work_logs
@@ -367,21 +400,22 @@ handover_records
     id
     repair_order_id
     recipient_name
+    recipient_contact
     returned_accessories
     final_condition_note
+    recipient_signature_ref
     confirmed_at
     handed_over_by
 
-warranties
-    id
-    repair_order_id
-    start_date
-    end_date
-    warranty_terms
-    status
 ```
 
 Checklist dùng `content_json` trong MVP để triển khai nhanh. Khi cần báo cáo chi tiết theo từng loại lỗi hoặc từng mục kiểm tra, có thể tách thành template và checklist items ở giai đoạn sau.
+
+Warranty được loại khỏi workflow và schema MVP. v0 không có entity, status,
+activation, claim, field, notification hoặc permission cho warranty. Khi triển
+khai sau, đây sẽ là một module riêng theo chính sách dịch vụ/linh kiện của
+từng workspace, không mặc định phụ thuộc vào một mẫu điện thoại hay một loại
+thiết bị.
 
 ### Theo dõi trạng thái và audit
 
@@ -417,21 +451,26 @@ Trạng thái không chỉ để hiển thị; mỗi chuyển trạng thái ph�
 
 ```text
 received
-    → diagnosing
+    → diagnosing | cancelled
 diagnosing
-    → waiting_for_approval
+    → waiting_for_approval | cancelled
 waiting_for_approval
-    → approved | rejected
+    → approved | rejected | cancelled
 approved
-    → repairing
+    → repairing | cancelled
 repairing
-    → quality_check
+    → quality_check | cancellation_requested
 quality_check
     → ready_for_pickup | repairing
+rejected
+    → waiting_for_approval | ready_for_return
+ready_for_return
+    → returned
+cancellation_requested
+    → repairing | ready_for_return
 ready_for_pickup
     → handed_over
 handed_over
-    → warranty_active
 ```
 
 Một số luật cần áp dụng:
@@ -441,8 +480,48 @@ Một số luật cần áp dụng:
 - Không chuyển sang `repairing` nếu chưa có quyết định `approved` cho đúng phiên bản báo giá.
 - Không chuyển sang `ready_for_pickup` nếu chưa hoàn thành checklist chất lượng.
 - Không chuyển sang `handed_over` nếu chưa có biên bản bàn giao.
-- Không kích hoạt bảo hành trước thời điểm bàn giao, trừ khi Owner/Manager ghi rõ lý do.
 - Mọi chuyển trạng thái phải ghi `changed_by`, thời gian và lý do khi là ngoại lệ.
+
+### 6.1. Chính sách hủy và hoàn trả
+
+- Customer có thể yêu cầu hủy khi Technician chưa bắt đầu sửa chữa thực tế,
+  gồm các trạng thái `received`, `diagnosing`, `waiting_for_approval` và
+  `approved`. Receptionist ghi nhận và thực hiện hủy trong phạm vi được giao.
+- Lý do hủy là bắt buộc, ví dụ: khách hàng yêu cầu hủy, tạo nhầm phiếu hoặc
+  thiết bị chưa được chuyển đến trung tâm sửa chữa.
+- Khi order đang `repairing`, yêu cầu hủy không được tự động chấp nhận. Order
+  chuyển sang `cancellation_requested` và phải được Technician đang chịu trách
+  nhiệm sửa xác nhận; Owner có thể chủ động xác nhận ngoại lệ. Receptionist
+  không xác nhận quyết định dừng sửa, nhưng có thể hoàn tất trả máy sau khi
+  yêu cầu đã được xác nhận.
+- Nếu yêu cầu hủy trong lúc `repairing` được xác nhận, phải ghi nhận tình trạng
+  hiện tại và kết thúc bằng luồng `ready_for_return` → `returned`. Receptionist
+  hoàn tất việc trả máy; người thực hiện có thể là Receptionist khác nhưng phải
+  cùng role và có quyền trên bước hoàn trả. Trường hợp này không kích hoạt bảo
+  hành.
+- Nếu yêu cầu hủy trong lúc `repairing` bị từ chối, order quay lại hoặc tiếp tục
+  ở `repairing`, phải lưu lý do từ chối và tiếp tục luồng sửa chữa bình thường.
+- Nếu Customer không đồng ý báo giá, order đi theo luồng `rejected` →
+  `ready_for_return` → `returned`, không coi là `cancelled`.
+- Khi trả máy, phải có xác nhận Customer đã nhận máy và chữ ký; Receptionist
+  thực hiện bước này có thể là người khác cùng role với người tiếp nhận ban đầu.
+- Mọi yêu cầu hủy, xác nhận, từ chối hoặc hoàn trả phải lưu actor, thời điểm,
+  lý do, status history, audit và bằng chứng liên quan nếu có.
+- `cancelled` là trạng thái kết thúc; không mở lại (`reopen`) phiếu đã hủy.
+- Nếu Customer quay lại sau khi phiếu bị hủy, phải tạo repair order mới và giữ
+  nguyên phiếu cùng lịch sử cũ; không trộn timeline, chẩn đoán hoặc báo giá của
+  hai phiếu.
+
+### 6.2. Hiệu chỉnh dữ liệu intake
+
+- Khi order đã chuyển từ `received` sang `diagnosing`, dữ liệu intake baseline
+  được xem là đã khóa để bảo toàn bằng chứng ban đầu.
+- Intake baseline gồm Customer, device, lỗi khách mô tả, phụ kiện, tình trạng
+  ban đầu và ảnh/bằng chứng trước sửa.
+- Chỉ Owner hoặc Manager được hiệu chỉnh dữ liệu intake sau thời điểm khóa,
+  với lý do bắt buộc và audit đầy đủ.
+- Không xóa hoặc ghi đè giá trị cũ; hệ thống phải giữ được giá trị trước và sau
+  hiệu chỉnh. Receptionist/Technician không tự sửa baseline đã khóa.
 
 ## 7. Bảo mật và quyền riêng tư
 
@@ -518,13 +597,12 @@ MVP nên có các nhóm chỉ số sau:
 - Số lần sửa lại hoặc không đạt kiểm tra chất lượng.
 - Các thiết bị hoặc lỗi thường gặp.
 
-### Báo cáo khách hàng và bảo hành
+### Báo cáo khách hàng
 
 - Lịch sử sửa chữa theo khách hàng.
 - Lịch sử theo serial number hoặc thiết bị.
-- Phiếu đang trong thời hạn bảo hành.
-- Phiếu sắp hết hạn bảo hành.
-- Số trường hợp quay lại trong thời hạn bảo hành.
+
+Báo cáo warranty được loại khỏi MVP và sẽ thiết kế cùng module warranty sau.
 
 ### Báo cáo giá trị
 
@@ -540,8 +618,11 @@ Các sự kiện nên được thiết kế để sau này có thể gửi nhi�
 - Khách đã duyệt hoặc từ chối báo giá.
 - Phiếu bị quá thời gian dự kiến.
 - Thiết bị đã sẵn sàng bàn giao.
-- Bảo hành sắp hết hạn.
 - Link khách hàng sắp hết hạn.
+
+Nhắc việc thiết bị không đến nhận được thực hiện sau khi luồng chính ổn định:
+Receptionist gọi điện, cập nhật follow-up và Manager theo dõi cảnh báo. Không
+tự động thanh lý thiết bị trong MVP. Nhắc việc warranty được loại khỏi MVP.
 
 Trong MVP, có thể hiển thị thông báo trong dashboard và cho phép nhân viên sao chép link gửi thủ công. Email/SMS là phần mở rộng sau khi nghiệp vụ ổn định.
 
@@ -557,7 +638,7 @@ Nên tạo index cho:
 - `repair_order_staff(user_id, repair_order_id)`.
 - `status_history(repair_order_id, created_at)`.
 - `customer_links(token_hash)`.
-- `warranties(end_date, status)`.
+Các index cho warranty chỉ được bổ sung khi module warranty được triển khai.
 
 Các nguyên tắc dữ liệu:
 
@@ -581,10 +662,15 @@ Các nguyên tắc dữ liệu:
 - Checklist và ảnh hiện trạng.
 - Chẩn đoán, báo giá theo phiên bản và quyết định của khách.
 - Link khách hàng có thời hạn và thu hồi được.
+- Luồng quote bị từ chối hoặc yêu cầu hủy phải hoàn trả thiết bị.
 - Timeline lịch sử thao tác.
 - Checklist sửa chữa và kiểm tra chất lượng.
-- Bàn giao, bảo hành và lịch sử.
+- Bàn giao và lịch sử.
+- Hủy phiếu trước khi kỹ thuật viên bắt đầu sửa chữa thực tế, kèm lý do và
+  audit; nếu đang sửa thì phải qua xác nhận dừng sửa và hoàn trả.
 - Dashboard cơ bản theo trạng thái và kỹ thuật viên.
+- Tra cứu read-only tiến độ, giai đoạn, tóm tắt lỗi và thời gian dự kiến cho
+  Receptionist khi hỗ trợ khách hàng.
 - Quyền theo role/workspace/assignment, audit log, kiểm soát file và backup.
 
 ### Có thể để sau MVP
@@ -598,6 +684,9 @@ Các nguyên tắc dữ liệu:
 - Ứng dụng mobile native.
 - Báo cáo nâng cao và data warehouse.
 - Tài khoản khách hàng dài hạn.
+- Module warranty và warranty claim theo chính sách riêng của từng workspace.
+- Xử lý thiết bị khách không đến nhận: dashboard cảnh báo, Receptionist gọi
+  điện và quy trình xử lý tiếp theo; không tự động thanh lý trong MVP.
 
 ## 12. Tiêu chí nghiệm thu kiến trúc
 
@@ -607,6 +696,14 @@ Các nguyên tắc dữ liệu:
 - Báo giá đã duyệt không bị thay đổi âm thầm.
 - Timeline hiển thị được toàn bộ quá trình từ tiếp nhận đến bàn giao.
 - Ảnh và tài liệu không bị public ngoài ý muốn.
+- Phiếu trước khi bắt đầu sửa có thể tiếp nhận yêu cầu hủy với lý do bắt buộc;
+  khi đang `repairing` phải có xác nhận của người chịu trách nhiệm trước khi
+  chuyển sang luồng hoàn trả.
+- Quote bị từ chối và không thương lượng thêm phải đi qua
+  `ready_for_return` → `returned`; nếu Customer muốn
+  thay đổi khi thiết bị chưa hoàn trả thì tạo quote version mới trên cùng order.
+- Intake baseline sau khi vào `diagnosing` chỉ được Owner/Manager hiệu chỉnh
+  với lý do và audit, không xóa giá trị cũ.
 - Dashboard cho biết phiếu đang ở đâu, đang chờ ai và phiếu nào bị trễ.
 - Có thể truy vấn lịch sử theo khách hàng, thiết bị, kỹ thuật viên và thời gian.
 - Có backup và đã kiểm tra khả năng khôi phục dữ liệu.

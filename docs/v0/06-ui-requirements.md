@@ -2,7 +2,7 @@
 
 ## 1. Document purpose
 
-This document defines the UX/UI requirements for RepairFlow, a workflow management system for personal device repair. The interface must help the shop create a clear evidence trail from device intake through diagnosis, quotation, repair, handover, and warranty.
+This document defines the UX/UI requirements for RepairFlow, a workflow management system for personal device repair. The interface must help the shop create a clear evidence trail from device intake through diagnosis, quotation, repair, quality check, and handover. Warranty is deferred to a later module and is not part of the v0 UI.
 
 Each repair order is the central workspace. Customer, device, condition, quotation, work, quality-check, and handover information must be reachable from the same record.
 
@@ -14,6 +14,9 @@ Each repair order is the central workspace. Customer, device, condition, quotati
 - Staff UI contains the operational detail; customer UI shows only necessary, understandable information.
 - Primary actions change with the current order status.
 - UI copy uses clear terms for staff and customers and does not depend on internal status codes.
+- The visual interface is redesigned from scratch for v0; the existing prototype is a functional reference only, not a visual constraint.
+- The first visual design pass covers Manager, Receptionist, Technician, and Customer rather than designing only the current prototype routes.
+- Vietnamese is the MVP display language.
 
 ## 3. Roles and primary entry points
 
@@ -23,8 +26,11 @@ Each repair order is the central workspace. Customer, device, condition, quotati
   active account has been provisioned for them.
 - Staff profiles without accounts have no session; the Manager can still
   operate the UI and select the correct staff profile for each step.
-- Staff work is limited by fixed role permissions and assigned repair orders;
-  it is not a workspace-wide view.
+- Staff write operations are limited by fixed role permissions and assigned
+  repair orders or tasks.
+- Receptionist has a workspace-wide, read-only operational lookup projection so
+  they can answer customer calls. This projection does not grant access to
+  unrestricted technical notes, audit metadata, credentials, or write actions.
 - Customers access a public link with a token and do not need an account.
 
 ### Receptionist/Front Desk
@@ -35,6 +41,7 @@ Priority tasks:
 - Record condition.
 - Send a quotation link.
 - Hand over the device.
+- Look up the operational progress of any order when a customer asks for an update.
 - Actions use the current account session when available; a Manager may still
   attribute an action to a staff profile when operating on their behalf.
 
@@ -63,6 +70,13 @@ Priority tasks:
 
 No account is required in the MVP. The customer accesses information through a secure link issued for the correct order and quotation.
 
+### Role-based entry screens
+
+- Manager opens the Manager operational dashboard after login.
+- Receptionist opens a compact “Today” dashboard after login.
+- Technician opens the “My Work” task queue after login.
+- Customer opens the public order progress page through a valid link.
+
 ## 4. Overall business flow
 
 ~~~text
@@ -77,7 +91,7 @@ Dashboard
     → Perform repair
     → Quality check
     → Ready for handover
-    → Handover and activate warranty
+    → Handover
     → Repair history
 ~~~
 
@@ -92,22 +106,30 @@ received
     → quality_check
     → ready_for_pickup
     → handed_over
-    → warranty_active
 ~~~
 
 When quality check fails, the order returns to `repairing`.
 
 ## 5. Internal navigation
 
-The primary navigation includes:
+The internal navigation is role-aware but intentionally small:
 
-- **Dashboard:** overall progress and orders requiring attention.
-- **Repair Orders:** list, search, filtering, and new-order creation.
-- **My Work:** orders assigned to the current staff profile.
-- **Customers:** customer profiles and repair history.
-- **Devices:** device information and history by serial number or identifier.
-- **Notifications:** quotations awaiting approval, overdue orders, and ready-for-handover orders.
-- **Settings:** shop, staff, roles, and workflow policies.
+- **Tổng quan:** role-specific dashboard and today’s priorities.
+- **Phiếu sửa chữa:** searchable order list and order detail.
+- **Hàng chờ công việc:** role-specific queue; Manager sees coordination work,
+  Technician sees assigned tasks, and Receptionist sees intake/handover tasks.
+- **Khách hàng:** customer profiles and repair history.
+- **Thiết bị và lịch sử:** device lookup by serial number or identifier.
+- **Quản trị:** staff, assignments, workspace, and workflow settings; Manager
+  and Owner only.
+
+`Tạo phiếu mới` is a prominent action in the shell, not a separate sidebar
+item. Notifications remain in the header because they support the current task
+instead of being a primary workspace.
+
+The Customer surface has no internal sidebar. Customer and Receptionist
+high-frequency mobile tasks use a mobile-first layout; Manager and Technician
+workspaces use desktop-first layouts with responsive support.
 
 ## 6. Screen and flow requirements
 
@@ -132,6 +154,33 @@ Suggested KPI cards:
 
 Each card links to the corresponding filtered list.
 
+Role-specific dashboard emphasis:
+
+- **Manager:** bottlenecks, overdue orders, waiting approval, unassigned work,
+  ready-for-handover orders, and staff workload.
+- **Receptionist:** today’s intake, draft orders, orders waiting for customer
+  response, ready-for-handover orders, and a quick lookup action.
+- **Technician:** the next assigned tasks, due work, blocked work, and pending
+  quality checks. The default landing route remains the dedicated My Work
+  queue rather than a management KPI dashboard.
+
+### 6.1.1. Receptionist operational lookup
+
+Receptionist can search by order code, customer phone, customer name, or device
+identifier and open a read-only progress view for any order in the workspace.
+The view must show:
+
+- Current repair stage and plain-language status.
+- Completed stages and the next expected stage.
+- Whether the order is waiting for the customer, a Technician, QC, or handover.
+- A customer-safe diagnosis/error summary when available.
+- A summary of the approved or performed repair work when available.
+- Expected completion time and last update time.
+- Quote, QC, and handover status summaries when relevant.
+
+The view must not show edit controls. Private audit metadata, credentials,
+customer-link tokens, and raw internal technical notes remain restricted.
+
 ### 6.2. Repair-order list
 
 Each order row displays:
@@ -155,6 +204,10 @@ Minimum filters:
 
 ### 6.3. Create repair order
 
+The create flow is a four-step wizard. Every step supports **Save draft** and
+**Continue later**. A draft may be incomplete, but it cannot move to diagnosis
+until the required intake conditions are satisfied.
+
 #### Step 1: Select or create a customer
 
 The form includes:
@@ -177,7 +230,7 @@ The form includes:
 
 When the device has history, show recent repair orders.
 
-#### Step 3: Record the reported issue
+#### Step 3: Record the reported issue and intake information
 
 The form includes:
 
@@ -188,7 +241,13 @@ The form includes:
 - Expected completion date.
 - Intake notes.
 
-After saving, the system creates a human-readable, workspace-unique order code such as `RF-20260911-001`.
+#### Step 4: Review and complete intake
+
+Show a compact summary of customer, device, reported issue, accessories,
+condition, and evidence. The user can save a draft or complete intake.
+
+After the first successful save, the system creates a human-readable,
+workspace-unique order code such as `RF-20260911-001`.
 
 ### 6.4. Record condition and evidence
 
@@ -207,7 +266,10 @@ Suggested checks:
 - Included accessories.
 - Additional notes.
 
-Photos display as thumbnails, support captions, and can be marked important. The UI may guide the user to capture the front, back, edges, and damaged area.
+The MVP requires at least one condition photo before intake can be completed.
+There is no upper limit on the number of photos. Photos display as thumbnails,
+support captions, and can be marked important. The UI may guide the user to
+capture the front, back, edges, and damaged area without requiring every angle.
 
 If the minimum checklist or evidence is incomplete, show:
 
@@ -252,7 +314,7 @@ Use sections or tabs:
 3. Diagnosis and quotation.
 4. Repair work.
 5. Quality check.
-6. Handover and warranty.
+6. Handover.
 7. History timeline.
 
 The timeline should remain visible on the side or at the end of the page. It includes time, actor, action, note, and related documents.
@@ -344,7 +406,7 @@ The checklist should include:
 
 When the check fails, return the order to `repairing`; it cannot go directly to handover.
 
-### 6.9. Handover and warranty
+### 6.9. Handover
 
 The handover form includes:
 
@@ -355,12 +417,10 @@ The handover form includes:
 - Notes.
 - Handover confirmation.
 - Handover staff profile.
-- Warranty duration or expiry date.
 
 After saving:
 
 - Move the order to `handed_over`.
-- Activate warranty from the handover time.
 - Lock important order information.
 - Add the order to customer and device history.
 
@@ -380,31 +440,41 @@ UX must clearly handle:
 
 ## 8. MVP screen list
 
-1. Internal login for Owner/Manager and provisioned staff accounts.
-2. Dashboard.
-3. Repair-order list.
-4. Create repair order.
-5. Repair-order detail.
-6. Condition and photo evidence.
-7. Diagnosis.
-8. Versioned quotation.
-9. Customer public page.
-10. Repair checklist.
-11. Quality check.
-12. Handover and warranty.
-13. Customer profile.
-14. Device profile.
-15. Timeline and basic audit log.
+1. Internal login by email for provisioned staff accounts.
+2. Role-aware internal app shell.
+3. Manager operational dashboard.
+4. Receptionist compact Today dashboard.
+5. Technician My Work task queue.
+6. Repair-order list.
+7. Receptionist operational lookup (read-only).
+8. Create repair order wizard and draft resume.
+9. Repair-order detail.
+10. Condition and photo evidence.
+11. Diagnosis.
+12. Versioned quotation.
+13. Customer public page.
+14. Repair checklist.
+15. Quality check.
+16. Handover.
+17. Customer profile.
+18. Device profile.
+19. Timeline and basic audit log.
 
 ## 9. UX/UI acceptance criteria
 
 - Users always see the current order status and next step.
+- Manager, Receptionist, and Technician land on role-appropriate entry screens.
+- Receptionist can read the operational progress of any workspace order without
+  receiving write access to that order.
+- The create-order flow can be saved and resumed as a draft.
+- Intake cannot be completed without at least one condition photo; additional
+  photos remain unlimited.
 - Owner/Manager can create an order and attribute the Receptionist profile without leaving the flow.
 - Managers can select and record only active Technician profiles; Technician accounts, when provisioned, remain limited to assigned work.
 - Customers can understand the quotation and decide without an account.
 - Repair cannot start without an `approved` decision for the correct quotation version.
 - Handover cannot occur before the quality checklist passes.
-- Users can trace an order to photos, quotations, customer decisions, checklists, handover, and warranty.
+- Users can trace an order to photos, quotations, customer decisions, checklists, and handover.
 - The UI clearly handles expired links, new quotation versions, overdue orders, and failed quality checks.
 
 ## 10. Related documents

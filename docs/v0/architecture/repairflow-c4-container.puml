@@ -13,7 +13,7 @@ System_Boundary(repairflow, "RepairFlow") {
     Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard, repair-order workspace và các màn hình vận hành")
     Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Trang public hiển thị diagnosis, quote và customer decision")
     Container(api, "Backend / API", "Python, FastAPI, Uvicorn", "Authentication, permission, workflow, quote, public link, audit và response envelope")
-    ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Workspace, customers, devices, repair orders, evidence, quotes, decisions, QC, handover, warranty và audit")
+    ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Workspace, customers, devices, repair orders, evidence, quotes, decisions, QC, handover và audit")
 }
 
 Container_Ext(objectStorage, "Object Storage", "Private object storage", "Ảnh và tài liệu; trạng thái PROPOSED cho MVP")

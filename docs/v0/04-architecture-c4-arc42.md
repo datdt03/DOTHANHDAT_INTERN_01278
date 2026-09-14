@@ -25,7 +25,7 @@ release handoff.
 ## 1. Introduction and Goals
 
 RepairFlow quản lý phiếu sửa chữa từ lúc tiếp nhận đến chẩn đoán, báo giá,
-khách duyệt, sửa chữa, kiểm tra chất lượng, bàn giao và bảo hành. Giá trị cốt
+khách duyệt, sửa chữa, kiểm tra chất lượng và bàn giao. Giá trị cốt
 lõi là tạo evidence trail có thể truy ngược cho toàn bộ vòng đời phiếu.
 
 Các mục tiêu kiến trúc chính:
@@ -87,11 +87,12 @@ Source PlantUML: [repairflow-usecase-overview.puml](./architecture/repairflow-us
 ### 3.3. In scope / out of scope
 
 In scope: repair order, customer, device, intake evidence, diagnosis, quote
-version, customer decision, repair work, quality check, handover, warranty,
-timeline, audit và dashboard vận hành cơ bản.
+version, customer decision, repair work, quality check, handover, timeline,
+audit và dashboard vận hành cơ bản.
 
 Out of scope trong MVP: thanh toán, tồn kho, AI diagnosis, định giá tự động,
-nhiều chi nhánh, tài khoản khách hàng dài hạn và email/SMS tự động.
+nhiều chi nhánh, tài khoản khách hàng dài hạn, email/SMS tự động và warranty.
+Warranty được để dành cho một module riêng ở giai đoạn sau.
 
 Chi tiết phạm vi nghiệp vụ nằm trong [02-use-cases.md](./02-use-cases.md).
 
@@ -141,7 +142,7 @@ Component boundary đề xuất:
 - Evidence and Diagnosis.
 - Quote and Customer Decision.
 - Repair Execution and Quality Check.
-- Handover and Warranty.
+- Handover.
 - Audit and Timeline.
 
 Đây là component-level target view để hướng dẫn module hóa; tên module/API cụ
@@ -167,10 +168,10 @@ API và database:
 2. Chẩn đoán và tạo quote version.
 3. Gửi customer link, customer approve/reject đúng quote version.
 4. Thực hiện sửa chữa và quality check.
-5. Bàn giao, kích hoạt warranty và đóng timeline.
+5. Bàn giao và đóng timeline.
 
 Các transition quan trọng phải atomic: create order, send quote, customer
-decision, quality-check transition và handover/warranty. Chi tiết state machine
+decision, quality-check transition và handover. Chi tiết state machine
 và transaction rule nằm trong [03-business-and-domain-requirements.md](./03-business-and-domain-requirements.md)
 và [05-database-requirements.md](./05-database-requirements.md).
 
@@ -229,7 +230,7 @@ Quality requirements cần kiểm chứng:
 - **Security/privacy**: customer link giới hạn đúng phiếu; file không public;
   dữ liệu tách theo workspace.
 - **Traceability**: truy ngược được actor, thời điểm, evidence, quote,
-  decision, QC, handover và warranty.
+  decision, QC và handover.
 - **Reliability**: thao tác quan trọng atomic và retry không tạo duplicate.
 - **Maintainability**: module theo feature, dependency một chiều, không thêm
   framework chỉ để tổ chức file.
