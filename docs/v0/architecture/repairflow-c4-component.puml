@@ -9,7 +9,7 @@ Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Public cus
 
 System_Boundary(repairflow, "RepairFlow") {
     Container_Boundary(api, "Backend / API — FastAPI modular monolith") {
-        Component(identity, "Identity and Management Session", "FastAPI module", "Owner/Manager session, workspace context và permission")
+        Component(identity, "Identity and Access Session", "FastAPI module", "Access principal, workspace context và permission theo role/assignment")
         Component(order, "Repair Order Lifecycle", "FastAPI module", "Create order, assignment, state transition và validation")
         Component(evidence, "Evidence and Diagnosis", "FastAPI module", "Intake evidence, diagnosis và technical notes")
         Component(quote, "Quote and Customer Decision", "FastAPI module", "Quote version, public link, approve/reject và immutable snapshot")

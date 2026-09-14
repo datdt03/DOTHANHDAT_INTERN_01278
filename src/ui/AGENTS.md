@@ -40,7 +40,7 @@ This is a default structure, not a requirement to create every file. Add files o
 - Every form needs labels and visible error and loading states.
 - Do not use a \`div\` as a button or link when it has interactive behavior.
 - Do not use inline styles or inline event handlers such as \`onclick\`.
-- User-facing copy must use the terminology defined in \`docs/v0/ui-requirements.md\`; do not expose internal status codes unnecessarily.
+- User-facing copy must use the terminology defined in \`docs/v0/06-ui-requirements.md\`; do not expose internal status codes unnecessarily.
 
 ## 3. CSS rules
 
@@ -139,4 +139,3 @@ src/ui/config/
 - Network-driven flows have loading, error, and empty states.
 - UI follows the documented business states, especially quotation approval, quality control, and handover.
 - Changes stay within the task scope unless the reason is recorded.
-

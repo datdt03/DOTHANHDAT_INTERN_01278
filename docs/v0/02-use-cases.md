@@ -7,29 +7,30 @@ Tài liệu này mô tả các use case quan trọng nhất của RepairFlow ở
 - Ai thực hiện từng hành động và được phép làm đến đâu.
 - Dữ liệu nào phải có trước khi chuyển bước.
 - Luồng chính, luồng thay thế, lỗi và ngoại lệ.
-- Trạng thái phiếu thay đổi như thế nào sau mỗi hành động.
+- Kết quả nghiệp vụ và điều kiện để hoàn tất từng use case.
 - Bằng chứng, quyết định của khách và lịch sử audit nào phải được lưu.
 - Tiêu chí nghiệm thu để QA, Product và Developer có thể dùng chung.
 
 Phạm vi bao gồm hai bề mặt sử dụng:
 
-1. **Giao diện nội bộ** do Owner/Manager truy cập; Receptionist và Technician là các staff profile được chọn trong nghiệp vụ, không đăng nhập riêng trong MVP.
+1. **Giao diện nội bộ** do Owner/Manager hoặc Receptionist/Technician có active account truy cập; staff profile chưa có account vẫn được chọn để ghi nhận trách nhiệm.
 2. **Giao diện public qua customer link** cho Customer, không yêu cầu tài khoản trong MVP.
 
 Tài liệu này không mở rộng phạm vi MVP sang thanh toán, tồn kho, AI chẩn đoán, định giá tự động, tài khoản khách hàng dài hạn hoặc tích hợp SMS/Zalo/email tự động.
 
 ### 1.1. Trạng thái đặc tả và các điểm cần chốt thêm
 
-Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy path, alternative flow cùng acceptance test. Trước khi triển khai business API, các policy chưa được quyết định hoàn toàn như cancellation/reopen, correction intake, quote/payment boundary, unclaimed device, warranty claim, retention, concurrency và deployment phải được chốt theo [requirements closure](./requirements-closure.md). Không tự suy ra policy mới từ UI mock hoặc từ một endpoint riêng lẻ.
+Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy path, alternative flow cùng acceptance test. Trước khi triển khai business API, các policy chưa được quyết định hoàn toàn như cancellation/reopen, correction intake, quote/payment boundary, unclaimed device, warranty claim, retention, concurrency và deployment phải được chốt theo [requirements closure](./01-requirements-closure.md). Không tự suy ra policy mới từ UI mock hoặc từ một endpoint riêng lẻ.
 
 ## 2. Nguồn yêu cầu và cách đọc tài liệu
 
 | Nguồn | Vai trò trong đặc tả này |
 | --- | --- |
 | [`README.md`](../../README.md) | Mục tiêu sản phẩm, giá trị cốt lõi, demo scenario và phạm vi MVP. |
-| [`architecture-and-requirements.md`](./architecture-and-requirements.md) | Vai trò, phân quyền, trạng thái, transaction, audit, bảo mật và dữ liệu nghiệp vụ. |
-| [`ui-requirements.md`](./ui-requirements.md) | Màn hình, hành vi UI, luồng nội bộ/public và tiêu chí nghiệm thu UX/UI. |
-| [`database-requirements.md`](./database-requirements.md) | Enum, quan hệ dữ liệu, constraint và các điều kiện toàn vẹn API/database. |
+| [`03-business-and-domain-requirements.md`](./03-business-and-domain-requirements.md) | Vai trò, phân quyền, trạng thái, transaction, audit, bảo mật và dữ liệu nghiệp vụ. |
+| [`06-ui-requirements.md`](./06-ui-requirements.md) | Màn hình, hành vi UI, luồng nội bộ/public và tiêu chí nghiệm thu UX/UI. |
+| [`05-database-requirements.md`](./05-database-requirements.md) | Enum, quan hệ dữ liệu, constraint và các điều kiện toàn vẹn API/database. |
+| [`07-authentication-and-authorization.md`](./07-authentication-and-authorization.md) | Phạm vi account, role, visibility và authorization tối thiểu. |
 | `src/ui/features/**` | Đối chiếu phạm vi prototype hiện tại, không thay thế cho business rule phía backend. |
 
 ### 2.1. Quy ước quan trọng
@@ -38,8 +39,9 @@ Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy p
 - `overdue` trong UI hiện tại là **cờ vận hành quá hạn**, không nên coi là trạng thái nghiệp vụ terminal nếu backend vẫn dùng `repair_order_status` theo database requirements.
 - Báo giá đã `sent`, `approved` hoặc `rejected` là snapshot bất biến. Mọi thay đổi phải tạo version mới.
 - Customer link trong prototype đang dùng route dạng `#/customer/:id`; triển khai thật phải dùng token ngẫu nhiên, chỉ lưu hash, có hạn dùng và có thể thu hồi.
-- Mọi quy tắc chuyển trạng thái, quyền truy cập, tính tổng tiền và ghi nhận quyết định phải được kiểm tra ở Backend/API; UI chỉ hỗ trợ hiển thị và gọi hành động.
-- Actor thao tác API nội bộ là Owner/Manager đang có management session; actor nghiệp vụ có thể là Receptionist/Technician được chọn trong staff assignment.
+- Quyền truy cập và điều kiện nghiệp vụ phải được kiểm tra ở lớp thực thi của hệ thống; UI chỉ hỗ trợ hiển thị và gọi hành động. State machine canonical nằm ở tài liệu business/domain.
+- Actor trong use case là người có mục tiêu nghiệp vụ; không đưa Backend/API, Object Storage hoặc notification worker vào danh sách actor. Các thành phần đó chỉ được nhắc trong đặc tả luồng khi cần mô tả hành vi hệ thống.
+- Actor nội bộ là Owner, Manager hoặc staff account có session hợp lệ. Owner/Manager có thể thao tác thay staff profile; account Receptionist/Technician chỉ được truy cập theo role và assignment.
 
 ## 3. Actors và persona
 
@@ -47,66 +49,55 @@ Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy p
 
 | Actor | Mục tiêu | Quyền và trách nhiệm chính | Không được tự ý |
 | --- | --- | --- | --- |
-| **Owner/Manager** | Kiểm soát vận hành và dữ liệu của workspace. | Quản lý cửa hàng, nhân viên, quyền, toàn bộ phiếu, link public, báo cáo và ngoại lệ. Admin chỉ là role mở rộng ngoài MVP. | Xóa audit log hoặc xóa cứng bằng chứng/quyết định/lịch sử. |
+| **Owner** | Kiểm soát toàn bộ vận hành và access của workspace. | Quản lý cửa hàng, nhân viên, account, quyền, toàn bộ phiếu, link public, báo cáo và ngoại lệ. | Xóa audit log hoặc xóa cứng bằng chứng/quyết định/lịch sử. |
 | **Manager** | Điều phối công việc và xử lý phiếu trễ. | Phân công nhân viên, theo dõi dashboard, báo cáo, xử lý ngoại lệ theo chính sách. | Quản lý tài khoản Owner nếu chưa được cấp quyền riêng. |
 | **Receptionist/Front Desk** | Tiếp nhận thiết bị và điều phối giao tiếp với khách. | Tạo phiếu, nhập khách/thiết bị, ghi hiện trạng, ảnh/phụ kiện, gửi link, bàn giao. | Sửa chẩn đoán hoặc báo giá đã duyệt nếu không có quyền. |
 | **Technician** | Chẩn đoán và thực hiện sửa chữa đúng phạm vi được phân công. | Chẩn đoán, lập báo giá, ghi work log, checklist sửa, QC. | Xem/sửa phiếu ngoài workspace hoặc ngoài phạm vi phân công. |
 | **Customer** | Hiểu thiết bị, chẩn đoán, chi phí và quyết định sửa. | Mở link hợp lệ, xem thông tin được phép, duyệt hoặc từ chối đúng quote version. | Truy cập phiếu khác, sửa nội dung báo giá hoặc duyệt quote cũ. |
-| **System/API** | Bảo đảm toàn vẹn, bảo mật và truy vết. | Xác thực management session, permission, transaction, tính tổng, đổi trạng thái, tạo link, audit, signed URL. | Tự chẩn đoán hoặc tự quyết định giá thay cho Technician. |
-| **Object Storage** | Lưu ảnh/tài liệu không public mặc định. | Lưu file private, trả signed URL có hạn. | Cho truy cập trực tiếp không qua kiểm tra quyền. |
 
-**Quy ước access:** Owner/Manager là access principal; Receptionist/Technician không có credential hoặc session riêng trong MVP. `userId` trong staff assignment được hiểu là ID hồ sơ nhân sự, không phải tài khoản đăng nhập.
+**Quy ước access:** Access principal có thể là Owner, Manager, Receptionist hoặc Technician nếu đã được cấp account và membership hợp lệ. Receptionist/Technician chưa có account chỉ là staff profile, không có session. `userId` trong staff assignment là ID hồ sơ nhân sự và được tách khỏi người đang đăng nhập. Chi tiết visibility và permission tối thiểu được ghi ở tài liệu access/authorization của v0.
 
 ### 3.2. Ma trận quyền theo nhóm use case
 
-Ký hiệu: `P` = thực hiện chính, `S` = hỗ trợ/xem, `A` = chỉ được thực hiện khi có quyền ngoại lệ, `-` = không thuộc luồng.
+Ký hiệu: `P` = thực hiện chính, `S` = hỗ trợ/xem, `A` = chỉ được thực hiện khi có quyền ngoại lệ, `-` = không thuộc luồng. Dấu `*` nghĩa là chỉ áp dụng khi staff đã được cấp account và quyền tương ứng.
 
-`P/S/A` trong bảng mô tả **trách nhiệm nghiệp vụ**, không phải quyền đăng nhập. Trong MVP, mọi thao tác trên giao diện nội bộ và mọi request API đều được thực hiện trong management session của Owner/Manager; Receptionist/Technician chỉ được chọn dưới dạng staff profile để ghi nhận trách nhiệm.
+`P/S/A` trong bảng mô tả **trách nhiệm nghiệp vụ**, không phải toàn bộ quyền đăng nhập. Mọi thao tác nội bộ phải đi qua access principal hợp lệ; Owner/Manager có thể thao tác thay staff và phải ghi rõ staff profile được attribution. Receptionist/Technician có account chỉ được truy cập theo role và assignment.
 
 | Use case | Owner | Manager | Receptionist | Technician | Customer |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Đăng nhập và chọn workspace | P | P | - | - | - |
-| Xem dashboard/danh sách | P | P | S | S | - |
-| Tạo phiếu và tiếp nhận | P | S | P | A | - |
-| Ghi hiện trạng/bằng chứng | P | S | P | P | S |
-| Chẩn đoán | P | S | A | P | S |
-| Lập/sửa nháp báo giá | P | A | A | P | - |
-| Gửi/revoke customer link | P | P | P | A | - |
+| Đăng nhập và chọn workspace | P | P | P* | P* | - |
+| Xem dashboard/danh sách | P | P | S theo assignment | S theo assignment | - |
+| Tạo phiếu và tiếp nhận | P | P | P theo quyền | A | - |
+| Ghi hiện trạng/bằng chứng | P | P | P theo assignment | P theo assignment | S theo public scope |
+| Chẩn đoán | P | P | S tối thiểu | P theo assignment | S theo public scope |
+| Lập/sửa nháp báo giá | P | P/review | S | P theo assignment khi còn draft | - |
+| Gửi/revoke customer link | P | P | P theo quyền | - | - |
 | Duyệt/từ chối báo giá | S | S | - | - | P |
 | Xác nhận thay khách qua điện thoại | P | A | A | - | - |
-| Ghi nhận sửa chữa | P | S | - | P | - |
-| QC và kết luận đạt/không đạt | P | S | - | P | S |
-| Bàn giao và kích hoạt bảo hành | P | S | P | A | S |
-| Xem lịch sử/timeline | P | P | S | S | S theo link |
+| Ghi nhận sửa chữa | P | P/review | - | P theo assignment | - |
+| QC và kết luận đạt/không đạt | P | P/review | S | P khi có responsibility QC | S theo public scope |
+| Bàn giao và kích hoạt bảo hành | P | P | P theo assignment | S | S theo public scope |
+| Xem lịch sử/timeline | P | P | S theo assignment | S theo assignment | S theo link |
 | Phân công nhân viên | P | P | - | - | - |
 
-## 4. Đối tượng nghiệp vụ và dữ liệu được tạo
+### 3.3. Sơ đồ Use Case tổng quan
 
-| Đối tượng | Ý nghĩa | Dữ liệu tối thiểu | Được tạo/cập nhật ở use case |
-| --- | --- | --- | --- |
-| `workspace` | Phạm vi tenant của cửa hàng. | Tên, timezone, thông tin liên hệ. | UC-01, quản trị workspace. |
-| `customer` | Người sở hữu/người gửi thiết bị. | Tên, phone, email tùy chọn, ghi chú. | UC-03, lịch sử. |
-| `device` | Thiết bị gắn với customer. | Loại, hãng, model, serial/IMEI/mã nhận diện. | UC-03, lịch sử. |
-| `repair_order` | Phiếu xuyên suốt vòng đời sửa chữa. | `order_code`, customer/device, issue, status, người tạo, thời gian nhận/dự kiến trả. | UC-03 và các UC sau. |
-| `repair_order_staff` | Hồ sơ nhân sự chịu trách nhiệm theo từng giai đoạn. | Staff profile, responsibility, primary, assigned/completed time. | UC-03, UC-04, UC-05, UC-09, UC-10, UC-11. |
-| `repair_evidence` | Ảnh/tài liệu chứng minh hiện trạng hoặc kết quả. | Stage, object key, metadata file, mô tả, người chụp, thời gian. | UC-04, UC-09, UC-10, UC-11. |
-| `diagnosis` | Kết quả kiểm tra kỹ thuật. | Findings, cause, recommendation, estimated duration, diagnosed by. | UC-05. |
-| `quote` | Một phiên bản báo giá. | Version, status, subtotal, total, note, created/sent time. | UC-05, UC-06, UC-08. |
-| `quote_item` | Một linh kiện/công sửa/dịch vụ trong quote. | Loại, mô tả, số lượng, đơn giá, lý do, thời gian dự kiến. | UC-05. |
-| `customer_link` | Quyền truy cập public có giới hạn. | Quote/order, purpose, token hash, expiry, revoke/access time. | UC-06, UC-07. |
-| `customer_decision` | Quyết định của Customer đối với đúng quote version. | Decision, tên/liên hệ snapshot, thời gian, source link. | UC-08. |
-| `repair_work_log` | Nhật ký công việc thực tế. | Technician, summary, start/end, note. | UC-09. |
-| `checklist` | Bộ kiểm tra theo stage. | Type, content, completed by/time. | UC-04, UC-09, UC-10, UC-11. |
-| `handover_record` | Biên bản trả thiết bị. | Người nhận, phụ kiện trả, tình trạng cuối, xác nhận, người bàn giao. | UC-11. |
-| `warranty` | Cam kết sau bàn giao. | Start/end, terms, status. | UC-11. |
-| `status_history` | Timeline nghiệp vụ. | From/to status, actor, reason, created time. | Mọi UC đổi trạng thái. |
-| `audit_log` | Truy vết bảo mật và hành động nhạy cảm. | Actor, entity, action, metadata, thời gian. | Mọi UC nhạy cảm. |
+Sơ đồ chỉ giữ các actor chính và các mục tiêu nghiệp vụ lớn; không biểu diễn
+Backend/API, Object Storage hoặc các chi tiết kỹ thuật. Account của Receptionist
+và Technician là tùy chọn, còn staff profile không có account vẫn có thể được
+chọn để attribution khi Owner/Manager thao tác thay. Các đường nối trong
+overview là liên kết đại diện để giữ bố cục dễ đọc; ma trận quyền ở mục 3.2
+mới là nơi quy định đầy đủ phạm vi của từng actor.
 
-## 5. Business rules dùng chung
+![RepairFlow Use Case Overview](./architecture/repairflow-usecase-overview.png)
+
+Source PlantUML: [repairflow-usecase-overview.puml](./architecture/repairflow-usecase-overview.puml).
+
+## 4. Business rules dùng chung
 
 | Mã | Quy tắc | Hệ quả khi vi phạm |
 | --- | --- | --- |
-| BR-01 | Mọi truy vấn nghiệp vụ phải được lọc theo `workspace_id`. | Từ chối request; không được để UI tự che dữ liệu khác tenant. |
+| BR-01 | Mọi thao tác nội bộ phải thuộc một access principal active, membership hợp lệ và đúng phạm vi `workspace_id`, role và assignment. | Từ chối truy cập; không được để UI tự che dữ liệu khác tenant hoặc order ngoài phạm vi. |
 | BR-02 | Một phiếu phải gắn đúng customer và device trong cùng workspace. | Không cho tạo liên kết chéo workspace hoặc chéo chủ thiết bị. |
 | BR-03 | Hiện trạng tối thiểu phải được ghi trước khi bắt đầu chẩn đoán/sửa. | Không cho chuyển `received` → `diagnosing` nếu checklist/bằng chứng chưa đủ. |
 | BR-04 | Diagnosis phải nêu kết quả, nguyên nhân, đề xuất và thời gian dự kiến trước khi gửi quote. | Không cho chuyển sang `waiting_for_approval`. |
@@ -122,61 +113,39 @@ Ký hiệu: `P` = thực hiện chính, `S` = hỗ trợ/xem, `A` = chỉ đư�
 | BR-14 | File ảnh/tài liệu private; chỉ hiển thị qua signed URL. | Không đưa object storage URL public trực tiếp vào response. |
 | BR-15 | Audit log, bằng chứng, customer decision và status history không bị xóa cứng trong luồng thường. | Chỉ cho phép archive/retention theo chính sách được phê duyệt. |
 | BR-16 | `overdue` là điều kiện tính từ `expected_completed_at` và status hiện tại. | Dashboard phải cảnh báo và ghi nhận xử lý, không tự ý làm mất trạng thái nghiệp vụ. |
+| BR-17 | Owner, Manager, Receptionist và Technician có thể được cấp account; staff profile chưa có account không có session riêng. | Không tạo session hoặc cho gọi use case nội bộ khi chưa có access principal hợp lệ. |
+| BR-18 | Receptionist và Technician chỉ được xem dữ liệu trực tiếp cần cho trách nhiệm và repair order được phân công. | Từ chối truy cập order, customer, device hoặc tài liệu ngoài role/assignment. |
+| BR-19 | Account đăng nhập và staff profile được attribution là hai thông tin độc lập. | Audit phải giữ cả acting account và staff profile; không cho giả mạo hoặc ghi đè người thực hiện. |
+| BR-20 | Customer chỉ được xem và quyết định đúng order/quote mà public link hợp lệ tham chiếu. | Không lộ dữ liệu nội bộ, order khác hoặc quote version cũ không còn hiệu lực. |
 
-## 6. Vòng đời phiếu và điều kiện chuyển trạng thái
-
-| Trạng thái hiện tại | Hành động hợp lệ | Điều kiện bắt buộc | Trạng thái sau | Người chính |
-| --- | --- | --- | --- | --- |
-| `received` | Bắt đầu chẩn đoán | Có customer/device, issue và intake evidence/checklist tối thiểu. | `diagnosing` | Owner/Manager thao tác cho Technician |
-| `diagnosing` | Hoàn tất diagnosis và phát hành quote | Có diagnosis hợp lệ, quote có item và tổng được tính lại. | `waiting_for_approval` | Owner/Manager thao tác cho Technician |
-| `waiting_for_approval` | Customer duyệt quote hiện hành | Link hợp lệ, quote `sent`, chưa có decision. | `approved` | Customer |
-| `waiting_for_approval` | Customer từ chối | Link hợp lệ hoặc quy trình exception được audit. | `rejected` | Customer/nhân viên được cấp quyền |
-| `waiting_for_approval` | Tạo quote mới do thay đổi nội dung | Quote cũ immutable, version mới được tạo và gửi lại. | `waiting_for_approval` | Owner/Manager thao tác cho Technician |
-| `approved` | Bắt đầu sửa | Decision approved gắn đúng quote version. | `repairing` | Owner/Manager thao tác cho Technician |
-| `repairing` | Hoàn tất công việc để kiểm tra | Có work log/checklist repair và ghi nhận linh kiện thực tế nếu có. | `quality_check` | Owner/Manager thao tác cho Technician |
-| `quality_check` | QC đạt | Checklist QC hoàn thành, kết luận `passed`, có kết quả/ảnh cần thiết. | `ready_for_pickup` | Quality checker |
-| `quality_check` | QC không đạt | Có note lỗi/ảnh và hướng xử lý lại. | `repairing` | Quality checker |
-| `ready_for_pickup` | Bàn giao | Có recipient, phụ kiện, tình trạng cuối và xác nhận bàn giao. | `handed_over` | Owner/Manager thao tác cho Receptionist |
-| `handed_over` | Kích hoạt bảo hành | Handover transaction thành công. | `warranty_active` | System |
-| Bất kỳ trạng thái mở | Dừng phiếu vì lý do cửa hàng | Có quyền Owner/Manager theo policy và ghi reason. | `cancelled` | Owner/Manager |
-
-### 6.1. Trạng thái hiển thị và cờ vận hành
-
-| Cờ/hiển thị | Cách tính | Không được hiểu là |
-| --- | --- | --- |
-| Quá hạn | `now > expected_completed_at` và phiếu chưa hoàn tất/bàn giao. | Một trạng thái thay thế cho `repairing` hoặc `quality_check`. |
-| Đang chờ khách | `repair_order.status = waiting_for_approval` và quote hiện hành `sent`. | Đã được khách duyệt. |
-| Sẵn sàng bàn giao | `status = ready_for_pickup`, QC đạt. | Đã bàn giao. |
-| Bảo hành hoạt động | `status = warranty_active`, trong khoảng start/end. | Đã thanh toán hoặc đã thu tiền. |
-
-## 7. Danh mục use case ưu tiên
+## 5. Danh mục use case ưu tiên
 
 | ID | Use case | Actor chính | Mức độ | Kết quả nghiệp vụ chính | Màn hình/feature liên quan |
 | --- | --- | --- | --- | --- | --- |
-| UC-01 | Owner/Manager đăng nhập và vào workspace | Owner/Manager | Must | Tạo management session hợp lệ và giới hạn dữ liệu theo workspace/quyền. | Login, app shell |
+| UC-01 | Access principal đăng nhập và vào workspace | Owner/Manager hoặc staff account | Must | Tạo session hợp lệ và giới hạn dữ liệu theo workspace, role và assignment. | Login, app shell |
 | UC-02 | Xem dashboard và danh sách việc | Manager/Owner | Must | Biết phiếu đang ở đâu, chờ ai, phiếu nào trễ/sẵn sàng. | Dashboard |
-| UC-03 | Tạo phiếu và tiếp nhận thiết bị | Owner/Manager thao tác cho Receptionist | Must | Tạo order code, gắn customer/device, ghi issue và trạng thái `received`. | Create repair order |
-| UC-04 | Ghi hiện trạng và bằng chứng | Owner/Manager thao tác cho Receptionist/Technician | Must | Khóa mốc “trước khi sửa”, tạo checklist và ảnh private. | Condition/evidence |
-| UC-05 | Chẩn đoán và lập báo giá nháp | Owner/Manager thao tác cho Technician | Must | Lưu diagnosis, quote items, tổng tiền và thời gian dự kiến. | Diagnosis/quote |
-| UC-06 | Gửi quote và cấp customer link | Owner/Manager | Must | Quote `sent`, link có hạn, order `waiting_for_approval`. | Quote detail/customer link |
+| UC-03 | Tạo phiếu và tiếp nhận thiết bị | Owner/Manager hoặc Receptionist account | Must | Tạo order code, gắn customer/device, ghi issue và trạng thái `received`. | Create repair order |
+| UC-04 | Ghi hiện trạng và bằng chứng | Owner/Manager hoặc account được phân công | Must | Khóa mốc “trước khi sửa”, tạo checklist và ảnh private. | Condition/evidence |
+| UC-05 | Chẩn đoán và lập báo giá nháp | Owner/Manager hoặc Technician account | Must | Lưu diagnosis, quote items, tổng tiền và thời gian dự kiến. | Diagnosis/quote |
+| UC-06 | Gửi quote và cấp customer link | Owner/Manager hoặc Receptionist account có quyền | Must | Quote `sent`, link có hạn, order `waiting_for_approval`. | Quote detail/customer link |
 | UC-07 | Customer mở link và xem thông tin | Customer | Must | Xem đúng phiếu/quote được cấp, không cần account. | Customer link |
 | UC-08 | Customer duyệt hoặc từ chối quote | Customer | Must | Lưu decision gắn quote version, đổi trạng thái order. | Customer link |
-| UC-09 | Bắt đầu và thực hiện sửa chữa | Owner/Manager thao tác cho Technician | Must | Chỉ thực hiện work đã duyệt, lưu log/checklist và ảnh sau sửa. | Repair execution |
-| UC-10 | Kiểm tra chất lượng và xử lý rework | Owner/Manager thao tác cho QC | Must | QC đạt thì sẵn sàng bàn giao; không đạt thì quay lại sửa. | Quality check |
-| UC-11 | Bàn giao và kích hoạt bảo hành | Owner/Manager thao tác cho Receptionist | Must | Tạo handover, khóa dữ liệu chính, tạo warranty từ ngày bàn giao. | Handover/warranty |
-| UC-12 | Tra cứu lịch sử và timeline | Owner/Manager | Must | Truy ngược customer/device/order và người thực hiện từng bước. | History/timeline/audit |
+| UC-09 | Bắt đầu và thực hiện sửa chữa | Owner/Manager hoặc Technician account | Must | Chỉ thực hiện work đã duyệt, lưu log/checklist và ảnh sau sửa. | Repair execution |
+| UC-10 | Kiểm tra chất lượng và xử lý rework | Owner/Manager hoặc Technician account có responsibility QC | Must | QC đạt thì sẵn sàng bàn giao; không đạt thì quay lại sửa. | Quality check |
+| UC-11 | Bàn giao và kích hoạt bảo hành | Owner/Manager hoặc Receptionist account có quyền | Must | Tạo handover, khóa dữ liệu chính, tạo warranty từ ngày bàn giao. | Handover/warranty |
+| UC-12 | Tra cứu lịch sử và timeline | Access principal theo quyền | Must | Truy ngược customer/device/order và người thực hiện từng bước. | History/timeline/audit |
 | UC-13 | Phân công và thay đổi người phụ trách | Manager/Owner | Should | Tách rõ intake/diagnosis/repair/QC/handover; giữ lịch sử người cũ. | Assignment/settings |
 | UC-14 | Xử lý link lỗi, quote mới và phiếu trễ | Staff/Manager | Should | Revoke/reissue link, tạo version mới, ghi lý do và thông báo. | Notifications/detail |
 
 Các use case UC-01–UC-12 được đặc tả chi tiết dưới đây. UC-13–UC-14 được đặc tả ở mức nghiệp vụ vì phụ thuộc module quản trị/thông báo mở rộng.
 
-### 7.1. User story theo persona
+### 5.1. User story theo persona
 
-Mỗi user story dưới đây có thể dùng làm đầu vào cho backlog. Một story chỉ được coi là hoàn tất khi các điều kiện nghiệm thu liên quan trong mục 12 đạt và business rule được kiểm tra ở Backend/API.
+Mỗi user story dưới đây có thể dùng làm đầu vào cho backlog. Một story chỉ được coi là hoàn tất khi các điều kiện nghiệm thu liên quan trong mục 10 đạt và business rule được kiểm tra ở lớp thực thi của hệ thống.
 
 | ID | Persona | User story | Vì sao cần | Tiêu chí chấp nhận tóm tắt |
 | --- | --- | --- | --- | --- |
-| US-01 | Owner/Manager | Là người quản lý, tôi muốn đăng nhập vào đúng workspace để bảo vệ dữ liệu cửa hàng và thực hiện các thao tác nội bộ. | Bảo vệ dữ liệu khi hệ thống được deploy. | Chỉ Owner/Manager login được; session scope theo workspace; hồ sơ inactive không được cấp quyền; Technician/Receptionist không có login riêng. |
+| US-01 | Owner/Manager hoặc staff được cấp account | Là người dùng nội bộ, tôi muốn đăng nhập vào đúng workspace để chỉ xem và thao tác đúng phạm vi được cấp. | Bảo vệ dữ liệu khi hệ thống được deploy. | Account active và membership hợp lệ mới login được; session scope theo workspace; role/assignment giới hạn dữ liệu; staff profile không có account không có session. |
 | US-02 | Manager/Owner | Là người quản lý, tôi muốn xem dashboard theo status, người phụ trách và hạn trả để biết việc nào cần xử lý trước. | Điều phối năng lực và phiếu trễ. | KPI/filter dẫn tới danh sách đúng; overdue là cờ tính từ deadline; có loading/empty/error. |
 | US-03 | Owner/Manager thao tác cho Receptionist | Là người quản lý, tôi muốn chọn hoặc tạo customer/device và ghi nhận người tiếp nhận để không nhập trùng và không bỏ sót thông tin nhận máy. | Tạo dữ liệu đầu vào sạch và truy được lịch sử. | Có duplicate check theo phone/device; order code unique; trạng thái ban đầu là `received`; staff profile tiếp nhận được lưu. |
 | US-04 | Owner/Manager thao tác cho Receptionist/Technician | Là người quản lý, tôi muốn ghi checklist, phụ kiện, ảnh hiện trạng và chọn staff profile thực hiện để hai bên có cùng bằng chứng baseline. | Giảm tranh chấp về tình trạng và tài sản đi kèm. | Không qua diagnosis nếu intake chưa đủ; ảnh private có stage/staff profile/thời gian. |
@@ -189,15 +158,15 @@ Mỗi user story dưới đây có thể dùng làm đầu vào cho backlog. M�
 | US-11 | Owner/Manager thao tác cho Quality checker | Là người quản lý, tôi muốn chọn quality-checker profile và đối chiếu lỗi ban đầu, chức năng, tình trạng sau sửa để kết luận đạt hoặc yêu cầu sửa lại. | Không giao thiết bị khi chưa đạt. | QC pass mới được `ready_for_pickup`; fail luôn quay về `repairing` với lý do. |
 | US-12 | Owner/Manager thao tác cho Receptionist/Customer | Là người quản lý, tôi muốn ghi staff profile bàn giao, người nhận, phụ kiện và tình trạng cuối để khách nhận đúng thiết bị. | Hoàn tất evidence chain trước khi đóng phiếu. | Không handover nếu QC chưa pass; có handover record và xác nhận. |
 | US-13 | Customer/Owner | Là khách hàng, tôi muốn biết điều khoản và thời điểm bắt đầu bảo hành để có thể tra cứu khi quay lại. | Bảo đảm cam kết sau sửa không bị thất lạc. | Warranty bắt đầu từ handover theo mặc định; terms/end date hiển thị và truy được từ device history. |
-| US-14 | Manager/Owner | Là người quản lý, tôi muốn phân công riêng staff profile tiếp nhận, chẩn đoán, sửa, QC và bàn giao để biết ai chịu trách nhiệm ở từng giai đoạn. | Một `assigned_technician_id` duy nhất không đủ cho audit. | Assignment không ghi đè lịch sử; staff profile inactive không nhận phiếu mới; không yêu cầu staff login. |
+| US-14 | Manager/Owner | Là người quản lý, tôi muốn phân công riêng staff profile tiếp nhận, chẩn đoán, sửa, QC và bàn giao để biết ai chịu trách nhiệm ở từng giai đoạn. | Một `assigned_technician_id` duy nhất không đủ cho audit. | Assignment không ghi đè lịch sử; staff profile inactive không nhận phiếu mới; account của staff là tùy chọn. |
 | US-15 | Manager/Owner | Là người quản lý, tôi muốn tạo quote version mới hoặc thu hồi link khi thông tin thay đổi/lộ link để giữ an toàn và yêu cầu khách duyệt lại. | Bảo vệ tính bất biến của quote và quyền public. | Quote cũ `superseded`; link cũ revoke; version mới có decision mới và audit reason. |
 | US-16 | Owner/Manager | Là người quản lý, tôi muốn xem lịch sử theo customer/device/order để trả lời khách và xử lý tranh chấp bằng dữ liệu thật. | Giảm phụ thuộc vào giấy/chat cá nhân. | Timeline nối được status, decision, evidence, work, QC, handover, warranty; audit không sửa/xóa thường. |
 
-## 8. Luồng người dùng theo persona
+## 6. Luồng người dùng theo persona
 
-### 8.1. Receptionist/Front Desk
+### 6.1. Receptionist/Front Desk
 
-Receptionist không đăng nhập trong MVP; Owner/Manager thao tác trên giao diện và chọn hồ sơ Receptionist cho các mốc cần truy vết.
+Receptionist có thể được cấp account với quyền giới hạn; nếu chưa có account, Owner/Manager thao tác trên giao diện và chọn hồ sơ Receptionist cho các mốc cần truy vết.
 
 | Bước | Hành động | Kết quả mong đợi |
 | ---: | --- | --- |
@@ -210,9 +179,9 @@ Receptionist không đăng nhập trong MVP; Owner/Manager thao tác trên giao 
 | 7 | Khi QC đạt, kiểm tra người nhận/phụ kiện/tình trạng cuối. | Tạo handover record và chuyển `handed_over`. |
 | 8 | Gửi/xuất thông tin bảo hành theo chính sách cửa hàng. | Warranty active từ ngày bàn giao; order vào lịch sử. |
 
-### 8.2. Technician
+### 6.2. Technician
 
-Technician không đăng nhập trong MVP; Owner/Manager ghi nhận thao tác và chọn hồ sơ Technician được phân công.
+Technician có thể được cấp account với quyền giới hạn; nếu chưa có account, Owner/Manager ghi nhận thao tác và chọn hồ sơ Technician được phân công.
 
 | Bước | Hành động | Kết quả mong đợi |
 | ---: | --- | --- |
@@ -225,9 +194,9 @@ Technician không đăng nhập trong MVP; Owner/Manager ghi nhận thao tác v�
 | 7 | Ghi work log, checklist thực hiện, linh kiện thực tế, ảnh sau sửa và staff profile. | Phân biệt proposed/approved/performed/verified. |
 | 8 | Chạy QC và kết luận đạt/không đạt. | Đạt → `ready_for_pickup`; không đạt → `repairing`. |
 
-### 8.3. Manager/Owner (Admin mở rộng)
+### 6.3. Manager/Owner (Admin mở rộng)
 
-Owner/Manager là người dùng có access session trong MVP; Admin chỉ là role mở rộng, chưa cần thêm credential riêng ở giai đoạn đầu.
+Owner/Manager là người dùng có access session trong MVP; Receptionist/Technician có thể có access session tối thiểu nếu được cấp account. Admin chỉ là role mở rộng, chưa cần credential riêng.
 
 | Bước | Hành động | Kết quả mong đợi |
 | ---: | --- | --- |
@@ -237,7 +206,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | 4 | Xử lý link lộ/hết hạn, quote cần sửa, phiếu bị khách từ chối. | Revoke/version/cancel theo policy và ghi reason. |
 | 5 | Kiểm tra timeline/audit khi có tranh chấp. | Truy được quote version, decision, ảnh, người và thời gian. |
 
-### 8.4. Customer
+### 6.4. Customer
 
 | Bước | Hành động | Kết quả mong đợi |
 | ---: | --- | --- |
@@ -248,19 +217,19 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | 5 | Nếu cần trao đổi, dùng kênh hỗ trợ của cửa hàng. | Không tạo decision giả hoặc duyệt nhầm version. |
 | 6 | Mở lại link để theo dõi status. | Chỉ xem phần public được phép; link hết hạn/revoke hiển thị rõ. |
 
-## 9. Đặc tả use case chi tiết
+## 7. Đặc tả use case chi tiết
 
-### UC-01 — Owner/Manager đăng nhập và truy cập workspace
+### UC-01 — Access principal đăng nhập và truy cập workspace
 
 | Trường | Đặc tả |
 | --- | --- |
-| Mục tiêu | Cho Owner/Manager truy cập đúng workspace và thực hiện toàn bộ thao tác nội bộ an toàn. |
-| Actor chính | Owner/Manager. |
-| Actor nghiệp vụ phụ | Receptionist/Technician/Quality checker là staff profile được chọn trong từng nghiệp vụ, không đăng nhập. |
-| Trigger | Owner/Manager mở ứng dụng hoặc gửi thông tin đăng nhập. |
-| Tiền điều kiện | Access principal tồn tại; thuộc workspace; đang active. Staff profile không cần credential. |
-| Dữ liệu vào | Email/phone/username theo cơ chế auth, password/PIN/SSO, workspace context nếu có nhiều workspace. |
-| Hậu điều kiện thành công | Tạo management session có thời hạn; tải workspace và quyền Owner/Manager; redirect về Dashboard. |
+| Mục tiêu | Cho access principal truy cập đúng workspace và thực hiện thao tác nội bộ trong phạm vi role/assignment an toàn. |
+| Actor chính | Owner/Manager hoặc staff account được cấp. |
+| Actor nghiệp vụ phụ | Receptionist/Technician/Quality checker là staff profile được chọn trong từng nghiệp vụ; có thể có account nếu được cấp quyền truy cập. |
+| Trigger | Access principal mở ứng dụng hoặc gửi thông tin đăng nhập. |
+| Tiền điều kiện | Access principal tồn tại; thuộc workspace; đang active; role và assignment phù hợp nếu là staff account. Staff profile chưa có account vẫn có thể được attribution bởi Manager. |
+| Dữ liệu vào | Email/phone/username theo cơ chế auth, password/PIN và workspace context theo access policy. |
+| Hậu điều kiện thành công | Tạo session có thời hạn; tải workspace, role và assignment; redirect đến màn hình phù hợp. |
 | Hậu điều kiện thất bại | Không tạo session; không tiết lộ access principal/workspace nào tồn tại. |
 | Quy tắc liên quan | BR-01, BR-15; xác thực phải ở backend, không chỉ ẩn menu. |
 
@@ -268,13 +237,13 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 
 | Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
 | ---: | --- | --- | --- |
-| 1 | Owner/Manager | Mở màn hình login. | Hiển thị form và trạng thái loading/error rõ ràng; không hiển thị login cho Technician. |
-| 2 | Owner/Manager | Nhập thông tin và submit. | Client kiểm tra rỗng; backend nhận request qua HTTPS. |
+| 1 | Access principal | Mở màn hình login. | Hiển thị form và trạng thái loading/error rõ ràng theo account được cấp. |
+| 2 | Access principal | Nhập thông tin và submit. | Client kiểm tra rỗng; backend nhận request qua HTTPS. |
 | 3 | System | Xác thực credential. | Kiểm tra user active/locked và membership active. |
 | 4 | System | Tạo session/access token. | Không trả password; session có expiry và cơ chế logout. |
-| 5 | System | Nạp workspace và role management. | Mọi query tiếp theo gắn `workspace_id`; staff profile chỉ phục vụ assignment. |
+| 5 | System | Nạp workspace và role management. | Mọi query tiếp theo gắn `workspace_id`; staff account bị giới hạn bởi role/assignment, còn attributed staff được ghi riêng. |
 | 6 | System | Ghi audit login thành công nếu policy yêu cầu. | Lưu actor, thời gian, user agent/IP hash theo chính sách. |
-| 7 | System | Điều hướng về Dashboard. | Chỉ hiển thị menu nội bộ cho Owner/Manager; không dùng menu làm cơ chế bảo mật. |
+| 7 | System | Điều hướng về màn hình phù hợp. | Hiển thị menu theo role/assignment; không dùng menu làm cơ chế bảo mật. |
 
 #### Luồng thay thế và ngoại lệ
 
@@ -289,7 +258,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 #### Tiêu chí nghiệm thu
 
 - Access principal bị khóa không thể truy cập API bằng cách gọi trực tiếp.
-- Technician/Receptionist không có session riêng; mọi API nội bộ phải đi qua Owner/Manager session.
+- Staff account chỉ được gọi API trong phạm vi role, workspace và assignment; profile không có account không tạo được session.
 - Refresh trang không làm mất session hợp lệ nhưng session hết hạn phải buộc đăng nhập lại.
 
 ### UC-02 — Xem Dashboard và danh sách việc
@@ -297,7 +266,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Giúp người vận hành biết phiếu đang ở đâu, đang chờ ai, phiếu nào quá hạn và phiếu nào sẵn sàng bàn giao. |
-| Actor chính | Owner/Manager trong management session. |
+| Actor chính | Owner/Manager hoặc staff account trong session hợp lệ. |
 | Trigger | Mở Dashboard, bấm KPI/pipeline, dùng filter hoặc tìm kiếm. |
 | Tiền điều kiện | Đã đăng nhập; có workspace context; quyền đọc order. |
 | Dữ liệu vào | Filter status, người phụ trách, ngày nhận, overdue, waiting customer, query order/customer/device. |
@@ -337,10 +306,10 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Tạo một repair order đầy đủ để cửa hàng có thể theo dõi thiết bị từ lúc nhận. |
-| Actor chính | Owner/Manager thao tác cho Receptionist/Front Desk. |
-| Actor phụ | Manager/Owner, System/API. |
+| Actor chính | Owner/Manager hoặc Receptionist account có quyền intake. |
+| Actor phụ | Staff profile Receptionist được attribution khi cần. |
 | Trigger | Bấm “Tạo phiếu sửa chữa”. |
-| Tiền điều kiện | Owner/Manager có management session; workspace active. |
+| Tiền điều kiện | Access principal có session hợp lệ và quyền tạo order; workspace active. |
 | Dữ liệu vào bắt buộc | Customer name, phone; device type/brand/model; serial/IMEI hoặc device identifier; issue customer mô tả. |
 | Dữ liệu vào tùy chọn | Email, note, issue start time, power state, accessories, expected completed time, intake note. |
 | Hậu điều kiện thành công | Tạo customer/device nếu cần, tạo `repair_order` với order code unique và status `received`, ghi creator/intake staff/status history/audit. |
@@ -383,7 +352,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Tạo baseline có thể đối chiếu để bảo vệ khách và cửa hàng trước khi chẩn đoán/sửa. |
-| Actor chính | Owner/Manager thao tác cho Receptionist/Technician được phân công. |
+| Actor chính | Owner/Manager hoặc Receptionist/Technician account được phân công. |
 | Trigger | Mở tab hiện trạng sau khi tạo phiếu hoặc bấm “Hoàn tất hiện trạng”. |
 | Tiền điều kiện | Order ở `received`; có customer/device; user có quyền sửa intake. |
 | Dữ liệu vào | Checklist ngoại hình/chức năng, accessories, power state, note, ảnh mặt trước/sau/cạnh/vùng hỏng, caption/important flag. |
@@ -424,7 +393,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Biến hiện trạng thành kết luận kỹ thuật và đề xuất có thể giải thích cho khách. |
-| Actor chính | Owner/Manager thao tác cho Technician staff profile. |
+| Actor chính | Owner/Manager hoặc Technician account được phân công. |
 | Actor phụ | Manager/Owner theo quyền review. |
 | Trigger | Owner/Manager mở thao tác chẩn đoán cho Technician profile trên order đã đủ intake. |
 | Tiền điều kiện | Order ở `diagnosing`; intake evidence/checklist đã hoàn tất; Technician được phân công. |
@@ -468,8 +437,8 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Phát hành một quote snapshot và cung cấp quyền xem/quyết định có giới hạn cho Customer. |
-| Actor chính | Owner/Manager thao tác cho staff profile được chọn. |
-| Actor phụ | System/API, Object Storage, notification worker nếu có. |
+| Actor chính | Owner/Manager hoặc Receptionist account có quyền phát hành. |
+| Actor phụ | Staff profile được attribution; Customer chỉ nhận và sử dụng public link. |
 | Trigger | Owner/Manager bấm “Gửi link khách hàng”. |
 | Tiền điều kiện | Diagnosis hợp lệ; quote hiện hành `draft` có item; customer có phương thức liên hệ; order chưa bị cancel. |
 | Hậu điều kiện thành công | Quote `sent`; customer link có token hash/expiry; order `waiting_for_approval`; status history/audit được ghi trong transaction. |
@@ -552,7 +521,7 @@ Owner/Manager là người dùng có access session trong MVP; Admin chỉ là r
 | --- | --- |
 | Mục tiêu | Ghi nhận quyết định có thể truy vết của Customer đối với đúng báo giá mà họ đã xem. |
 | Actor chính | Customer. |
-| Actor phụ | System/API; nhân viên chỉ xử lý sau khi có decision. |
+| Actor phụ | Owner/Manager hoặc Receptionist xử lý follow-up sau khi có decision. |
 | Trigger | Customer chọn “Đồng ý sửa chữa” hoặc “Từ chối/trao đổi”. |
 | Tiền điều kiện | Link hợp lệ; quote `sent`; chưa có decision hợp lệ; quote là version hiện hành của order. |
 | Dữ liệu vào | Decision, customer name, contact snapshot nếu yêu cầu, rejection note nếu từ chối, confirmation action. |
@@ -610,8 +579,8 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Thực hiện đúng phần khách đã duyệt và để lại bằng chứng công việc thực tế. |
-| Actor chính | Owner/Manager thao tác cho Technician staff profile được phân công. |
-| Actor phụ | Manager/Owner, System/API. |
+| Actor chính | Owner/Manager hoặc Technician account có assignment phù hợp. |
+| Actor phụ | Staff profile Technician được attribution khi Owner/Manager thao tác thay. |
 | Trigger | Owner/Manager mở thao tác “Bắt đầu sửa” cho Technician profile trên order `approved`. |
 | Tiền điều kiện | Có quote hiện hành `approved` và customer decision approved đúng version; order chưa cancel/handed over. |
 | Dữ liệu vào | Start/end, checklist repair, summary, note, actual parts, before/after photos, exception note. |
@@ -654,7 +623,7 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Xác nhận thiết bị đạt yêu cầu trước khi cho phép bàn giao. |
-| Actor chính | Owner/Manager thao tác cho Technician/Quality checker staff profile. |
+| Actor chính | Owner/Manager hoặc Technician account có responsibility QC. |
 | Trigger | Work log/checklist repair hoàn tất, order ở `quality_check`. |
 | Tiền điều kiện | Có repair evidence/work log tối thiểu; Owner/Manager có quyền QC. |
 | Dữ liệu vào | Checklist lỗi ban đầu, power boot, chức năng liên quan, lỗi mới, ngoại hình sau sửa, ảnh, limitation note, kết luận pass/fail. |
@@ -696,8 +665,8 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Trả đúng thiết bị/phụ kiện, ghi nhận tình trạng cuối và khởi tạo bảo hành có thể tra cứu. |
-| Actor chính | Owner/Manager thao tác cho Receptionist/Front Desk hoặc staff profile có responsibility `handover`. |
-| Actor phụ | Owner/Manager, Customer, System/API. |
+| Actor chính | Owner/Manager hoặc Receptionist account có responsibility `handover`. |
+| Actor phụ | Customer tham gia xác nhận; staff profile được attribution khi cần. |
 | Trigger | Owner/Manager mở phiếu `ready_for_pickup` và bấm “Tạo biên bản bàn giao”. |
 | Tiền điều kiện | QC pass; order ready; chưa có handover record; recipient được xác định. |
 | Dữ liệu vào | Recipient name, handover datetime, returned accessories, final condition, confirmation, warranty duration/end date, note. |
@@ -741,7 +710,7 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 | Trường | Đặc tả |
 | --- | --- |
 | Mục tiêu | Cho nhân viên truy ngược toàn bộ bằng chứng và trách nhiệm khi khách quay lại hoặc có tranh chấp. |
-| Actor chính | Owner/Manager; Customer chỉ xem public subset. Receptionist/Technician chỉ là staff profile được hiển thị trong lịch sử. |
+| Actor chính | Owner/Manager; Customer chỉ xem public subset. Receptionist/Technician có thể là staff account giới hạn hoặc staff profile được hiển thị trong lịch sử. |
 | Trigger | Mở customer profile, device profile, order detail hoặc timeline. |
 | Tiền điều kiện | Có quyền đọc entity; query thuộc workspace; public link hợp lệ nếu là Customer. |
 | Dữ liệu hiển thị | Order, status history, work logs, decisions, checklists, evidence, handover, warranty, audit event theo quyền. |
@@ -775,7 +744,7 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 - Từ decision có thể truy về đúng link, quote version và order.
 - Timeline không cho phép sửa/xóa trực tiếp event gốc.
 
-## 10. Use case bổ trợ
+## 8. Use case bổ trợ
 
 ### UC-13 — Phân công và thay đổi người phụ trách
 
@@ -796,7 +765,7 @@ Prototype hiện có nút “Khách đồng ý qua điện thoại”. Đây kh�
 | Phiếu quá hạn | Dashboard gắn cờ, Manager xem nguyên nhân, cập nhật expected time và thông báo khách theo policy. | Có reason/timeline; không tự đổi thành status mới nếu backend không định nghĩa. |
 | Staff profile bị vô hiệu hóa | Không cho chọn vào assignment mới; giữ lịch sử cũ; Manager reassign order mở. | Không mất audit và không ghi đè người cũ. |
 
-## 11. Ma trận chức năng và mức độ hỗ trợ của prototype hiện tại
+## 9. Ma trận chức năng và mức độ hỗ trợ của prototype hiện tại
 
 Bảng này giúp phân biệt nghiệp vụ đích với phần UI demo đang có trong `src/ui`.
 
@@ -813,10 +782,10 @@ Bảng này giúp phân biệt nghiệp vụ đích với phần UI demo đang c
 | Repair execution | Có status mẫu trong mock, chưa có màn hình thao tác. | Work log, repair checklist, actual parts, after evidence. | Chưa có use case UI hoàn chỉnh. |
 | Quality check | Có tab/nhãn mẫu trong detail, chưa có form pass/fail. | Checklist QC, required items, fail → repairing. | Chưa có guard chuyển trạng thái thật. |
 | Handover/warranty | Có status/order mẫu và nội dung định hướng trong docs. | Handover transaction, recipient/accessories/final condition, warranty start/end. | Chưa có màn hình và API hoàn chỉnh. |
-| Management access/workspace | UI có current user tĩnh trong config. | Owner/Manager login, session, membership, workspace isolation và quyền ở backend; staff profile không login. | Không được dùng config UI làm cơ chế phân quyền. |
+| Management access/workspace | UI có current user tĩnh trong config. | Access principal login, session, membership, workspace isolation và quyền theo role/assignment ở backend; staff profile không có account không login. | Không được dùng config UI làm cơ chế phân quyền. |
 | Timeline/audit | Có timeline mock trong detail. | Tổng hợp event chuẩn hóa, audit immutable, actor/time/entity. | Mock timeline không phải audit log bảo mật. |
 
-## 12. Bảng acceptance test cấp nghiệp vụ
+## 10. Bảng acceptance test cấp nghiệp vụ
 
 | ID | Điều kiện kiểm thử | Kết quả mong đợi |
 | --- | --- | --- |
@@ -837,11 +806,11 @@ Bảng này giúp phân biệt nghiệp vụ đích với phần UI demo đang c
 | AT-15 | Handover khi QC pass. | Tạo handover, order `handed_over`, warranty start bằng ngày bàn giao, sau đó `warranty_active`. |
 | AT-16 | Handover retry/concurrent. | Không tạo trùng handover/warranty; transaction idempotent. |
 | AT-17 | Management session truy cập order thuộc workspace khác. | 403/404; không đọc/ghi dữ liệu ngoài tenant. |
-| AT-18 | Staff profile bị inactive nhưng còn order cũ. | Không được gán vào assignment mới; lịch sử thao tác cũ vẫn còn; Manager có thể reassign. Không có bước staff profile login để chặn. |
+| AT-18 | Staff profile bị inactive nhưng còn order cũ. | Không được gán vào assignment mới; account liên quan không tạo session mới; lịch sử thao tác cũ vẫn còn; Manager có thể reassign. |
 | AT-19 | Query lịch sử theo serial/device. | Trả đúng các order cùng workspace, sắp xếp theo thời gian, không thiếu handover/warranty hợp lệ. |
 | AT-20 | Phiếu quá hạn nhưng đang `repairing`. | Dashboard gắn cờ overdue và cho xử lý, không làm mất status `repairing`. |
 
-## 13. Các điểm cần giữ nhất quán khi triển khai
+## 11. Các điểm cần giữ nhất quán khi triển khai
 
 1. **Một nguồn dữ liệu trung tâm:** toàn bộ màn hình chỉ đọc từ repair order và các entity liên quan; không tạo state nghiệp vụ độc lập trong từng feature.
 2. **Backend là nơi bảo vệ nghiệp vụ:** frontend không được là nơi duy nhất khóa nút approve, start repair, QC hoặc handover.
@@ -852,12 +821,12 @@ Bảng này giúp phân biệt nghiệp vụ đích với phần UI demo đang c
 7. **Public link tối thiểu quyền:** Customer chỉ xem phần cần thiết cho phiếu được cấp; token có expiry/revoke/rate limit.
 8. **Không dùng khái niệm thanh toán trong MVP:** `total` là giá trị báo giá, không phải doanh thu đã thu hoặc COD.
 9. **Cảnh báo quá hạn là dữ liệu dẫn xuất:** dùng để điều phối, không tự thay thế lifecycle status.
-10. **Các màn hình chưa có trong prototype vẫn là phần của target MVP:** management login, tạo phiếu thật, intake checklist, repair checklist, QC, handover/warranty, staff profile và audit phải được thiết kế theo use case trong tài liệu này.
+10. **Các màn hình chưa có trong prototype vẫn là phần của target MVP:** internal login, tạo phiếu thật, intake checklist, repair checklist, QC, handover/warranty, staff profile và audit phải được thiết kế theo use case trong tài liệu này.
 
-## 14. Tóm tắt luồng end-to-end chuẩn
+## 12. Tóm tắt luồng end-to-end chuẩn
 
 ```text
-Owner/Manager đăng nhập
+Access principal đăng nhập (Owner/Manager hoặc staff account được cấp)
   → Tạo/tìm customer và device
   → Tạo repair order (received)
   → Ghi hiện trạng + ảnh + phụ kiện

@@ -9,11 +9,12 @@ Keep the codebase small, discoverable, easy to change, and easy to provide to an
 - \`README.md\`: product goal, MVP scope, project dashboard, and local quickstart.
 - \`docs/README.md\`: documentation boundaries and the LLM documentation workflow.
 - \`docs/v0/README.md\`: the current phase index and phase rules.
-- \`docs/v0/requirements-closure.md\`: decision backlog, open questions, and the build gate.
-- \`docs/v0/usecase.md\`: user stories, main flows, alternative flows, failure flows, and acceptance baseline.
-- \`docs/v0/architecture-and-requirements.md\`: architecture, roles, data, and business rules discussed or decided in v0.
-- \`docs/v0/database-requirements.md\`: schema, constraints, indexes, and transaction rules discussed or decided in v0.
-- \`docs/v0/ui-requirements.md\`: UX flows, screens, states, and acceptance criteria for v0.
+- \`docs/v0/01-requirements-closure.md\`: decision backlog, open questions, and the build gate.
+- \`docs/v0/02-use-cases.md\`: user stories, main flows, alternative flows, failure flows, and acceptance baseline.
+- \`docs/v0/03-business-and-domain-requirements.md\`: roles, data, and business rules discussed or decided in v0.
+- \`docs/v0/04-architecture-c4-arc42.md\`: canonical architecture narrative and C4/arc42 views.
+- \`docs/v0/05-database-requirements.md\`: schema, constraints, indexes, and transaction rules discussed or decided in v0.
+- \`docs/v0/06-ui-requirements.md\`: UX flows, screens, states, and acceptance criteria for v0.
 - \`src/ui/AGENTS.md\`: HTML, CSS, and JavaScript rules for the UI.
 
 When documentation and source code conflict, do not guess. Identify the conflict, name the files involved, and ask before changing product behavior.
@@ -71,4 +72,3 @@ Completion criteria: [verifiable conditions]
 \`\`\`
 
 Do not load the entire repository into one task. Read the root rules, the local rules, and the directly relevant files only.
-

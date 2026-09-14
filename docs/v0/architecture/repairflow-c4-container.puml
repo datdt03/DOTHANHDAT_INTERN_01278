@@ -6,8 +6,8 @@ title RepairFlow — C4 Container View
 
 Person(owner, "Owner / Manager", "Management session")
 Person(customer, "Customer", "Public customer link")
-Person(receptionist, "Receptionist / Front Desk", "Staff profile")
-Person(technician, "Technician", "Staff profile")
+Person(receptionist, "Receptionist / Front Desk", "Staff profile; account tùy chọn")
+Person(technician, "Technician", "Staff profile; account tùy chọn")
 
 System_Boundary(repairflow, "RepairFlow") {
     Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard, repair-order workspace và các màn hình vận hành")
@@ -19,8 +19,8 @@ System_Boundary(repairflow, "RepairFlow") {
 Container_Ext(objectStorage, "Object Storage", "Private object storage", "Ảnh và tài liệu; trạng thái PROPOSED cho MVP")
 
 Rel(owner, internalUi, "Sử dụng")
-Rel(receptionist, internalUi, "Được ghi nhận dưới dạng staff profile")
-Rel(technician, internalUi, "Được ghi nhận dưới dạng staff profile")
+Rel(receptionist, internalUi, "Truy cập theo account/assignment hoặc được ghi nhận dưới dạng staff profile")
+Rel(technician, internalUi, "Truy cập theo account/assignment hoặc được ghi nhận dưới dạng staff profile")
 Rel(customer, customerUi, "Mở customer link")
 Rel(internalUi, api, "HTTPS / JSON")
 Rel(customerUi, api, "HTTPS / public token")

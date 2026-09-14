@@ -13,14 +13,12 @@ This directory contains implementation plans for LLM agents. Create or update fi
 
 ## Active plans
 
-- [000 — RepairFlow v1 implementation](./000-repairflow-v1-implementation.md): cluster map and gates.
-- [002 — API server for Codex](./002-api-server-codex.md): FastAPI and PostgreSQL task packet.
-- [003 — UI for Antigravity](./003-ui-antigravity.md): UI task packet.
+No active implementation plan files are currently present in this checkout. Create or restore a plan only when the Product or user explicitly requests one.
 
 ## Required inputs
 
 - [Product v0 documentation](../docs/v0/README.md).
-- [Requirements closure](../docs/v0/requirements-closure.md) when a task depends on unresolved decisions.
+- [Requirements closure](../docs/v0/01-requirements-closure.md) when a task depends on unresolved decisions.
 - \`README.md\`, \`AGENTS.md\`, and \`src/ui/AGENTS.md\` when the task touches the relevant area.
 
 ## Minimum plan structure
@@ -36,4 +34,3 @@ This directory contains implementation plans for LLM agents. Create or update fi
 - Acceptance criteria
 
 Every checklist must show its status. Do not use plans as long discussion logs or implementation journals.
-

@@ -19,9 +19,12 @@ Each repair order is the central workspace. Customer, device, condition, quotati
 
 ### MVP access model
 
-- Only Owner/Manager sees the login screen and uses an internal session.
-- Receptionist/Technician have no separate accounts; the Manager operates the UI and selects the correct staff profile for each step.
-- Do not display a “Technician login”. “Technician work” is a filter by assigned staff profile.
+- Owner/Manager, Receptionist and Technician may see the login screen when an
+  active account has been provisioned for them.
+- Staff profiles without accounts have no session; the Manager can still
+  operate the UI and select the correct staff profile for each step.
+- Staff work is limited by fixed role permissions and assigned repair orders;
+  it is not a workspace-wide view.
 - Customers access a public link with a token and do not need an account.
 
 ### Receptionist/Front Desk
@@ -32,7 +35,8 @@ Priority tasks:
 - Record condition.
 - Send a quotation link.
 - Hand over the device.
-- All actions use the Owner/Manager session; there is no separate login in the MVP.
+- Actions use the current account session when available; a Manager may still
+  attribute an action to a staff profile when operating on their behalf.
 
 ### Technician
 
@@ -43,7 +47,8 @@ Priority tasks:
 - Create and update quotations.
 - Record repair work.
 - Perform quality checks.
-- A Technician is a staff profile assigned to the order; there is no separate login in the MVP.
+- A Technician may have an account with access limited to assigned orders; a
+  Technician without an account remains a staff profile.
 
 ### Manager/Owner
 
@@ -375,7 +380,7 @@ UX must clearly handle:
 
 ## 8. MVP screen list
 
-1. Owner/Manager login.
+1. Internal login for Owner/Manager and provisioned staff accounts.
 2. Dashboard.
 3. Repair-order list.
 4. Create repair order.
@@ -395,7 +400,7 @@ UX must clearly handle:
 
 - Users always see the current order status and next step.
 - Owner/Manager can create an order and attribute the Receptionist profile without leaving the flow.
-- Managers can select and record only active Technician profiles; Technicians have no separate session in the MVP.
+- Managers can select and record only active Technician profiles; Technician accounts, when provisioned, remain limited to assigned work.
 - Customers can understand the quotation and decide without an account.
 - Repair cannot start without an `approved` decision for the correct quotation version.
 - Handover cannot occur before the quality checklist passes.
@@ -405,5 +410,5 @@ UX must clearly handle:
 ## 10. Related documents
 
 - [Product README](../../README.md)
-- [Architecture and system requirements](./architecture-and-requirements.md)
-
+- [Architecture and system requirements](./03-business-and-domain-requirements.md)
+- [Authentication and authorization](./07-authentication-and-authorization.md)
