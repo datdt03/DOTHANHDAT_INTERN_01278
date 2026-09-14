@@ -351,9 +351,8 @@ Customer chỉ duyệt hoặc từ chối toàn bộ quote version hiện hành;
 approve từng item trong MVP.
 Trao đổi thương lượng có thể diễn ra qua điện thoại hoặc Zalo. Customer chỉ
 thông báo chưa chấp thuận và yêu cầu thay đổi; Technician điều chỉnh phần kỹ
-thuật/hạng mục khi cần và tạo bản nháp version mới, còn Receptionist là người
-chủ yếu điều chỉnh giá/chiết khấu và gửi version mới cho Customer theo quyền
-được cấp. Nếu quote hiện tại đã `rejected` nhưng thiết bị chưa được hoàn trả,
+thuật, hạng mục và giá khi cần, tạo bản nháp version mới và gửi cho Customer
+theo quyền được cấp. Nếu quote hiện tại đã `rejected` nhưng thiết bị chưa được hoàn trả,
 cùng repair order vẫn được tạo quote version mới và quay lại
 `waiting_for_approval`; sau khi order đã `returned` thì không tạo quote mới
 trên order cũ. MVP không lưu communication log của phone/Zalo; snapshot item,
@@ -459,7 +458,7 @@ waiting_for_approval
 approved
     → repairing | cancelled
 repairing
-    → quality_check | cancellation_requested
+    → quality_check | cancellation_requested | ready_for_return
 quality_check
     → ready_for_pickup | repairing
 rejected
@@ -501,6 +500,10 @@ Một số luật cần áp dụng:
   hành.
 - Nếu yêu cầu hủy trong lúc `repairing` bị từ chối, order quay lại hoặc tiếp tục
   ở `repairing`, phải lưu lý do từ chối và tiếp tục luồng sửa chữa bình thường.
+- Nếu Technician xác định không thể sửa, Technician ghi lý do và bấm thông báo
+  Customer trên customer link; không cần Customer approve lại. Order chuyển vào
+  `ready_for_return`, sau đó Customer hoặc người được ủy quyền xác nhận và ký
+  trên link, Receptionist hoàn tất biên bản và chuyển sang `returned`.
 - Nếu Customer không đồng ý báo giá, order đi theo luồng `rejected` →
   `ready_for_return` → `returned`, không coi là `cancelled`.
 - Khi trả máy, phải có xác nhận Customer đã nhận máy và chữ ký; Receptionist
@@ -540,7 +543,12 @@ Một số luật cần áp dụng:
 
 - Token được tạo bằng bộ sinh số ngẫu nhiên an toàn.
 - Database chỉ lưu hash của token.
-- Link có thời hạn, có thể thu hồi và có thể tạo lại.
+- Link có thời hạn 7 ngày, có thể thu hồi và có thể tạo lại. Trước khi xem
+  thông tin hoặc xác nhận/ký, Customer hoặc người được ủy quyền phải nhập OTP
+  gửi qua số điện thoại hoặc email đã được ghi nhận; không coi token/link đơn
+  thuần là đủ quyền truy cập. Khi có quote
+  version mới, link của version cũ bị thu hồi; khi phiếu đã `handed_over`,
+  `returned` hoặc `cancelled`, link không còn quyền quyết định.
 - Không đưa thông tin cá nhân hoặc dữ liệu báo giá vào URL.
 - Áp dụng rate limit cho trang public và các thao tác duyệt.
 - Link chỉ cho phép xem đúng phiếu được cấp quyền.
