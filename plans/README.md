@@ -1,30 +1,29 @@
-# Plans — LLM implementation tasks
+# Plans — LLM Implementation Tasks
 
-Thư mục này chỉ chứa kế hoạch triển khai dành cho LLM. Chỉ tạo hoặc cập nhật
-file trong `plans/` sau khi Product yêu cầu rõ ràng.
+This directory contains implementation plans for LLM agents. Create or update files here only after the Product or user explicitly requests a plan.
 
-## Quy tắc phạm vi
+## Scope rules
 
-- Thảo luận nghiệp vụ, quyết định đã chốt, câu hỏi còn mở và context sản phẩm nằm trong `docs/v0/`.
-- `plans/` chỉ chứa mục tiêu triển khai, task cards, file được phép sửa, test và acceptance criteria.
-- Mỗi task phải đủ nhỏ để một LLM thực hiện và kiểm chứng được.
-- Với task full-stack, chia theo cluster: một nhánh Codex xử lý server và một nhánh Antigravity xử lý UI trong cùng cluster; không chờ hoàn thành toàn bộ server mới làm UI.
-- Không tạo API contract, API handoff, release note hoặc tài liệu production trong thư mục này nếu Product chưa yêu cầu riêng.
-- Không dùng nội dung trong `docs/v0/archive/` làm nguồn sự thật.
+- Business discussion, approved decisions, open questions, and product context belong in \`docs/v0/\`.
+- \`plans/\` contains implementation goals, task cards, allowed files, tests, and acceptance criteria only.
+- Each task must be small enough for one LLM to implement and verify.
+- Full-stack work is split by cluster between a Codex server task and an Antigravity UI task; do not wait for the entire server before starting the UI.
+- Do not create an API contract, API handoff, release note, or production document here unless the user requests it separately.
+- Never use \`docs/v0/archive/\` as a source of truth.
 
-## Plan đang hiệu lực
+## Active plans
 
-- [000 — RepairFlow v1 implementation](./000-repairflow-v1-implementation.md): bản đồ triển khai lớn theo cluster và gate.
-- [002 — API server Codex](./002-api-server-codex.md): task packet phía FastAPI/PostgreSQL.
-- [003 — UI Antigravity](./003-ui-antigravity.md): task packet phía UI.
+- [000 — RepairFlow v1 implementation](./000-repairflow-v1-implementation.md): cluster map and gates.
+- [002 — API server for Codex](./002-api-server-codex.md): FastAPI and PostgreSQL task packet.
+- [003 — UI for Antigravity](./003-ui-antigravity.md): UI task packet.
 
-## Nguồn đầu vào bắt buộc
+## Required inputs
 
-- [Product docs v0](../docs/v0/README.md).
-- [Requirements closure](../docs/v0/requirements-closure.md), nếu task còn phụ thuộc quyết định chưa hoàn tất.
-- `README.md`, `AGENTS.md` và `src/ui/AGENTS.md` khi task chạm khu vực tương ứng.
+- [Product v0 documentation](../docs/v0/README.md).
+- [Requirements closure](../docs/v0/requirements-closure.md) when a task depends on unresolved decisions.
+- \`README.md\`, \`AGENTS.md\`, and \`src/ui/AGENTS.md\` when the task touches the relevant area.
 
-## Cấu trúc tối thiểu của một plan
+## Minimum plan structure
 
 - Goal
 - Scope
@@ -36,4 +35,5 @@ file trong `plans/` sau khi Product yêu cầu rõ ràng.
 - Testing plan
 - Acceptance criteria
 
-Mọi checklist phải ghi rõ trạng thái; không ghi kết quả triển khai hoặc nhật ký thảo luận dài vào plan.
+Every checklist must show its status. Do not use plans as long discussion logs or implementation journals.
+

@@ -1,0 +1,31 @@
+@startuml repairflow-c4-container
+!include <C4/C4_Container>
+
+LAYOUT_TOP_DOWN()
+title RepairFlow — C4 Container View
+
+Person(owner, "Owner / Manager", "Management session")
+Person(customer, "Customer", "Public customer link")
+Person(receptionist, "Receptionist / Front Desk", "Staff profile")
+Person(technician, "Technician", "Staff profile")
+
+System_Boundary(repairflow, "RepairFlow") {
+    Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard, repair-order workspace và các màn hình vận hành")
+    Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Trang public hiển thị diagnosis, quote và customer decision")
+    Container(api, "Backend / API", "Python, FastAPI, Uvicorn", "Authentication, permission, workflow, quote, public link, audit và response envelope")
+    ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Workspace, customers, devices, repair orders, evidence, quotes, decisions, QC, handover, warranty và audit")
+}
+
+Container_Ext(objectStorage, "Object Storage", "Private object storage", "Ảnh và tài liệu; trạng thái PROPOSED cho MVP")
+
+Rel(owner, internalUi, "Sử dụng")
+Rel(receptionist, internalUi, "Được ghi nhận dưới dạng staff profile")
+Rel(technician, internalUi, "Được ghi nhận dưới dạng staff profile")
+Rel(customer, customerUi, "Mở customer link")
+Rel(internalUi, api, "HTTPS / JSON")
+Rel(customerUi, api, "HTTPS / public token")
+Rel(api, database, "SQLAlchemy / psycopg")
+Rel(api, objectStorage, "Signed URL và object metadata")
+
+SHOW_LEGEND()
+@enduml

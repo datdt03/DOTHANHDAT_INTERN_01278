@@ -12,19 +12,19 @@ export function renderOrdersTable(orders, currentFilter = 'all') {
         <div>
           <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
             <span class="material-symbols-outlined text-sky-700 text-[18px]">assignment</span>
-            Phiếu sửa chữa cần xử lý ưu tiên
+            Repair orders requiring priority attention
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Danh sách các phiếu cần cập nhật trạng thái hoặc trễ cam kết</p>
+          <p class="text-xs text-slate-500 mt-0.5">Orders that need a status update or are past their commitment</p>
         </div>
         <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs font-semibold">
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'all' ? 'bg-white text-sky-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="all">
-            Tất cả (${orders.length})
+            All (${orders.length})
           </button>
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'waiting' ? 'bg-white text-sky-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="waiting">
-            Chờ duyệt (1)
+            Waiting for approval (1)
           </button>
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'overdue' ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="overdue">
-            Quá hạn (1)
+            Overdue (1)
           </button>
         </div>
       </div>
@@ -33,12 +33,12 @@ export function renderOrdersTable(orders, currentFilter = 'all') {
           <thead class="bg-slate-50/80 text-slate-500 uppercase font-bold text-[10.5px] border-b border-slate-100">
             <tr>
               <th class="py-3 px-4">MÃ PHIẾU</th>
-              <th class="py-3 px-4">KHÁCH HÀNG</th>
+              <th class="py-3 px-4">CUSTOMER</th>
               <th class="py-3 px-4">THIẾT BỊ</th>
               <th class="py-3 px-4">TRẠNG THÁI XỬ LÝ</th>
               <th class="py-3 px-4">PHỤ TRÁCH</th>
               <th class="py-3 px-4">HẠN DỰ KIẾN</th>
-              <th class="py-3 px-4 text-right">HÀNH ĐỘNG</th>
+              <th class="py-3 px-4 text-right">ACTIONS</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -63,11 +63,11 @@ export function renderOrdersTable(orders, currentFilter = 'all') {
                   <span class="font-medium text-slate-700">${escapeHtml(order.technicianName.split('(')[0].trim())}</span>
                 </td>
                 <td class="py-3 px-4 text-slate-600 font-medium">
-                  ${order.status === 'overdue' ? '<span class="text-rose-600 font-bold">Hôm qua (Trễ)</span>' : '13/09/2026'}
+                  ${order.status === 'overdue' ? '<span class="text-rose-600 font-bold">Yesterday (Overdue)</span>' : '13/09/2026'}
                 </td>
                 <td class="py-3 px-4 text-right">
                   <a href="#/orders/${escapeHtml(order.id)}" class="rf-btn rf-btn-outline text-[11px] py-1 px-2.5">
-                    Xem chi tiết
+                    View details
                   </a>
                 </td>
               </tr>
@@ -76,13 +76,14 @@ export function renderOrdersTable(orders, currentFilter = 'all') {
         </table>
       </div>
       <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500">
-        <span>Hiển thị ${orders.length} phiếu</span>
+        <span>Showing ${orders.length} order</span>
         <div class="flex items-center gap-1.5">
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Trước</button>
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Previous</button>
           <span class="px-2 py-0.5 rounded bg-sky-700 text-white font-bold text-xs">1</span>
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Sau</button>
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Next</button>
         </div>
       </div>
     </div>
   `;
 }
+

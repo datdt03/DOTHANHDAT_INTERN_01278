@@ -50,34 +50,34 @@ const UI_CONFIG = {
   shopName: 'Minh Tâm Store',
   shopAddress: '182 Lê Duẩn, Quận 1, TP. Hồ Chí Minh',
   shopPhone: '1900 8899',
-  shopStatus: 'Cửa hàng đang mở',
+  shopStatus: 'Store is open',
   currentUser: {
     name: 'Minh Tâm',
-    role: 'Quản lý điều hành',
+    role: 'Operations Manager',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces'
   }
 };
 
 const STATUS_LABELS = {
-  received: { label: 'Tiếp nhận mới', color: 'blue', step: 1 },
-  diagnosing: { label: 'Đang chẩn đoán', color: 'sky', step: 2 },
-  waiting_for_approval: { label: 'Chờ khách duyệt', color: 'amber', step: 3 },
-  approved: { label: 'Đã duyệt giá', color: 'indigo', step: 3 },
-  repairing: { label: 'Đang sửa chữa', color: 'purple', step: 4 },
-  quality_check: { label: 'Kiểm tra QC', color: 'teal', step: 5 },
-  ready_for_pickup: { label: 'Sẵn sàng bàn giao', color: 'emerald', step: 6 },
-  handed_over: { label: 'Đã bàn giao', color: 'green', step: 6 },
-  rejected: { label: 'Khách từ chối', color: 'rose', step: 3 },
-  overdue: { label: 'Quá hạn cam kết', color: 'red', step: 4 }
+  received: { label: 'New intake', color: 'blue', step: 1 },
+  diagnosing: { label: 'Diagnosing', color: 'sky', step: 2 },
+  waiting_for_approval: { label: 'Waiting for customer approval', color: 'amber', step: 3 },
+  approved: { label: 'Quotation approved', color: 'indigo', step: 3 },
+  repairing: { label: 'Repairing', color: 'purple', step: 4 },
+  quality_check: { label: 'Quality check', color: 'teal', step: 5 },
+  ready_for_pickup: { label: 'Ready for Handover', color: 'emerald', step: 6 },
+  handed_over: { label: 'Handed over', color: 'green', step: 6 },
+  rejected: { label: 'Customer rejected', color: 'rose', step: 3 },
+  overdue: { label: 'Overdue', color: 'red', step: 4 }
 };
 
 const PIPELINE_STEPS = [
-  { step: 1, title: 'Tiếp nhận', subtext: 'Chờ phân' },
-  { step: 2, title: 'Chẩn đoán', subtext: 'Đang đo' },
-  { step: 3, title: 'Duyệt giá', subtext: '11.4 tr' },
-  { step: 4, title: 'Sửa chữa', subtext: 'Bàn thợ' },
-  { step: 5, title: 'Kiểm tra QC', subtext: 'Test chức...' },
-  { step: 6, title: 'Sẵn sàng...', subtext: 'Hẹn trả' }
+  { step: 1, title: 'Intake', subtext: 'Awaiting assignment' },
+  { step: 2, title: 'Diagnosis', subtext: 'Testing' },
+  { step: 3, title: 'Quote approval', subtext: '11.4 tr' },
+  { step: 4, title: 'Repair', subtext: 'At repair bench' },
+  { step: 5, title: 'Quality check', subtext: 'Functional test...' },
+  { step: 6, title: 'Sẵn sàng...', subtext: 'Pickup scheduled' }
 ];
 
 
@@ -94,7 +94,7 @@ const INITIAL_ORDERS = [
     status: 'waiting_for_approval',
     receptionist: 'Linh',
     technicianId: 'ktv-nam',
-    technicianName: 'Trần Hoàng Nam (KTV Trưởng Phần Cứng Bậc 3)',
+    technicianName: 'Trần Hoàng Nam (Technician Trưởng Phần Cứng Bậc 3)',
     customer: {
       id: 'c-01',
       name: 'Nguyễn Minh Anh',
@@ -108,12 +108,12 @@ const INITIAL_ORDERS = [
       name: 'iPhone 13 Pro',
       specs: '128GB · Xanh Sierra',
       imei: '356891104829104',
-      issueReported: 'Lỗi nguồn, sập nguồn, nứt kính màn hình góc trên phải, loạn cảm ứng',
+      issueReported: 'Error nguồn, sập nguồn, nứt kính màn hình góc trên phải, loạn cảm ứng',
       currentBattery: '87% (Zin Apple)',
-      icloudPasscode: 'Đã mở mật khẩu',
-      simTray: 'Đã tháo trả khách',
+      icloudPasscode: 'Completed open mật khẩu',
+      simTray: 'Completed tháo trả customer',
       trueTone: 'Có thể sao lưu',
-      sealStatus: '2 ốc đáy hình sao Pentalobe còn nguyên tem Minh Tâm Care. Chưa qua sửa chữa bên ngoài.'
+      sealStatus: '2 ốc đáy hình sao Pentalobe remaining nguyên tem Minh Tâm Care. Chưa qua repair bên ngoài.'
     },
     intakePhotos: [
       {
@@ -137,18 +137,18 @@ const INITIAL_ORDERS = [
       {
         title: 'Vùng chấn thương OLED',
         subtitle: 'Đứt mạch số hóa Digitizer',
-        tag: 'Lỗi OLED',
+        tag: 'Error OLED',
         url: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=400&h=300&fit=crop'
       }
     ],
     diagnosis: {
-      hardwareDisplay: 'Màn hình vỡ góc trên phải, xuất hiện sọc tím mảnh dọc panel OLED. Cảm ứng nhảy loạn khu vực phím 7, 8, 9 và đơ dải phím dưới.',
+      hardwareDisplay: 'Màn hình vỡ góc trên phải, xuất hiện sọc tím mảnh dọc panel OLED. Cảm ứng nhảy loạn khu vực phím 7, 8, 9 and đơ dải phím dưới.',
       powerAndFeatures: 'Dòng cấp nguồn Boot current chuẩn 0.12A ~ 0.85A. Cụm Face ID, cảm biến tiệm cận nguyên bản hoạt động tốt. Pin zin 87% dung lượng.',
       proposedSolution: [
         'Thay Màn hình iPhone 13 Pro OLED Zin Apple (giữ nguyên ProMotion 120Hz mượt mà).',
-        'Dùng thiết bị chuyên dụng JCID nạp lại dữ liệu màn gốc, bảo toàn tính năng True Tone.',
+        'Dùng device chuyên dụng JCID nạp lại dữ liệu màn gốc, bảo toàn tính năng True Tone.',
         'Vệ sinh màng loa thoại, ép lại ron cao su chống nước & bụi chuẩn IP68.',
-        'Thời gian thi công: 90 phút ngay khi khách hàng xác nhận duyệt giá.'
+        'Repair time: 90 phút as soon as customer hàng confirm duyệt giá.'
       ],
       checkedItemsCount: 14
     },
@@ -163,7 +163,7 @@ const INITIAL_ORDERS = [
             stt: '01',
             name: 'Cụm Màn hình iPhone 13 Pro OLED Zin Apple',
             desc: 'Linh kiện bóc máy nguyên bản, hỗ trợ ProMotion 120Hz',
-            warranty: '6 tháng (1 đổi 1)',
+            warranty: '6 month (1 đổi 1)',
             quantity: 1,
             unitPrice: 2650000,
             totalPrice: 2650000
@@ -191,21 +191,21 @@ const INITIAL_ORDERS = [
         subtotal: 2850000,
         discount: 142500,
         finalTotal: 2707500,
-        warrantyPolicy: 'Bảo hành cảm ứng 06 tháng (1 đổi 1). Bảo hành hiển thị màu sắc 03 tháng. Không áp dụng trong trường hợp rơi vỡ va đập hoặc nước vào sau bàn giao.'
+        warrantyPolicy: 'Six-month one-for-one touch warranty. Three-month display-color warranty. Not applicable to impact, drops, or liquid damage after handover.'
       }
     ],
     customerFeedback: {
-      lastViewedAt: '10:28 - 12 phút trước',
+      lastViewedAt: '10:28 - 12 minutes ago',
       openedPlatform: 'Safari Mobile',
       decision: 'pending', // 'pending' | 'approved' | 'rejected'
       decisionAt: null
     },
     timeline: [
-      { time: '10:28', title: 'Khách mở xem link báo giá', note: 'Nguyễn Minh Anh mở link báo giá trên Safari Mobile.' },
-      { time: '10:20', title: 'Gửi báo giá v1.0', note: 'Lễ tân Linh phát hành báo giá 2.707.500 đ qua tin nhắn ZNS.' },
-      { time: '09:45', title: 'Hoàn tất chẩn đoán', note: 'KTV Nam hoàn thành đo đạc bo mạch, đề xuất thay màn Zin.' },
-      { time: '09:25', title: 'Chuyển sang Bàn 04', note: 'Máy được chuyển từ quầy tiếp tân vào khu kỹ thuật kiểm tra.' },
-      { time: '09:10', title: 'Tiếp nhận máy', note: 'Lập phiếu RF-20260911-001, chụp 4 ảnh hiện trạng ban đầu.' }
+      { time: '10:28', title: 'Customer opened the quotation link', note: 'Nguyễn Minh Anh open link quotation trên Safari Mobile.' },
+      { time: '10:20', title: 'Sent quotation v1.0', note: 'Receptionist Linh publish quotation 2.707.500 đ qua tin nhắn ZNS.' },
+      { time: '09:45', title: 'Diagnosis completed', note: 'Technician Nam hoàn thành đo đạc bo mạch, đề xuất thay màn Zin.' },
+      { time: '09:25', title: 'Chuyển sang Bàn 04', note: 'Máy được chuyển từ quầy tiếp tân ando khu kỹ thuật check.' },
+      { time: '09:10', title: 'Intake máy', note: 'Lập order RF-20260911-001, chụp 4 ảnh condition ban đầu.' }
     ]
   },
   {
@@ -215,12 +215,12 @@ const INITIAL_ORDERS = [
     status: 'diagnosing',
     receptionist: 'Linh',
     technicianId: 'ktv-phong',
-    technicianName: 'KTV Phong (Chẩn đoán sơ bộ & đo đạc)',
+    technicianName: 'Technician Phong (Diagnosis sơ bộ & đo đạc)',
     customer: { id: 'c-02', name: 'Trần Văn Phúc', phone: '0988234567', maskedPhone: '0988***234', isVip: false },
     device: { id: 'd-02', name: 'iPad Pro M1 11"', specs: '256GB · Xám Không Gian', imei: '358901239841209', issueReported: 'Loạn cảm ứng nửa dưới màn hình' },
     quoteVersion: 'v1.0',
     quoteVersions: [{ version: 'v1.0', finalTotal: 1850000 }],
-    timeline: [{ time: '09:30', title: 'Tiếp nhận máy', note: 'Lập phiếu kiểm tra socket cáp cảm ứng iPad.' }]
+    timeline: [{ time: '09:30', title: 'Intake máy', note: 'Lập order check socket cáp cảm ứng iPad.' }]
   },
   {
     id: 'RF-20260910-019',
@@ -229,12 +229,12 @@ const INITIAL_ORDERS = [
     status: 'repairing',
     receptionist: 'Linh',
     technicianId: 'ktv-tuan',
-    technicianName: 'KTV Tuấn (Ép kính & Màn hình)',
+    technicianName: 'Technician Tuấn (Ép kính & Màn hình)',
     customer: { id: 'c-03', name: 'Lê Thị Hoa', phone: '0903567890', maskedPhone: '0903***567', isVip: false },
     device: { id: 'd-03', name: 'Galaxy S23 Ultra', specs: '512GB · Xanh Botanic', imei: '351290384719203', issueReported: 'Thay cụm sạc & pin zin' },
     quoteVersion: 'v1.0',
     quoteVersions: [{ version: 'v1.0', finalTotal: 1950000 }],
-    timeline: [{ time: '14:20', title: 'Khách duyệt báo giá', note: 'Bắt đầu tiến hành thay pin và cụm sạc.' }]
+    timeline: [{ time: '14:20', title: 'Customer duyệt quotation', note: 'Bắt đầu tiến hành thay pin and cụm sạc.' }]
   },
   {
     id: 'RF-20260910-012',
@@ -243,12 +243,12 @@ const INITIAL_ORDERS = [
     status: 'overdue',
     receptionist: 'Linh',
     technicianId: 'ktv-nam',
-    technicianName: 'KTV Nam (Trưởng nhóm)',
+    technicianName: 'Technician Nam (Trưởng nhóm)',
     customer: { id: 'c-04', name: 'Vũ Đình Quân', phone: '0977991234', maskedPhone: '0977***991', isVip: false },
-    device: { id: 'd-04', name: 'MacBook Pro 14" M2', specs: 'Mất nguồn sạc MagSafe', imei: 'C02G9014Q05D', issueReported: 'Chờ IC nguồn mainboard' },
+    device: { id: 'd-04', name: 'MacBook Pro 14" M2', specs: 'Mất nguồn sạc MagSafe', imei: 'C02G9014Q05D', issueReported: 'Waiting IC nguồn mainboard' },
     quoteVersion: 'v1.0',
     quoteVersions: [{ version: 'v1.0', finalTotal: 3400000 }],
-    timeline: [{ time: 'Hôm qua', title: 'Trễ hẹn', note: 'IC nguồn từ hãng về trễ 1 ngày, đã gọi thông báo cho khách.' }]
+    timeline: [{ time: 'Hôm qua', title: 'Overdue', note: 'The power IC was delayed by one day; the customer was notified by phone.' }]
   },
   {
     id: 'RF-20260909-008',
@@ -257,12 +257,12 @@ const INITIAL_ORDERS = [
     status: 'ready_for_pickup',
     receptionist: 'Linh',
     technicianId: 'ktv-tuan',
-    technicianName: 'KTV Tuấn (Ép kính)',
+    technicianName: 'Technician Tuấn (Ép kính)',
     customer: { id: 'c-05', name: 'Hoàng Bích Ngà', phone: '0934112345', maskedPhone: '0934***112', isVip: false },
     device: { id: 'd-05', name: 'Xiaomi 13 Ultra', specs: 'Màu Trắng Gốm', imei: '867192038471920', issueReported: 'Ép kính màn hình cong' },
     quoteVersion: 'v1.0',
     quoteVersions: [{ version: 'v1.0', finalTotal: 1450000 }],
-    timeline: [{ time: '11:15', title: 'Kiểm tra QC Đạt', note: 'Đã gửi SMS thông báo khách đến nhận máy.' }]
+    timeline: [{ time: '11:15', title: 'QC passed', note: 'SMS sent to notify the customer that the device is ready for pickup.' }]
   },
   {
     id: 'RF-20260908-003',
@@ -271,12 +271,12 @@ const INITIAL_ORDERS = [
     status: 'handed_over',
     receptionist: 'Linh',
     technicianId: 'ktv-nam',
-    technicianName: 'KTV Nam',
+    technicianName: 'Technician Nam',
     customer: { id: 'c-06', name: 'Phạm Quốc Tuấn', phone: '0918777888', maskedPhone: '0918***777', isVip: true },
     device: { id: 'd-06', name: 'iPhone 14 Pro Max', specs: '256GB Vàng Gold', imei: '357192039485712', issueReported: 'Thay pin Pisen chính hãng' },
     quoteVersion: 'v1.0',
     quoteVersions: [{ version: 'v1.0', finalTotal: 1200000 }],
-    timeline: [{ time: '09/09', title: 'Đã bàn giao máy', note: 'Bảo hành 12 tháng kích hoạt từ ngày 09/09/2026.' }]
+    timeline: [{ time: '09/09', title: 'Device handed over', note: 'Twelve-month warranty activated from 09/09/2026.' }]
   }
 ];
 
@@ -290,32 +290,32 @@ const INITIAL_ORDERS = [
 const MOCK_TECHNICIANS = [
   {
     id: 'ktv-nam',
-    name: 'KTV Nam (Trưởng nhóm)',
+    name: 'Technician Nam (Trưởng nhóm)',
     specialty: 'Phần cứng Apple & Mainboard',
     assignedCount: 5,
     statusLevel: 'BẬN RỘN (80%)',
     statusClass: 'text-amber-700 bg-amber-50 border-amber-200',
-    breakdown: 'Sửa: 2 máy · Chờ LK: 1 · QC: 2',
+    breakdown: 'Sửa: 2 máy · Waiting LK: 1 · QC: 2',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
   },
   {
     id: 'ktv-tuan',
-    name: 'KTV Tuấn',
+    name: 'Technician Tuấn',
     specialty: 'Ép kính, màn hình cong OLED',
     assignedCount: 4,
     statusLevel: 'BÌNH THƯỜNG (60%)',
     statusClass: 'text-sky-700 bg-sky-50 border-sky-200',
-    breakdown: 'Sửa: 3 máy · Chẩn đoán: 1 máy · QC: 0',
+    breakdown: 'Sửa: 3 máy · Diagnosis: 1 máy · QC: 0',
     avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop'
   },
   {
     id: 'ktv-phong',
-    name: 'KTV Phong',
-    specialty: 'Chẩn đoán sơ bộ & module',
+    name: 'Technician Phong',
+    specialty: 'Diagnosis sơ bộ & module',
     assignedCount: 2,
     statusLevel: 'SẴN SÀNG (30%)',
     statusClass: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    breakdown: 'Chẩn đoán: 2 máy · Có thể nhận thêm',
+    breakdown: 'Diagnosis: 2 máy · Có thể nhận thêm',
     avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop'
   }
 ];
@@ -323,21 +323,21 @@ const MOCK_TECHNICIANS = [
 const MOCK_ACTIVITIES = [
   {
     time: '10:20',
-    relative: '15 phút trước',
-    content: 'Đã gửi báo giá phiếu <strong class="text-sky-800 font-semibold">RF-20260911-001</strong> cho khách <strong class="text-slate-800">Nguyễn Minh Anh</strong> qua Zalo ZNS.',
+    relative: '15 minutes ago',
+    content: 'Quotation sent for order <strong class="text-sky-800 font-semibold">RF-20260911-001</strong> cho customer <strong class="text-slate-800">Nguyễn Minh Anh</strong> through the customer channel.',
     meta: '2.850.000 đ · Thay IC nguồn & Màn hình'
   },
   {
     time: '09:55',
-    relative: '40 phút trước',
-    content: 'KTV Tuấn đã hoàn tất sửa chữa <strong class="text-slate-800">Samsung S23 Ultra</strong>, chuyển sang Test QC chức năng.',
-    meta: 'Phiếu RF-20260910-019'
+    relative: '40 minutes ago',
+    content: 'Technician Tuấn completed completed repair <strong class="text-slate-800">Samsung S23 Ultra</strong>, and moved to functional QC testing.',
+    meta: 'Order RF-20260910-019'
   },
   {
     time: '09:10',
-    relative: '1 giờ trước',
-    content: 'Tiếp tân Linh tạo mới tiếp nhận máy <strong class="text-slate-800">iPhone 13 Pro</strong> (Phiếu RF-20260911-001).',
-    meta: 'Khách hàng VIP'
+    relative: '1 hours ago',
+    content: 'Tiếp tân Linh create mới tiếp nhận máy <strong class="text-slate-800">iPhone 13 Pro</strong> (Order RF-20260911-001).',
+    meta: 'VIP customer'
   }
 ];
 
@@ -385,15 +385,15 @@ async function fetchDashboardData() {
       processing: { count: 18, todayDelta: '+3', capacity: '85%' },
       waitingApproval: { count: waitingApprovalCount, urgent: 2, totalValue: 11450000 },
       readyPickup: { count: readyPickupCount, afternoonCount: 3, codValue: 9280000 },
-      overdue: { count: overdueCount, reason: 'Chờ linh kiện mainboard' }
+      overdue: { count: overdueCount, reason: 'Waiting linh kiện mainboard' }
     },
     pipeline: [
-      { step: 1, title: 'Tiếp nhận', count: 4, subtext: 'Chờ phân' },
-      { step: 2, title: 'Chẩn đoán', count: 3, subtext: 'Đang đo' },
-      { step: 3, title: 'Duyệt giá', count: waitingApprovalCount, subtext: '11.4 tr' },
-      { step: 4, title: 'Sửa chữa', count: 6, subtext: 'Bàn thợ' },
-      { step: 5, title: 'Kiểm tra QC', count: 4, subtext: 'Test chức năng' },
-      { step: 6, title: 'Sẵn sàng giao', count: 7, subtext: 'Hẹn trả' }
+      { step: 1, title: 'Intake', count: 4, subtext: 'Awaiting assignment' },
+      { step: 2, title: 'Diagnosis', count: 3, subtext: 'Testing' },
+      { step: 3, title: 'Quote approval', count: waitingApprovalCount, subtext: '11.4 tr' },
+      { step: 4, title: 'Repair', count: 6, subtext: 'At repair bench' },
+      { step: 5, title: 'Quality check', count: 4, subtext: 'Test chức năng' },
+      { step: 6, title: 'Sẵn sàng giao', count: 7, subtext: 'Pickup scheduled' }
     ],
     technicians: MOCK_TECHNICIANS,
     activities: MOCK_ACTIVITIES,
@@ -429,13 +429,13 @@ async function updateOrderStatus(id, newStatus, note = '') {
   await delay();
   const orders = getMockOrders();
   const order = orders.find(o => o.id === id);
-  if (!order) throw new Error('Không tìm thấy phiếu sửa chữa.');
+  if (!order) throw new Error('Not found order repair.');
 
   order.status = newStatus;
   const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   order.timeline.unshift({
     time,
-    title: `Trạng thái cập nhật: ${newStatus}`,
+    title: `Status cập nhật: ${newStatus}`,
     note: note || 'Cập nhật từ hệ thống.'
   });
 
@@ -447,7 +447,7 @@ async function createQuoteVersion(orderId, items, note = '') {
   await delay();
   const orders = getMockOrders();
   const order = orders.find(o => o.id === orderId);
-  if (!order) throw new Error('Không tìm thấy phiếu.');
+  if (!order) throw new Error('Not found order.');
 
   const nextVer = `v${(parseFloat(order.quoteVersion.replace('v', '')) + 1.0).toFixed(1)}`;
   order.quoteVersion = nextVer;
@@ -469,17 +469,17 @@ async function createQuoteVersion(orderId, items, note = '') {
 
   order.quoteVersions.unshift(newQuote);
   order.customerFeedback.decision = 'pending';
-  order.customerFeedback.lastViewedAt = 'Chưa gửi khách';
+  order.customerFeedback.lastViewedAt = 'Chưa send customer';
 
   setMockOrders([...orders]);
   return order;
 }
 
-async function approveQuote(orderId, approvedBy = 'Khách hàng') {
+async function approveQuote(orderId, approvedBy = 'Customers') {
   await delay();
   const orders = getMockOrders();
   const order = orders.find(o => o.id === orderId);
-  if (!order) throw new Error('Không tìm thấy phiếu.');
+  if (!order) throw new Error('Not found order.');
 
   order.status = 'approved';
   order.customerFeedback.decision = 'approved';
@@ -488,19 +488,19 @@ async function approveQuote(orderId, approvedBy = 'Khách hàng') {
   const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   order.timeline.unshift({
     time,
-    title: 'Khách đã duyệt báo giá',
-    note: `${approvedBy} đã xác nhận đồng ý phương án và chi phí sửa chữa.`
+    title: 'Customer completed duyệt quotation',
+    note: `${approvedBy} completed confirm approve phương án and chi phí repair.`
   });
 
   setMockOrders([...orders]);
   return order;
 }
 
-async function rejectQuote(orderId, reason = 'Khách không đồng ý chi phí') {
+async function rejectQuote(orderId, reason = 'Customer không approve chi phí') {
   await delay();
   const orders = getMockOrders();
   const order = orders.find(o => o.id === orderId);
-  if (!order) throw new Error('Không tìm thấy phiếu.');
+  if (!order) throw new Error('Not found order.');
 
   order.status = 'rejected';
   order.customerFeedback.decision = 'rejected';
@@ -509,8 +509,8 @@ async function rejectQuote(orderId, reason = 'Khách không đồng ý chi phí'
   const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   order.timeline.unshift({
     time,
-    title: 'Khách từ chối sửa chữa',
-    note: `Lý do: ${reason}`
+    title: 'Customer rejected repair chữa',
+    note: `Reason: ${reason}`
   });
 
   setMockOrders([...orders]);
@@ -525,7 +525,7 @@ async function rejectQuote(orderId, reason = 'Khách không đồng ý chi phí'
 
 function formatVND(amount) {
   if (typeof amount !== 'number') return '0 đ';
-  return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+  return new Intl.NumberFormat('en-US').format(amount) + ' VND';
 }
 
 function formatDateTime(isoString) {
@@ -546,10 +546,10 @@ function maskPhone(phone) {
 }
 
 function formatRelativeTime(minutesAgo) {
-  if (minutesAgo < 1) return 'Vừa xong';
-  if (minutesAgo < 60) return `${minutesAgo} phút trước`;
+  if (minutesAgo < 1) return 'Just now';
+  if (minutesAgo < 60) return `${minutesAgo} minutes ago`;
   const hours = Math.floor(minutesAgo / 60);
-  return `${hours} giờ trước`;
+  return `${hours} hours ago`;
 }
 
 
@@ -702,7 +702,7 @@ function showToast(message, type = 'info', duration = 3200) {
 
 let activeModal = null;
 
-function showModal({ title, contentHtml, onConfirm, confirmText = 'Xác nhận', cancelText = 'Đóng' }) {
+function showModal({ title, contentHtml, onConfirm, confirmText = 'Confirm', cancelText = 'Đóng' }) {
   closeModal();
 
   const modalOverlay = document.createElement('div');
@@ -775,16 +775,16 @@ function renderOrdersTable(orders, currentFilter = 'all') {
         <div>
           <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
             <span class="material-symbols-outlined text-sky-700 text-[18px]">assignment</span>
-            Phiếu sửa chữa cần xử lý ưu tiên
+            Repair orders requiring priority attention
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Danh sách các phiếu cần cập nhật trạng thái hoặc trễ cam kết</p>
+          <p class="text-xs text-slate-500 mt-0.5">Danh sách các order cần cập nhật status hoặc trễ cam kết</p>
         </div>
         <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs font-semibold">
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'all' ? 'bg-white text-sky-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="all">
             Tất cả (${orders.length})
           </button>
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'waiting' ? 'bg-white text-sky-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="waiting">
-            Chờ duyệt (1)
+            Waiting duyệt (1)
           </button>
           <button type="button" class="filter-btn px-3 py-1 rounded-md transition-all ${currentFilter === 'overdue' ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}" data-filter="overdue">
             Quá hạn (1)
@@ -796,7 +796,7 @@ function renderOrdersTable(orders, currentFilter = 'all') {
           <thead class="bg-slate-50/80 text-slate-500 uppercase font-bold text-[10.5px] border-b border-slate-100">
             <tr>
               <th class="py-3 px-4">MÃ PHIẾU</th>
-              <th class="py-3 px-4">KHÁCH HÀNG</th>
+              <th class="py-3 px-4">CUSTOMER</th>
               <th class="py-3 px-4">THIẾT BỊ</th>
               <th class="py-3 px-4">TRẠNG THÁI XỬ LÝ</th>
               <th class="py-3 px-4">PHỤ TRÁCH</th>
@@ -826,11 +826,11 @@ function renderOrdersTable(orders, currentFilter = 'all') {
                   <span class="font-medium text-slate-700">${escapeHtml(order.technicianName.split('(')[0].trim())}</span>
                 </td>
                 <td class="py-3 px-4 text-slate-600 font-medium">
-                  ${order.status === 'overdue' ? '<span class="text-rose-600 font-bold">Hôm qua (Trễ)</span>' : '13/09/2026'}
+                  ${order.status === 'overdue' ? '<span class="text-rose-600 font-bold">Yesterday (Overdue)</span>' : '13/09/2026'}
                 </td>
                 <td class="py-3 px-4 text-right">
                   <a href="#/orders/${escapeHtml(order.id)}" class="rf-btn rf-btn-outline text-[11px] py-1 px-2.5">
-                    Xem chi tiết
+                    View details
                   </a>
                 </td>
               </tr>
@@ -839,11 +839,11 @@ function renderOrdersTable(orders, currentFilter = 'all') {
         </table>
       </div>
       <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500">
-        <span>Hiển thị ${orders.length} phiếu</span>
+        <span>Showing ${orders.length} order</span>
         <div class="flex items-center gap-1.5">
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Trước</button>
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Previous</button>
           <span class="px-2 py-0.5 rounded bg-sky-700 text-white font-bold text-xs">1</span>
-          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Sau</button>
+          <button type="button" class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-xs">Next</button>
         </div>
       </div>
     </div>
@@ -862,7 +862,7 @@ function renderDashboardHeader() {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div>
         <div class="flex items-center gap-2.5">
-          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Tổng quan điều hành</h1>
+          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Overview điều hành</h1>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-600 animate-pulse"></span>
             Live Xưởng
@@ -878,7 +878,7 @@ function renderDashboardHeader() {
           <span class="material-symbols-outlined text-[17px]">download</span> Xuất báo cáo
         </button>
         <button type="button" id="btn-create-order" class="rf-btn rf-btn-primary text-xs">
-          <span class="material-symbols-outlined text-[17px]">add</span> Tạo phiếu sửa chữa
+          <span class="material-symbols-outlined text-[17px]">add</span> Create Repair Order
         </button>
       </div>
     </div>
@@ -888,38 +888,38 @@ function renderDashboardHeader() {
 function renderKpis(kpis) {
   return `
     <div class="kpi-grid mb-6">
-      <!-- KPI 1: Đang xử lý -->
+      <!-- KPI 1: In progress xử lý -->
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Đang xử lý</span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">In progress xử lý</span>
           <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Tiến độ tốt</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${kpis.processing.count}</span>
-          <span class="text-xs text-slate-500 font-medium">phiếu</span>
+          <span class="text-xs text-slate-500 font-medium">order</span>
           <span class="text-xs font-bold text-emerald-600 ml-auto flex items-center">
             <span class="material-symbols-outlined text-[14px]">arrow_upward</span> ${kpis.processing.todayDelta} hôm nay
           </span>
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Công suất xưởng</span>
+          <span>Công suất workshop</span>
           <span class="font-bold text-slate-700">${kpis.processing.capacity}</span>
         </div>
       </div>
 
-      <!-- KPI 2: Chờ duyệt giá -->
+      <!-- KPI 2: Waiting duyệt giá -->
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Chờ duyệt giá</span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Waiting duyệt giá</span>
           <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Nhắc hẹn</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${String(kpis.waitingApproval.count).padStart(2, '0')}</span>
-          <span class="text-xs text-slate-500 font-medium">phiếu</span>
-          <span class="text-xs font-bold text-amber-600 ml-auto">${kpis.waitingApproval.urgent} phiếu > 4h</span>
+          <span class="text-xs text-slate-500 font-medium">order</span>
+          <span class="text-xs font-bold text-amber-600 ml-auto">${kpis.waitingApproval.urgent} order > 4h</span>
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Tổng báo giá</span>
+          <span>Total Quotation Value</span>
           <span class="font-bold text-slate-700">${formatVND(kpis.waitingApproval.totalValue)}</span>
         </div>
       </div>
@@ -928,7 +928,7 @@ function renderKpis(kpis) {
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sẵn sàng giao</span>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Đã QC</span>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Completed QC</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${String(kpis.readyPickup.count).padStart(2, '0')}</span>
@@ -941,10 +941,10 @@ function renderKpis(kpis) {
         </div>
       </div>
 
-      <!-- KPI 4: Phiếu quá hạn -->
+      <!-- KPI 4: Order quá hạn -->
       <div class="rf-card p-4 flex flex-col justify-between border-rose-200 bg-rose-50/30">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Phiếu quá hạn</span>
+          <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Order quá hạn</span>
           <span class="text-[11px] font-semibold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full">Khẩn cấp</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
@@ -955,7 +955,7 @@ function renderKpis(kpis) {
           </span>
         </div>
         <div class="pt-2 border-t border-rose-100 flex items-center justify-between text-xs text-rose-700">
-          <span class="truncate">Lý do: ${escapeHtml(kpis.overdue.reason)}</span>
+          <span class="truncate">Reason: ${escapeHtml(kpis.overdue.reason)}</span>
         </div>
       </div>
     </div>
@@ -968,9 +968,9 @@ function renderPipeline(pipeline) {
       <div class="flex items-center justify-between mb-3.5">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-sky-700 text-[20px]">timeline</span>
-          <h2 class="text-sm font-bold text-slate-800">Tiến trình luồng sửa chữa (Pipeline)</h2>
+          <h2 class="text-sm font-bold text-slate-800">Repair workflow pipeline</h2>
         </div>
-        <span class="text-xs text-slate-500 font-medium">29 phiếu trong quy trình</span>
+        <span class="text-xs text-slate-500 font-medium">29 order trong quy trình</span>
       </div>
       <div class="pipeline-track">
         ${pipeline.map(item => `
@@ -999,9 +999,9 @@ function renderDashboardRightCol(technicians, activities, warranty) {
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px] text-sky-700">engineering</span>
-            Kỹ thuật viên trực xưởng
+            Kỹ thuật viên trực workshop
           </h2>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">3 KTV trực</span>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">3 Technician trực</span>
         </div>
         <div class="space-y-3">
           ${technicians.map(t => `
@@ -1044,7 +1044,7 @@ function renderDashboardRightCol(technicians, activities, warranty) {
             <span class="material-symbols-outlined text-[20px]">verified</span>
           </span>
           <div>
-            <div class="text-xs font-bold text-slate-800">Bảo hành linh kiện ${escapeHtml(warranty.month)}</div>
+            <div class="text-xs font-bold text-slate-800">Warranty linh kiện ${escapeHtml(warranty.month)}</div>
             <div class="text-[11px] text-emerald-700 font-semibold">Tỷ lệ đổi trả tái sửa: ${warranty.rate} (${warranty.rating})</div>
           </div>
         </div>
@@ -1066,9 +1066,9 @@ function setupDashboardActions(container) {
   const exportBtn = container.querySelector('#btn-export-report');
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
-      showToast('Đang tạo báo cáo vận hành định dạng Excel/PDF...', 'info');
+      showToast('In progress create báo cáo vận hành định dạng Excel/PDF...', 'info');
       setTimeout(() => {
-        showToast('Đã xuất báo cáo ca làm việc thành công!', 'success');
+        showToast('Completed xuất báo cáo ca làm việc successfully!', 'success');
       }, 700);
     });
   }
@@ -1078,21 +1078,21 @@ function setupDashboardActions(container) {
   if (createOrderBtn) {
     createOrderBtn.addEventListener('click', () => {
       showModal({
-        title: 'Tạo phiếu sửa chữa mới',
+        title: 'Create New Repair Order',
         contentHtml: `
           <div class="space-y-3 text-xs text-slate-600">
             <p>Quy trình SOP tiếp nhận gồm 3 bước bắt buộc:</p>
             <ol class="list-decimal pl-5 space-y-1 font-medium text-slate-700">
-              <li>Nhập thông tin khách hàng hoặc tra cứu số điện thoại cũ.</li>
-              <li>Ghi nhận thiết bị, số IMEI/Serial và triệu chứng lỗi.</li>
-              <li>Chụp tối thiểu 2-4 ảnh hiện trạng và kiểm tra niêm phong ốc đáy.</li>
+              <li>Nhập thông tin customer hàng hoặc tra cứu số phone cũ.</li>
+              <li>Ghi nhận device, số IMEI/Serial and triệu chứng error.</li>
+              <li>Chụp tối thiểu 2-4 ảnh condition and check niêm phong ốc đáy.</li>
             </ol>
             <div class="p-2.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 mt-2">
-              💡 <em>Trong bản demo, phiếu mẫu <strong>#RF-20260911-001</strong> đã được nạp sẵn dữ liệu chuẩn để kiểm nghiệm toàn bộ quy trình.</em>
+              💡 <em>Trong bản demo, order mẫu <strong>#RF-20260911-001</strong> completed được nạp sẵn dữ liệu chuẩn để kiểm nghiệm toàn bộ quy trình.</em>
             </div>
           </div>
         `,
-        confirmText: 'Mở phiếu mẫu',
+        confirmText: 'Open order mẫu',
         cancelText: 'Đóng',
         onConfirm: () => {
           window.location.hash = '#/orders/RF-20260911-001';
@@ -1147,7 +1147,7 @@ async function initDashboard(container) {
     <div class="p-8 flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-3">
         <span class="w-8 h-8 rounded-full border-2 border-sky-600 border-t-transparent animate-spin"></span>
-        <span class="text-xs font-semibold text-slate-500">Đang tải dữ liệu xưởng...</span>
+        <span class="text-xs font-semibold text-slate-500">Loading workshop data...</span>
       </div>
     </div>
   `;
@@ -1176,7 +1176,7 @@ async function initDashboard(container) {
   } catch (err) {
     container.innerHTML = `
       <div class="p-8 text-center text-rose-600 text-sm">
-        Đã xảy ra lỗi khi tải Dashboard: ${err.message}
+        Unable to load the dashboard: ${err.message}
       </div>
     `;
   }
@@ -1191,34 +1191,34 @@ async function initDashboard(container) {
 
 function renderOrderHeader(order) {
   const currentStep = order.status === 'approved' ? 4 : order.status === 'repairing' ? 4 : order.status === 'quality_check' ? 5 : order.status === 'ready_for_pickup' || order.status === 'handed_over' ? 6 : 3;
-  const stepText = order.status === 'approved' ? 'Khách đã duyệt - Sẵn sàng sửa' : order.status === 'repairing' ? 'Đang sửa chữa linh kiện' : order.status === 'waiting_for_approval' ? 'Đang chờ khách duyệt giá' : 'Đang xử lý';
+  const stepText = order.status === 'approved' ? 'Customer approved — Ready to repair' : order.status === 'repairing' ? 'Repair in progress' : order.status === 'waiting_for_approval' ? 'Waiting for Customer Approval' : 'In progress xử lý';
 
   return `
     <div class="mb-5">
       <!-- Breadcrumb -->
       <div class="text-xs text-slate-500 font-medium mb-2 flex items-center gap-1.5">
-        <a href="#/dashboard" class="hover:text-sky-700">Phiếu sửa chữa</a>
+        <a href="#/dashboard" class="hover:text-sky-700">Repair Orders</a>
         <span>/</span>
         <span class="text-slate-800 font-semibold">#${escapeHtml(order.id)}</span>
         <span>·</span>
-        <span>Tạo lúc 09:10, 11/09/2026</span>
+        <span>Create lúc 09:10, 11/09/2026</span>
       </div>
 
       <!-- Title & Actions -->
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Phiếu sửa chữa #${escapeHtml(order.id)}</h1>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Repair Orders #${escapeHtml(order.id)}</h1>
           ${renderStatusBadge(order.status)}
         </div>
         <div class="flex items-center gap-2">
           <button type="button" id="btn-copy-customer-link" class="rf-btn rf-btn-primary text-xs">
-            <span class="material-symbols-outlined text-[17px]">link</span> Sao chép link khách hàng
+            <span class="material-symbols-outlined text-[17px]">link</span> Sao chép link customer hàng
           </button>
           <button type="button" id="btn-edit-order" class="rf-btn rf-btn-outline text-xs">
             <span class="material-symbols-outlined text-[17px]">edit</span> Chỉnh sửa
           </button>
           <button type="button" id="btn-create-quote-version" class="rf-btn rf-btn-outline text-xs">
-            <span class="material-symbols-outlined text-[17px]">add_circle</span> Tạo phiên bản báo giá mới
+            <span class="material-symbols-outlined text-[17px]">add_circle</span> Create a new quotation version
           </button>
         </div>
       </div>
@@ -1238,9 +1238,9 @@ function renderOrderHeader(order) {
           <span class="text-slate-400 font-mono">IMEI: ${escapeHtml(order.device.imei)}</span>
         </div>
         <div class="flex items-center gap-4 text-slate-600">
-          <span>Tiếp nhận: <strong class="text-slate-800">${escapeHtml(order.receptionist)}</strong></span>
-          <span>KTV: <strong class="text-slate-800">${escapeHtml(order.technicianName.split('(')[0])}</strong></span>
-          <span>Hẹn trả: <strong class="text-sky-800 font-semibold">17:30 - 13/09/2026</strong></span>
+          <span>Intake: <strong class="text-slate-800">${escapeHtml(order.receptionist)}</strong></span>
+          <span>Technician: <strong class="text-slate-800">${escapeHtml(order.technicianName.split('(')[0])}</strong></span>
+          <span>Pickup scheduled: <strong class="text-sky-800 font-semibold">17:30 - 13/09/2026</strong></span>
         </div>
       </div>
     </div>
@@ -1248,7 +1248,7 @@ function renderOrderHeader(order) {
     <!-- Progress Pipeline -->
     <div class="rf-card p-4 mb-5">
       <div class="flex items-center justify-between mb-3">
-        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tiến trình xử lý sửa chữa</span>
+        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Repair workflow progress</span>
         <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
           ${stepText}
         </span>
@@ -1260,8 +1260,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 01</span>
             <span class="material-symbols-outlined text-[16px]">check_circle</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Tiếp nhận máy</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Lập phiếu 09:10</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Intake máy</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Lập order 09:10</div>
         </div>
 
         <!-- Step 2 -->
@@ -1270,8 +1270,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 02</span>
             <span class="material-symbols-outlined text-[16px]">check_circle</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Chẩn đoán</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">KTV Nam hoàn tất</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Diagnosis</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Technician Nam completed</div>
         </div>
 
         <!-- Step 3 -->
@@ -1280,8 +1280,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 03 · HIỆN TẠI</span>
             <span class="material-symbols-outlined text-[16px]">${currentStep === 3 ? 'pending_actions' : 'check_circle'}</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Chờ duyệt giá</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">${order.status === 'approved' ? 'Khách đã duyệt' : 'Đã gửi link khách'}</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Waiting duyệt giá</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${order.status === 'approved' ? 'Customer completed duyệt' : 'Completed send link customer'}</div>
         </div>
 
         <!-- Step 4 -->
@@ -1290,8 +1290,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 04</span>
             <span class="material-symbols-outlined text-[16px]">${currentStep >= 4 ? 'build' : 'lock'}</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Sửa chữa linh kiện</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">${currentStep >= 4 ? 'Đang tiến hành' : 'Chờ khách xác nhận'}</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Repair linh kiện</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${currentStep >= 4 ? 'In progress tiến hành' : 'Waiting customer confirm'}</div>
         </div>
 
         <!-- Step 5 -->
@@ -1300,8 +1300,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 05</span>
             <span class="material-symbols-outlined text-[16px]">lock</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Kiểm tra QC (36 bước)</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Sau khi sửa xong</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Quality check (36 bước)</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Next khi sửa xong</div>
         </div>
 
         <!-- Step 6 -->
@@ -1310,8 +1310,8 @@ function renderOrderHeader(order) {
             <span>BƯỚC 06</span>
             <span class="material-symbols-outlined text-[16px]">lock</span>
           </div>
-          <div class="text-xs font-bold text-slate-800 mt-1">Bàn giao & Ký nhận</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Xuất hóa đơn bảo hành</div>
+          <div class="text-xs font-bold text-slate-800 mt-1">Handover & Sign-off</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Issue warranty record</div>
         </div>
       </div>
     </div>
@@ -1319,16 +1319,16 @@ function renderOrderHeader(order) {
     <!-- Navigation Tabs -->
     <div class="flex items-center gap-2 border-b border-slate-200 mb-5 text-xs font-bold text-slate-600">
       <button type="button" class="tab-btn px-4 py-2.5 border-b-2 border-sky-700 text-sky-800 transition-colors" data-tab="quote">
-        Chẩn đoán & Báo giá ${escapeHtml(order.quoteVersion)}
+        Diagnosis & Quotation ${escapeHtml(order.quoteVersion)}
       </button>
       <button type="button" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors" data-tab="condition">
-        Ảnh hiện trạng nhận máy (${order.intakePhotos ? order.intakePhotos.length : 4})
+        Ảnh condition nhận máy (${order.intakePhotos ? order.intakePhotos.length : 4})
       </button>
       <button type="button" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors" data-tab="execution">
         Tiến độ kỹ thuật
       </button>
       <button type="button" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-colors" data-tab="qc">
-        Biên bản kiểm tra QC
+        Biên bản check QC
       </button>
     </div>
   `;
@@ -1344,9 +1344,9 @@ function renderOrderHeader(order) {
 function renderConditionAndDiagnosis(order) {
   const photos = order.intakePhotos || [];
   const diagnosis = order.diagnosis || {
-    hardwareDisplay: 'Đang kiểm tra.',
-    powerAndFeatures: 'Đang đo đạc.',
-    proposedSolution: ['Đang đề xuất phương án.'],
+    hardwareDisplay: 'In progress check.',
+    powerAndFeatures: 'Testing đạc.',
+    proposedSolution: ['In progress đề xuất phương án.'],
     checkedItemsCount: 14
   };
 
@@ -1382,7 +1382,7 @@ function renderConditionAndDiagnosis(order) {
 
       <div class="mt-3.5 p-3 rounded-xl bg-sky-50/50 border border-sky-100 flex items-center gap-2.5 text-xs text-slate-700">
         <span class="material-symbols-outlined text-emerald-600 text-[18px]">verified</span>
-        <span><strong>Tình trạng ốc & niêm phong:</strong> ${escapeHtml(order.device.sealStatus || '2 ốc đáy hình sao Pentalobe còn nguyên tem. Khách xác nhận thiết bị chưa từng qua sửa chữa tại cửa hàng thứ ba.')}</span>
+        <span><strong>Screw and seal condition:</strong> ${escapeHtml(order.device.sealStatus || '2 ốc đáy hình sao Pentalobe remaining nguyên tem. Customer confirm device chưa từng qua repair tại store thứ ba.')}</span>
       </div>
     </div>
 
@@ -1392,18 +1392,18 @@ function renderConditionAndDiagnosis(order) {
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-sky-700 text-[20px]">psychology</span>
           <div>
-            <h2 class="text-sm font-bold text-slate-900">Kết luận chẩn đoán kỹ thuật</h2>
+            <h2 class="text-sm font-bold text-slate-900">Technical diagnosis conclusion</h2>
             <p class="text-[11px] text-slate-500">Phụ trách: <strong class="text-slate-800">${escapeHtml(order.technicianName)}</strong></p>
           </div>
         </div>
         <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-          Đã kiểm ${diagnosis.checkedItemsCount || 14} mục
+          Completed kiểm ${diagnosis.checkedItemsCount || 14} mục
         </span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
-          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Hiện trạng phần cứng hiển thị</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Condition phần cứng hiển thị</div>
           <p class="text-slate-700 leading-relaxed">${escapeHtml(diagnosis.hardwareDisplay)}</p>
         </div>
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
@@ -1439,7 +1439,7 @@ function renderQuoteTable(order) {
     subtotal: 2850000,
     discount: 142500,
     finalTotal: 2707500,
-    warrantyPolicy: 'Bảo hành cảm ứng 06 tháng (1 đổi 1). Bảo hành hiển thị màu sắc 03 tháng.'
+    warrantyPolicy: 'Six-month one-for-one touch warranty. Three-month display-color warranty.'
   };
 
   const isApproved = order.status === 'approved';
@@ -1449,15 +1449,15 @@ function renderQuoteTable(order) {
       <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-4">
         <div>
           <div class="flex items-center gap-2">
-            <h2 class="text-sm font-bold text-slate-900">Bảng báo giá sửa chữa ${escapeHtml(currentVerData.version)}</h2>
+            <h2 class="text-sm font-bold text-slate-900">Repair quotation ${escapeHtml(currentVerData.version)}</h2>
             <span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-              ${isApproved ? 'Đã được khách phê duyệt' : 'Báo giá đã phát hành — Chỉ đọc'}
+              ${isApproved ? 'Approved by customer' : 'Quotation published — Read only'}
             </span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Nội dung báo giá đã gửi khách hàng, không chỉnh sửa trực tiếp để đảm bảo kiểm toán.</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">This quotation has been sent to the customer and cannot be edited directly to preserve the audit trail.</p>
         </div>
         <button type="button" id="btn-create-v2-inline" class="rf-btn rf-btn-outline text-xs text-sky-800 border-sky-300 hover:bg-sky-50">
-          <span class="material-symbols-outlined text-[16px]">edit_document</span> Tạo bản ${order.quoteVersion === 'v1.0' ? 'v2.0' : 'mới'} để sửa
+          <span class="material-symbols-outlined text-[16px]">edit_document</span> Create bản ${order.quoteVersion === 'v1.0' ? 'v2.0' : 'mới'} để sửa
         </button>
       </div>
 
@@ -1468,7 +1468,7 @@ function renderQuoteTable(order) {
             <tr>
               <th class="py-2.5 px-3 w-12 text-center">STT</th>
               <th class="py-2.5 px-4">HẠNG MỤC DỊCH VỤ / LINH KIỆN</th>
-              <th class="py-2.5 px-3 text-center">BẢO HÀNH</th>
+              <th class="py-2.5 px-3 text-center">WARRANTY</th>
               <th class="py-2.5 px-3 text-center w-12">SL</th>
               <th class="py-2.5 px-3 text-right">ĐƠN GIÁ</th>
               <th class="py-2.5 px-4 text-right">THÀNH TIỀN</th>
@@ -1503,9 +1503,9 @@ function renderQuoteTable(order) {
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
           <div class="font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sky-700 text-[16px]">verified_user</span>
-            Chính sách cam kết bảo hành:
+            Warranty policy:
           </div>
-          <p class="text-slate-600 leading-relaxed">${escapeHtml(currentVerData.warrantyPolicy || 'Bảo hành cảm ứng 06 tháng (1 đổi 1). Bảo hành hiển thị màu sắc 03 tháng. Không áp dụng va đập tì đè hoặc nước vào.')}</p>
+          <p class="text-slate-600 leading-relaxed">${escapeHtml(currentVerData.warrantyPolicy || 'Six-month one-for-one touch warranty. Three-month display-color warranty. Not applicable to impact, pressure, or liquid damage.')}</p>
         </div>
 
         <div class="space-y-2 text-slate-600 font-medium">
@@ -1516,16 +1516,16 @@ function renderQuoteTable(order) {
           <div class="flex justify-between items-center text-amber-700">
             <span class="flex items-center gap-1">
               <span class="material-symbols-outlined text-[15px]">stars</span>
-              Ưu đãi thành viên VIP (5%):
+              Ưu completedi thành viên VIP (5%):
             </span>
             <span class="font-bold font-mono">-${formatVND(currentVerData.discount)}</span>
           </div>
           <div class="flex justify-between items-center text-slate-500">
             <span>Thuế GTGT (VAT 8%):</span>
-            <span class="font-medium">Đã bao gồm</span>
+            <span class="font-medium">Completed bao gồm</span>
           </div>
           <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
-            <span class="text-sm font-bold text-slate-900">Tổng thanh toán:</span>
+            <span class="text-sm font-bold text-slate-900">Total thanh toán:</span>
             <span class="text-xl font-extrabold text-sky-800 font-mono">${formatVND(currentVerData.finalTotal)}</span>
           </div>
         </div>
@@ -1554,37 +1554,37 @@ function renderDetailSidebar(order) {
           <span class="material-symbols-outlined ${isApproved ? 'text-emerald-600' : isRejected ? 'text-rose-600' : 'text-amber-600'} text-[20px]">
             ${isApproved ? 'thumb_up' : isRejected ? 'cancel' : 'contact_phone'}
           </span>
-          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Trạng thái phản hồi khách</h2>
+          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Status phản hồi customer</h2>
         </div>
 
         ${isApproved ? `
           <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 mb-3">
             <div class="font-bold flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">check_circle</span>
-              Khách hàng đã duyệt báo giá!
+              Customer approved the quotation!
             </div>
-            <p class="mt-1 text-[11px] text-emerald-700">KTV có thể tiến hành sửa chữa theo phương án và linh kiện đã phê duyệt.</p>
+            <p class="mt-1 text-[11px] text-emerald-700">The technician may repair according to the approved plan and parts.</p>
           </div>
         ` : isRejected ? `
           <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 mb-3">
             <div class="font-bold flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">cancel</span>
-              Khách hàng đã từ chối sửa chữa
+              Customer rejected the repair
             </div>
-            <p class="mt-1 text-[11px] text-rose-700">Liên hệ khách hàng để làm thủ tục hoàn trả máy nguyên trạng.</p>
+            <p class="mt-1 text-[11px] text-rose-700">Contact the customer to arrange return of the device in its original condition.</p>
           </div>
         ` : `
           <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 mb-3">
             <div class="font-bold flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">hourglass_top</span>
-              Đang chờ khách duyệt báo giá
+              Waiting for customer quotation approval
             </div>
-            <p class="mt-1 text-[11px] text-amber-800">Hệ thống đã tự động gửi tin ZNS & SMS chứa link duyệt trực tuyến.</p>
+            <p class="mt-1 text-[11px] text-amber-800">Hệ thống completed tự động send tin ZNS & SMS chứa link duyệt trực tuyến.</p>
           </div>
         `}
 
         <div class="mb-3">
-          <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Link duyệt báo giá trực tiếp</label>
+          <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Direct quotation approval link</label>
           <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
             <input type="text" readonly value="${escapeHtml(customerLink)}" id="input-customer-link-val" class="text-xs bg-transparent text-slate-600 font-mono flex-1 outline-none truncate"/>
             <button type="button" id="btn-copy-link-inline" class="p-1 rounded text-sky-700 hover:bg-sky-100 transition-colors" title="Sao chép link">
@@ -1596,7 +1596,7 @@ function renderDetailSidebar(order) {
         <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-2 text-xs text-slate-600 mb-3.5">
           <span class="material-symbols-outlined text-sky-600 text-[18px]">visibility</span>
           <div>
-            <div class="font-medium text-slate-700">Khách đã mở xem link báo giá</div>
+            <div class="font-medium text-slate-700">Customer opened the quotation link</div>
             <div class="text-[10.5px] text-slate-400">Lần cuối: ${escapeHtml(order.customerFeedback.lastViewedAt)}</div>
           </div>
         </div>
@@ -1604,16 +1604,16 @@ function renderDetailSidebar(order) {
         <!-- Action buttons -->
         <div class="space-y-2">
           <button type="button" id="btn-resend-zns" class="rf-btn rf-btn-primary w-full text-xs py-2">
-            <span class="material-symbols-outlined text-[16px]">send</span> Gửi lại link qua Zalo & SMS
+            <span class="material-symbols-outlined text-[16px]">send</span> Send lại link qua Zalo & SMS
           </button>
           ${!isApproved ? `
             <button type="button" id="btn-phone-approve" class="rf-btn rf-btn-outline w-full text-xs py-2 text-emerald-700 border-emerald-300 hover:bg-emerald-50">
-              <span class="material-symbols-outlined text-[16px]">check_circle</span> Khách đồng ý qua điện thoại
+              <span class="material-symbols-outlined text-[16px]">check_circle</span> Customer approved by phone
             </button>
           ` : ''}
           ${!isRejected ? `
             <button type="button" id="btn-order-reject" class="rf-btn rf-btn-outline w-full text-xs py-2 text-rose-700 border-rose-300 hover:bg-rose-50">
-              <span class="material-symbols-outlined text-[16px]">close</span> Khách từ chối / Hủy sửa chữa
+              <span class="material-symbols-outlined text-[16px]">close</span> Customer rejected / Cancel repair
             </button>
           ` : ''}
         </div>
@@ -1654,11 +1654,11 @@ function renderDetailSidebar(order) {
           </div>
           <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
             <div class="text-[10px] text-slate-400 font-bold uppercase">iCloud / Passcode</div>
-            <div class="font-bold text-slate-800 mt-0.5">${escapeHtml(order.device.icloudPasscode || 'Đã mở')}</div>
+            <div class="font-bold text-slate-800 mt-0.5">${escapeHtml(order.device.icloudPasscode || 'Completed open')}</div>
           </div>
           <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
             <div class="text-[10px] text-slate-400 font-bold uppercase">Khay SIM vật lý</div>
-            <div class="font-bold text-slate-800 mt-0.5">${escapeHtml(order.device.simTray || 'Đã tháo')}</div>
+            <div class="font-bold text-slate-800 mt-0.5">${escapeHtml(order.device.simTray || 'Completed tháo')}</div>
           </div>
           <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
             <div class="text-[10px] text-slate-400 font-bold uppercase">True Tone gốc</div>
@@ -1666,7 +1666,7 @@ function renderDetailSidebar(order) {
           </div>
         </div>
         <div class="mt-3 p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 leading-snug">
-          <strong>Quy chuẩn SOP:</strong> Chỉ được bóc tem niêm phong màn hình mới khi hệ thống ghi nhận phê duyệt từ khách hàng.
+          <strong>SOP:</strong> Open the new screen seal only after the system records customer approval.
         </div>
       </div>
     </div>
@@ -1685,9 +1685,9 @@ function setupDetailActions(container, order, onOrderUpdated) {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(customerLink).then(() => {
-      showToast('Đã sao chép link khách hàng vào bộ nhớ tạm!', 'success');
+      showToast('Customer link copied to clipboard.', 'success');
     }).catch(() => {
-      showToast('Vui lòng sao chép link trực tiếp trong ô nhập!', 'warning');
+      showToast('Please copy the link directly from the input.', 'warning');
     });
   };
 
@@ -1702,9 +1702,9 @@ function setupDetailActions(container, order, onOrderUpdated) {
   const resendBtn = container.querySelector('#btn-resend-zns');
   if (resendBtn) {
     resendBtn.addEventListener('click', () => {
-      showToast('Đang gửi tin Zalo ZNS và SMS tới khách...', 'info');
+      showToast('Sending the link to the customer...', 'info');
       setTimeout(() => {
-        showToast(`Đã gửi lại link duyệt báo giá tới ${order.customer.phone} thành công!`, 'success');
+        showToast(`Approval link resent to ${order.customer.phone} successfully!`, 'success');
       }, 600);
     });
   }
@@ -1714,18 +1714,18 @@ function setupDetailActions(container, order, onOrderUpdated) {
   if (phoneApproveBtn) {
     phoneApproveBtn.addEventListener('click', () => {
       showModal({
-        title: 'Xác nhận khách duyệt qua điện thoại',
+        title: 'Confirm customer approval by phone',
         contentHtml: `
-          <p class="text-xs text-slate-600 mb-2">Bạn đang xác nhận thay cho khách hàng <strong>${order.customer.name}</strong> rằng khách đã đồng ý toàn bộ chi phí sửa chữa qua cuộc gọi ghi âm.</p>
+          <p class="text-xs text-slate-600 mb-2">You are confirming on behalf of customer <strong>${order.customer.name}</strong> that the customer approved the full repair cost during a recorded call.</p>
           <div class="p-2.5 rounded bg-amber-50 text-amber-900 border border-amber-200 text-xs font-medium">
-            ⚠️ Trạng thái sẽ chuyển ngay sang <strong>Đã duyệt</strong> và mở khóa công đoạn sửa chữa.
+            ⚠️ The status will immediately change to <strong>Completed duyệt</strong> and unlock the repair stage.
           </div>
         `,
-        confirmText: 'Xác nhận duyệt',
-        cancelText: 'Hủy',
+        confirmText: 'Confirm approval',
+        cancelText: 'Cancel',
         onConfirm: async () => {
-          await approveQuote(order.id, 'Nhân viên tư vấn (Qua cuộc gọi điện thoại)');
-          showToast('Đã ghi nhận phê duyệt báo giá từ khách hàng!', 'success');
+          await approveQuote(order.id, 'Nhân viên tư vấn (Qua cuộc gọi phone)');
+          showToast('Customer quotation approval recorded.', 'success');
           onOrderUpdated();
         }
       });
@@ -1737,18 +1737,18 @@ function setupDetailActions(container, order, onOrderUpdated) {
   if (rejectBtn) {
     rejectBtn.addEventListener('click', () => {
       showModal({
-        title: 'Xác nhận khách từ chối sửa chữa',
+        title: 'Confirm customer repair rejection',
         contentHtml: `
-          <p class="text-xs text-slate-600 mb-2">Vui lòng xác nhận khách hàng <strong>${order.customer.name}</strong> muốn hủy phiếu sửa chữa này.</p>
-          <textarea id="modal-reject-reason" class="w-full p-2 border border-slate-300 rounded text-xs" placeholder="Nhập lý do từ chối (ví dụ: Chi phí cao, đổi ý mua máy mới...)">Khách không đồng ý chi phí thay linh kiện Zin</textarea>
+          <p class="text-xs text-slate-600 mb-2">Please confirm that customer <strong>${order.customer.name}</strong> wants to cancel this repair order.</p>
+          <textarea id="modal-reject-reason" class="w-full p-2 border border-slate-300 rounded text-xs" placeholder="Enter a rejection reason (for example: cost too high, changed plans...)">Customer did not approve the genuine-part replacement cost</textarea>
         `,
-        confirmText: 'Ghi nhận từ chối',
+        confirmText: 'Record rejection',
         cancelText: 'Đóng',
         onConfirm: async () => {
           const reasonInput = document.querySelector('#modal-reject-reason');
-          const reason = reasonInput ? reasonInput.value : 'Khách từ chối sửa chữa';
+          const reason = reasonInput ? reasonInput.value : 'Customer rejected repair chữa';
           await rejectQuote(order.id, reason);
-          showToast('Đã cập nhật trạng thái phiếu: Khách từ chối sửa chữa.', 'warning');
+          showToast('Order status updated: customer rejected the repair.', 'warning');
           onOrderUpdated();
         }
       });
@@ -1758,23 +1758,23 @@ function setupDetailActions(container, order, onOrderUpdated) {
   // Create Quote Version v2.0
   const handleCreateV2 = () => {
     showModal({
-      title: 'Tạo phiên bản báo giá mới',
+      title: 'Create a new quotation version',
       contentHtml: `
         <div class="space-y-3 text-xs text-slate-600">
-          <p>Khi tạo phiên bản báo giá mới, báo giá cũ sẽ được lưu trữ lịch sử để kiểm toán. Khách hàng sẽ nhận thông báo duyệt lại phiên bản mới.</p>
+          <p>When a new quotation version is created, the old version remains in history for audit. The customer must review the new version again.</p>
           <div>
-            <label class="font-bold text-slate-700 block mb-1">Ghi chú thay đổi cho bản mới:</label>
-            <textarea id="modal-quote-v2-notes" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs" rows="3" placeholder="Ví dụ: Giảm 100.000 đ hỗ trợ khách, thay đổi loại màn hình...">Điều chỉnh ưu đãi thêm cho khách hàng thân thiết.</textarea>
+            <label class="font-bold text-slate-700 block mb-1">Change note for the new version:</label>
+            <textarea id="modal-quote-v2-notes" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs" rows="3" placeholder="For example: apply a customer discount or change the screen type...">Additional loyalty-customer discount applied.</textarea>
           </div>
         </div>
       `,
-      confirmText: 'Phát hành bản mới',
-      cancelText: 'Hủy',
+      confirmText: 'Publish new version',
+      cancelText: 'Cancel',
       onConfirm: async () => {
         const notes = document.querySelector('#modal-quote-v2-notes')?.value || '';
         const currentItems = order.quoteVersions[0]?.items || [];
         await createQuoteVersion(order.id, currentItems, notes);
-        showToast('Đã tạo phiên bản báo giá mới thành công!', 'success');
+        showToast('New quotation version created successfully.', 'success');
         onOrderUpdated();
       }
     });
@@ -1798,7 +1798,7 @@ function setupDetailActions(container, order, onOrderUpdated) {
       e.currentTarget.classList.remove('border-transparent', 'text-slate-500');
 
       const targetTab = e.currentTarget.dataset.tab;
-      showToast(`Chuyển sang tab: ${e.currentTarget.innerText.trim()}`, 'info', 1200);
+      showToast(`Switched to tab: ${e.currentTarget.innerText.trim()}`, 'info', 1200);
     });
   });
 }
@@ -1818,7 +1818,7 @@ async function initOrderDetail(container, params = {}) {
     <div class="p-8 flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-3">
         <span class="w-8 h-8 rounded-full border-2 border-sky-600 border-t-transparent animate-spin"></span>
-        <span class="text-xs font-semibold text-slate-500">Đang tải hồ sơ phiếu ${orderId}...</span>
+        <span class="text-xs font-semibold text-slate-500">Loading order record ${orderId}...</span>
       </div>
     </div>
   `;
@@ -1850,7 +1850,7 @@ async function initOrderDetail(container, params = {}) {
     } catch (err) {
       container.innerHTML = `
         <div class="p-8 text-center text-rose-600 text-sm">
-          Không thể tải chi tiết phiếu: ${err.message}
+          Unable to load order details: ${err.message}
         </div>
       `;
     }
@@ -1873,7 +1873,7 @@ function renderCustomerQuoteCard(quoteData) {
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
         <h2 class="font-bold text-slate-900 flex items-center gap-1.5">
           <span class="material-symbols-outlined text-sky-700 text-[18px]">receipt_long</span>
-          Chi tiết báo giá
+          Quotation details
         </h2>
         <span class="text-[10.5px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">Phiên bản ${escapeHtml(quoteData.version)}</span>
       </div>
@@ -1882,7 +1882,7 @@ function renderCustomerQuoteCard(quoteData) {
         <div class="flex justify-between items-start pb-2 border-b border-slate-50">
           <div>
             <strong class="text-slate-800 block">Cụm màn hình OLED Zin bóc máy</strong>
-            <span class="text-[10.5px] text-emerald-700 font-medium">🛡️ Bảo hành tiêu chuẩn 6 tháng 1 đổi 1</span>
+            <span class="text-[10.5px] text-emerald-700 font-medium">🛡️ Standard six-month one-for-one warranty</span>
           </div>
           <span class="font-bold font-mono text-slate-900">2.650.000 đ</span>
         </div>
@@ -1909,18 +1909,18 @@ function renderCustomerQuoteCard(quoteData) {
 
       <div class="pt-3 border-t border-slate-100 space-y-1 text-slate-600">
         <div class="flex justify-between">
-          <span>Tổng tạm tính:</span>
+          <span>Total tạm tính:</span>
           <span class="font-mono text-slate-800 font-semibold">2.850.000 đ</span>
         </div>
         <div class="flex justify-between text-amber-700">
-          <span>Ưu đãi thành viên VIP (5%):</span>
+          <span>Ưu completedi thành viên VIP (5%):</span>
           <span class="font-mono font-bold">-142.500 đ</span>
         </div>
         <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
           <span class="font-bold text-slate-900">TỔNG THANH TOÁN:</span>
           <span class="text-lg font-extrabold text-sky-800 font-mono">${formatVND(quoteData.finalTotal)}</span>
         </div>
-        <p class="text-[10px] text-slate-400 text-right">Đã bao gồm VAT & công thay</p>
+        <p class="text-[10px] text-slate-400 text-right">Completed bao gồm VAT & công thay</p>
       </div>
     </div>
 
@@ -1932,11 +1932,11 @@ function renderCustomerQuoteCard(quoteData) {
       </div>
       <div class="flex items-start gap-2 text-slate-600">
         <span class="material-symbols-outlined text-emerald-600 text-[16px] flex-shrink-0">check_circle</span>
-        <p><strong>Linh kiện bóc máy 100%:</strong> Đúng cam kết ban đầu, bảo hành cảm ứng 6 tháng lỗi 1 đổi 1 ngay lập tức.</p>
+        <p><strong>Genuine reclaimed part:</strong> As initially promised, with a six-month one-for-one touch warranty.</p>
       </div>
       <div class="flex items-start gap-2 text-slate-600">
         <span class="material-symbols-outlined text-emerald-600 text-[16px] flex-shrink-0">check_circle</span>
-        <p><strong>Minh bạch quy trình:</strong> Khách hàng có thể theo dõi kỹ thuật viên thao tác trực tiếp tại bàn kiểm tra.</p>
+        <p><strong>Process transparency:</strong> Customers can follow the technician's work at the inspection bench.</p>
       </div>
       <div class="flex items-start gap-2 text-slate-600">
         <span class="material-symbols-outlined text-emerald-600 text-[16px] flex-shrink-0">check_circle</span>
@@ -1969,7 +1969,7 @@ function renderCustomerMobileView(order) {
       <!-- Top Mobile Header -->
       <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 h-14 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <a href="#/orders/${order.id}" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100" title="Trở lại giao diện nhân viên">
+          <a href="#/orders/${order.id}" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100" title="Trở lại interface nhân viên">
             <span class="material-symbols-outlined text-[22px]">arrow_back</span>
           </a>
           <div>
@@ -1977,7 +1977,7 @@ function renderCustomerMobileView(order) {
               <span class="font-bold text-sky-800 text-sm">RepairFlow</span>
               <span class="material-symbols-outlined text-emerald-600 text-[15px]">verified</span>
             </div>
-            <div class="text-[10px] text-slate-500 font-medium">Báo giá trực tuyến</div>
+            <div class="text-[10px] text-slate-500 font-medium">Online quotation</div>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -1999,17 +1999,17 @@ function renderCustomerMobileView(order) {
             ${isApproved ? `
               <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                Đã duyệt sửa chữa
+                Repair approved
               </span>
             ` : isRejected ? `
               <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-semibold text-xs flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-rose-600"></span>
-                Khách từ chối sửa
+                Customer rejected repair
               </span>
             ` : `
               <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-semibold text-xs flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                Chờ bạn duyệt báo giá
+                Waiting for your quotation approval
               </span>
             `}
           </div>
@@ -2026,11 +2026,11 @@ function renderCustomerMobileView(order) {
 
           <div class="bg-slate-50 rounded-xl p-3 text-xs space-y-1.5 text-slate-600">
             <div class="flex justify-between items-center">
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">person</span> Khách hàng:</span>
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">person</span> Customer:</span>
               <strong class="text-slate-800">${escapeHtml(order.customer.name)} (${escapeHtml(order.customer.maskedPhone)})</strong>
             </div>
             <div class="flex justify-between items-center">
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> Tiếp nhận:</span>
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> Intake:</span>
               <span>09:10 - 11/09/2026</span>
             </div>
             <div class="flex justify-between items-center">
@@ -2048,21 +2048,21 @@ function renderCustomerMobileView(order) {
               <div class="w-6 h-6 rounded-full bg-sky-700 text-white flex items-center justify-center text-xs font-bold">
                 <span class="material-symbols-outlined text-[14px]">check</span>
               </div>
-              <span class="text-[10.5px] font-semibold text-slate-800">Tiếp nhận</span>
+              <span class="text-[10.5px] font-semibold text-slate-800">Intake</span>
             </div>
             <!-- step 2 -->
             <div class="flex flex-col items-center gap-1 z-10">
               <div class="w-6 h-6 rounded-full bg-sky-700 text-white flex items-center justify-center text-xs font-bold">
                 <span class="material-symbols-outlined text-[14px]">check</span>
               </div>
-              <span class="text-[10.5px] font-semibold text-slate-800">Chẩn đoán</span>
+              <span class="text-[10.5px] font-semibold text-slate-800">Diagnosis</span>
             </div>
             <!-- step 3 -->
             <div class="flex flex-col items-center gap-1 z-10">
               <div class="w-6 h-6 rounded-full ${isApproved ? 'bg-sky-700 text-white' : 'bg-amber-500 text-white ring-4 ring-amber-100'} flex items-center justify-center text-xs font-bold">
                 ${isApproved ? '<span class="material-symbols-outlined text-[14px]">check</span>' : '3'}
               </div>
-              <span class="text-[10.5px] font-bold ${isApproved ? 'text-slate-800' : 'text-amber-800'}">Duyệt giá</span>
+              <span class="text-[10.5px] font-bold ${isApproved ? 'text-slate-800' : 'text-amber-800'}">Quote approval</span>
             </div>
             <!-- step 4 -->
             <div class="flex flex-col items-center gap-1 z-10">
@@ -2077,7 +2077,7 @@ function renderCustomerMobileView(order) {
         <!-- Intake Photos -->
         <div class="space-y-2">
           <div class="flex items-center justify-between px-1">
-            <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hình ảnh thiết bị lúc nhận</h2>
+            <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hình ảnh device lúc nhận</h2>
             <span class="text-[11px] text-slate-400">2 ảnh chụp macro</span>
           </div>
           <div class="grid grid-cols-2 gap-2.5">
@@ -2098,7 +2098,7 @@ function renderCustomerMobileView(order) {
           </div>
           <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center gap-2 text-xs text-emerald-800">
             <span class="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
-            <span>Ốc đáy và tem niêm phong còn nguyên vẹn 100%.</span>
+            <span>Ốc đáy and tem niêm phong remaining nguyên vẹn 100%.</span>
           </div>
         </div>
 
@@ -2106,15 +2106,15 @@ function renderCustomerMobileView(order) {
         <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3 text-xs">
           <h2 class="font-bold text-slate-900 flex items-center gap-1.5 pb-2 border-b border-slate-100">
             <span class="material-symbols-outlined text-sky-700 text-[18px]">psychology</span>
-            Kết luận chẩn đoán kỹ thuật
+            Technical diagnosis conclusion
           </h2>
           <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400">Tình trạng ghi nhận</div>
-            <p class="text-slate-700 mt-1 leading-relaxed">Màn hình va đập nứt kính ngoài và chập mạch ma trận cảm ứng OLED bên trong. Mainboard, FaceID, pin và camera hoạt động bình thường, không ẩm nước.</p>
+            <div class="text-[10px] uppercase font-bold text-slate-400">Condition ghi nhận</div>
+            <p class="text-slate-700 mt-1 leading-relaxed">Màn hình va đập nứt kính ngoài and chập mạch ma trận cảm ứng OLED bên trong. Mainboard, FaceID, pin and camera hoạt động bình thường, không ẩm nước.</p>
           </div>
           <div class="pt-2 border-t border-slate-100">
             <div class="text-[10px] uppercase font-bold text-slate-400">Giải pháp kỹ thuật</div>
-            <p class="text-slate-700 mt-1 leading-relaxed">Thay thế cụm màn hình OLED Zin bóc máy chính hãng Apple, nạp lại mã True Tone gốc, vệ sinh bo mạch và ép lại ron kháng nước chuẩn IP68.</p>
+            <p class="text-slate-700 mt-1 leading-relaxed">Thay thế cụm màn hình OLED Zin bóc máy chính hãng Apple, nạp lại code True Tone gốc, vệ sinh bo mạch and ép lại ron kháng nước chuẩn IP68.</p>
           </div>
           <div class="pt-2 border-t border-slate-100 flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-800 font-bold flex items-center justify-center text-xs">HN</div>
@@ -2136,11 +2136,11 @@ function renderCustomerMobileView(order) {
         </a>
         ${isApproved ? `
           <button type="button" disabled class="rf-btn rf-btn-success flex-2 py-3 text-xs justify-center opacity-90 cursor-not-allowed">
-            <span class="material-symbols-outlined text-[18px]">check_circle</span> Đã duyệt sửa chữa
+            <span class="material-symbols-outlined text-[18px]">check_circle</span> Repair approved
           </button>
         ` : isRejected ? `
           <button type="button" disabled class="rf-btn rf-btn-danger flex-2 py-3 text-xs justify-center opacity-90 cursor-not-allowed">
-            <span class="material-symbols-outlined text-[18px]">cancel</span> Đã từ chối sửa
+            <span class="material-symbols-outlined text-[18px]">cancel</span> Completed reject sửa
           </button>
         ` : `
           <button type="button" id="btn-customer-approve" class="rf-btn rf-btn-primary flex-2 py-3 text-xs justify-center">
@@ -2166,25 +2166,25 @@ function setupCustomerActions(container, order, onApproved) {
       const quoteTotal = order.quoteVersions?.[0]?.finalTotal || 2707500;
 
       showModal({
-        title: 'Xác nhận đồng ý sửa chữa',
+        title: 'Confirm repair approval',
         contentHtml: `
           <div class="space-y-2.5 text-xs text-slate-700">
-            <p>Quý khách <strong>${order.customer.name}</strong> xác nhận đồng ý với phương án và chi phí sửa chữa:</p>
+            <p>You <strong>${order.customer.name}</strong> confirm that you approve the repair plan and cost:</p>
             <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
               <div class="flex justify-between font-bold text-slate-900 text-sm">
-                <span>Tổng chi phí duyệt:</span>
+                <span>Total chi phí duyệt:</span>
                 <span class="text-sky-800 font-mono">${formatVND(quoteTotal)}</span>
               </div>
-              <div class="text-[11px] text-slate-500 mt-1">Dự kiến hoàn tất: 17:00 - 13/09/2026</div>
+              <div class="text-[11px] text-slate-500 mt-1">Dự kiến completed: 17:00 - 13/09/2026</div>
             </div>
-            <p class="text-[11px] text-slate-500">Sau khi xác nhận, kỹ thuật viên sẽ tiến hành xử lý ngay.</p>
+            <p class="text-[11px] text-slate-500">After confirmation, the technician will begin the repair.</p>
           </div>
         `,
         confirmText: 'Đồng ý & Bắt đầu sửa',
         cancelText: 'Xem lại',
         onConfirm: async () => {
           await approveQuote(order.id, `${order.customer.name} (Xác thực qua Link Web)`);
-          showToast('Quý khách đã duyệt báo giá thành công! Minh Tâm Care xin cảm ơn.', 'success', 4000);
+          showToast('Quotation approved successfully. Thank you from Minh Tâm Care.', 'success', 4000);
           onApproved();
         }
       });
@@ -2206,7 +2206,7 @@ async function initCustomerLink(container, params = {}) {
     <div class="p-8 flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-3">
         <span class="w-8 h-8 rounded-full border-2 border-sky-600 border-t-transparent animate-spin"></span>
-        <span class="text-xs font-semibold text-slate-500">Đang tải báo giá...</span>
+        <span class="text-xs font-semibold text-slate-500">Loading quotation...</span>
       </div>
     </div>
   `;
@@ -2219,7 +2219,7 @@ async function initCustomerLink(container, params = {}) {
     } catch (err) {
       container.innerHTML = `
         <div class="p-8 text-center text-rose-600 text-sm">
-          Không thể tìm thấy liên kết báo giá này: ${err.message}
+          This quotation link could not be found: ${err.message}
         </div>
       `;
     }
@@ -2339,7 +2339,7 @@ if (searchInput) {
       if (q.toUpperCase().startsWith('RF-') || q.includes('001')) {
         window.location.hash = '#/orders/RF-20260911-001';
       } else {
-        showToast(`Tìm kiếm theo từ khóa: "${q}"`, 'info');
+        showToast(`Searching for: "${q}"`, 'info');
       }
     }
   });
@@ -2347,3 +2347,5 @@ if (searchInput) {
 
 
 })();
+
+

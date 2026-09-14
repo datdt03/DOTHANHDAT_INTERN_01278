@@ -7,32 +7,32 @@ import { INITIAL_ORDERS } from './mock-orders.js';
 export const MOCK_TECHNICIANS = [
   {
     id: 'ktv-nam',
-    name: 'KTV Nam (Trưởng nhóm)',
-    specialty: 'Phần cứng Apple & Mainboard',
+    name: 'Technician Nam (Team lead)',
+    specialty: 'Apple hardware and mainboards',
     assignedCount: 5,
     statusLevel: 'BẬN RỘN (80%)',
     statusClass: 'text-amber-700 bg-amber-50 border-amber-200',
-    breakdown: 'Sửa: 2 máy · Chờ LK: 1 · QC: 2',
+    breakdown: 'Repair: 2 devices · Waiting parts: 1 · QC: 2',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
   },
   {
     id: 'ktv-tuan',
-    name: 'KTV Tuấn',
-    specialty: 'Ép kính, màn hình cong OLED',
+    name: 'Technician Tuấn',
+    specialty: 'Glass repair and curved OLED displays',
     assignedCount: 4,
-    statusLevel: 'BÌNH THƯỜNG (60%)',
+    statusLevel: 'NORMAL (60%)',
     statusClass: 'text-sky-700 bg-sky-50 border-sky-200',
-    breakdown: 'Sửa: 3 máy · Chẩn đoán: 1 máy · QC: 0',
+    breakdown: 'Repair: 3 devices · Diagnosis: 1 device · QC: 0',
     avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop'
   },
   {
     id: 'ktv-phong',
-    name: 'KTV Phong',
-    specialty: 'Chẩn đoán sơ bộ & module',
+    name: 'Technician Phong',
+    specialty: 'Preliminary diagnosis and modules',
     assignedCount: 2,
     statusLevel: 'SẴN SÀNG (30%)',
     statusClass: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    breakdown: 'Chẩn đoán: 2 máy · Có thể nhận thêm',
+    breakdown: 'Diagnosis: 2 devices · Available for more',
     avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop'
   }
 ];
@@ -40,29 +40,29 @@ export const MOCK_TECHNICIANS = [
 export const MOCK_ACTIVITIES = [
   {
     time: '10:20',
-    relative: '15 phút trước',
-    content: 'Đã gửi báo giá phiếu <strong class="text-sky-800 font-semibold">RF-20260911-001</strong> cho khách <strong class="text-slate-800">Nguyễn Minh Anh</strong> qua Zalo ZNS.',
-    meta: '2.850.000 đ · Thay IC nguồn & Màn hình'
+    relative: '15 minutes ago',
+    content: 'Quotation sent for order <strong class="text-sky-800 font-semibold">RF-20260911-001</strong> to customer <strong class="text-slate-800">Nguyễn Minh Anh</strong> through the customer channel.',
+    meta: '2,850,000 VND · Power IC and display replacement'
   },
   {
     time: '09:55',
-    relative: '40 phút trước',
-    content: 'KTV Tuấn đã hoàn tất sửa chữa <strong class="text-slate-800">Samsung S23 Ultra</strong>, chuyển sang Test QC chức năng.',
-    meta: 'Phiếu RF-20260910-019'
+    relative: '40 minutes ago',
+    content: 'Technician Tuấn completed the repair of <strong class="text-slate-800">Samsung S23 Ultra</strong> and moved it to functional QC testing.',
+    meta: 'Order RF-20260910-019'
   },
   {
     time: '09:10',
-    relative: '1 giờ trước',
-    content: 'Tiếp tân Linh tạo mới tiếp nhận máy <strong class="text-slate-800">iPhone 13 Pro</strong> (Phiếu RF-20260911-001).',
-    meta: 'Khách hàng VIP'
+    relative: '1 hours ago',
+    content: 'Receptionist Linh created a new intake for <strong class="text-slate-800">iPhone 13 Pro</strong> (Order RF-20260911-001).',
+    meta: 'VIP customer'
   }
 ];
 
 export const MOCK_WARRANTY_METRIC = {
-  month: 'Tháng 09/2026',
+  month: 'September 2026',
   rate: '1.2%',
-  rating: 'Rất tốt',
-  desc: 'Tỷ lệ đổi trả tái sửa thấp hơn chuẩn mục tiêu 2.5%'
+  rating: 'Very good',
+  desc: 'Repeat-repair return rate is below the 2.5% target'
 };
 
 // In-Memory Persistent State for Demo Session
@@ -75,3 +75,4 @@ export function getMockOrders() {
 export function setMockOrders(newOrders) {
   currentOrders = newOrders;
 }
+

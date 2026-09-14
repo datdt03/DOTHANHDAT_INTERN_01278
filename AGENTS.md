@@ -1,73 +1,74 @@
-# RepairFlow — Quy tắc phát triển cho AI
+# RepairFlow — Development Rules for AI Agents
 
-## 1. Mục tiêu
+## 1. Purpose
 
-Giữ mã nguồn nhỏ, dễ tìm, dễ thay đổi và dễ cung cấp cho LLM khi làm từng tính năng. Mỗi thay đổi phải có phạm vi rõ ràng, ưu tiên đọc và tái sử dụng cấu trúc hiện có trước khi tạo file hoặc abstraction mới.
+Keep the codebase small, discoverable, easy to change, and easy to provide to an LLM for a focused task. Every change must have a clear scope. Read and reuse the existing structure before introducing a new file or abstraction.
 
-## 2. Nguồn sự thật của sản phẩm
+## 2. Product sources of truth
 
-- `README.md`: mục tiêu sản phẩm, phạm vi MVP và nghiệp vụ tổng thể.
-- `docs/README.md`: quy tắc phân phase và quy trình LLM khi đọc/viết tài liệu.
-- `docs/v0/README.md`: quy tắc và mục lục tài liệu của phase hiện tại.
-- `docs/v0/requirements-closure.md`: decision backlog, câu hỏi còn mở và điều kiện mở build.
-- `docs/v0/usecase.md`: user story, main flow, alternative flow và acceptance baseline.
-- `docs/v0/architecture-and-requirements.md`: kiến trúc, vai trò, dữ liệu và business rules đã thảo luận/chốt trong v0.
-- `docs/v0/database-requirements.md`: schema, constraint, index và transaction rules đã thảo luận/chốt trong v0.
-- `docs/v0/ui-requirements.md`: luồng UX/UI, màn hình, trạng thái và tiêu chí nghiệm thu của v0.
-- `src/ui/AGENTS.md`: quy tắc riêng cho HTML, CSS và JavaScript của giao diện.
+- \`README.md\`: product goal, MVP scope, project dashboard, and local quickstart.
+- \`docs/README.md\`: documentation boundaries and the LLM documentation workflow.
+- \`docs/v0/README.md\`: the current phase index and phase rules.
+- \`docs/v0/requirements-closure.md\`: decision backlog, open questions, and the build gate.
+- \`docs/v0/usecase.md\`: user stories, main flows, alternative flows, failure flows, and acceptance baseline.
+- \`docs/v0/architecture-and-requirements.md\`: architecture, roles, data, and business rules discussed or decided in v0.
+- \`docs/v0/database-requirements.md\`: schema, constraints, indexes, and transaction rules discussed or decided in v0.
+- \`docs/v0/ui-requirements.md\`: UX flows, screens, states, and acceptance criteria for v0.
+- \`src/ui/AGENTS.md\`: HTML, CSS, and JavaScript rules for the UI.
 
-Khi tài liệu và mã nguồn mâu thuẫn, không tự đoán. Nêu rõ mâu thuẫn, chỉ ra file liên quan và hỏi trước khi đổi nghiệp vụ.
+When documentation and source code conflict, do not guess. Identify the conflict, name the files involved, and ask before changing product behavior.
 
-## 3. Nguyên tắc tổ chức file
+## 3. File organization
 
-- Tổ chức theo **feature trước, loại file sau**. Một feature nên gom các file liên quan trong cùng thư mục.
-- Mỗi file chỉ có một trách nhiệm chính.
-- Không tạo thư mục sâu quá 3 cấp bên dưới `src/ui` nếu chưa có lý do cụ thể.
-- Không tạo file chỉ để chứa một hằng số hoặc một hàm nhỏ nếu file đó chưa có khả năng tái sử dụng.
-- Không tạo `helpers`, `misc`, `common2`, `new`, `final` hoặc tên mơ hồ.
-- Không nhân bản cùng một logic cho nhiều màn hình; đưa logic dùng chung vào `shared` sau khi có ít nhất hai nơi sử dụng.
-- Tên file dùng `kebab-case`; tên biến và hàm dùng `camelCase`; tên class CSS dùng `kebab-case`.
-- Mỗi feature phải có một file chính có tên trùng thư mục, ví dụ `dashboard/dashboard.js`.
-- Ưu tiên file ngắn và dễ đọc. Nếu một file vượt khoảng 250 dòng, xem xét tách theo trách nhiệm, không tách máy móc.
+- Organize by feature first and file type second. Related feature files belong together.
+- Give each file one primary responsibility.
+- Do not create more than three levels below \`src/ui\` without a specific reason.
+- Do not create a file for one constant or tiny helper unless it has a clear reuse case.
+- Do not use vague directories or filenames such as \`helpers\`, \`misc\`, \`common2\`, \`new\`, or \`final\`.
+- Do not duplicate logic across screens. Move shared logic to \`shared\` after at least two real consumers exist.
+- Use \`kebab-case\` for filenames, \`camelCase\` for variables and functions, and \`kebab-case\` for CSS classes.
+- Each feature must have a primary file named after its directory, for example \`dashboard/dashboard.js\`.
+- Prefer short, readable files. When a file grows beyond roughly 250 lines, consider splitting by responsibility instead of splitting mechanically.
 
-## 4. Cấu hình và dữ liệu
+## 4. Configuration and data
 
-- Cấu hình ứng dụng đặt tập trung trong `src/ui/config/`.
-- Không rải URL API, trạng thái, tên route, feature flag hoặc giá trị môi trường trong các file giao diện.
-- Không commit secret, token thật hoặc dữ liệu khách hàng thật.
-- Cấu hình khác nhau theo môi trường phải dùng biến môi trường hoặc file mẫu; không sửa trực tiếp trong feature.
-- Dữ liệu giả lập/demo đặt trong `src/ui/mocks/`, không trộn vào `src/ui/features/`.
-- Không đặt business rule vào file cấu hình. Rule nghiệp vụ phải nằm ở backend hoặc module nghiệp vụ tương ứng.
+- Keep UI configuration in \`src/ui/config/\`.
+- Do not scatter API URLs, route names, feature flags, environment values, or application state across UI features.
+- Never commit secrets, real tokens, or real customer data.
+- Use environment variables or sample files for environment-specific configuration; do not edit feature code for an environment change.
+- Keep demo and mock data in \`src/ui/mocks/\`, separate from \`src/ui/features/\`.
+- Do not put business rules in configuration. Business rules belong in the backend or the relevant business module.
 
-## 5. Quy trình cho mỗi thay đổi
+## 5. Change workflow
 
-1. Đọc `AGENTS.md` gần file cần sửa và tài liệu liên quan.
-2. Tìm một ví dụ tương tự trong codebase trước khi tạo pattern mới.
-3. Xác định rõ feature, file đầu vào, file đầu ra và hành vi cần thay đổi.
-4. Sửa ít file nhất có thể; không refactor lan sang khu vực không liên quan.
-5. Cập nhật tài liệu hoặc test nếu thay đổi contract, trạng thái hoặc luồng nghiệp vụ.
-6. Chạy lệnh kiểm tra hiện có trong `package.json`; nếu chưa có script, không tự bịa lệnh.
-7. Báo cáo file đã đổi, cách kiểm tra và phần còn chưa kiểm chứng.
+1. Read the nearest \`AGENTS.md\` and the relevant product documentation.
+2. Find a similar existing example before creating a new pattern.
+3. Identify the feature, input files, output files, and behavior being changed.
+4. Change the smallest possible set of files; do not refactor unrelated areas.
+5. Update documentation or tests when a contract, state, or business flow changes.
+6. Run the existing checks in \`package.json\` when such scripts exist. If no script exists, do not invent one as a repository requirement.
+7. Report changed files, checks run, and anything that remains unverified.
 
-## 6. Ranh giới không được tự ý vượt qua
+## 6. Boundaries
 
-- Không thêm framework, thư viện hoặc bundler mới chỉ để giải quyết vấn đề tổ chức file.
-- Không đổi tên hàng loạt file hoặc di chuyển thư mục đang được sử dụng nếu chưa kiểm tra toàn bộ import/link.
-- Không thay đổi database, API contract, quyền truy cập hoặc business rule khi yêu cầu chỉ nói về UI.
-- Không xóa code cũ khi chưa xác định nơi sử dụng và chưa có thay thế tương đương.
-- Không làm một file “siêu tổng hợp” chứa toàn bộ markup, style, API và state của ứng dụng.
+- Do not add a framework, library, or bundler only to solve file organization.
+- Do not rename many files or move a used directory without checking every import and link.
+- Do not change the database, API contract, access model, or business rules when the request is UI-only.
+- Do not delete old code until its usage is known and an equivalent replacement exists.
+- Do not create a god file containing all markup, styles, API calls, and application state.
 
-## 7. Cách cung cấp context cho LLM
+## 7. LLM task context
 
-Mỗi task nên bắt đầu bằng một context nhỏ:
+Every task should begin with a small context block:
 
-```text
-Mục tiêu: [một câu]
-Feature: [tên thư mục]
-Đọc trước: [tối đa 5 file liên quan]
-Được phép sửa: [danh sách file/thư mục]
-Không được đổi: [API, business rule hoặc khu vực ngoài phạm vi]
-Tiêu chí hoàn thành: [các điều kiện kiểm chứng được]
-```
+\`\`\`text
+Goal: [one sentence]
+Feature: [directory name]
+Read first: [up to five relevant files]
+Allowed to change: [files or directories]
+Do not change: [API, business rules, or out-of-scope areas]
+Completion criteria: [verifiable conditions]
+\`\`\`
 
-Không nạp toàn bộ repository vào một task. Chỉ đọc rule gốc, rule của thư mục đang làm và các file liên quan trực tiếp.
+Do not load the entire repository into one task. Read the root rules, the local rules, and the directly relevant files only.
+

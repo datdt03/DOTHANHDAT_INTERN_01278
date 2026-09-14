@@ -12,9 +12,9 @@ export function setupDashboardActions(container) {
   const exportBtn = container.querySelector('#btn-export-report');
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
-      showToast('Đang tạo báo cáo vận hành định dạng Excel/PDF...', 'info');
+      showToast('Creating an Excel/PDF operations report...', 'info');
       setTimeout(() => {
-        showToast('Đã xuất báo cáo ca làm việc thành công!', 'success');
+        showToast('Shift report exported successfully!', 'success');
       }, 700);
     });
   }
@@ -24,22 +24,22 @@ export function setupDashboardActions(container) {
   if (createOrderBtn) {
     createOrderBtn.addEventListener('click', () => {
       showModal({
-        title: 'Tạo phiếu sửa chữa mới',
+        title: 'Create New Repair Order',
         contentHtml: `
           <div class="space-y-3 text-xs text-slate-600">
-            <p>Quy trình SOP tiếp nhận gồm 3 bước bắt buộc:</p>
+            <p>The intake SOP has three required steps:</p>
             <ol class="list-decimal pl-5 space-y-1 font-medium text-slate-700">
-              <li>Nhập thông tin khách hàng hoặc tra cứu số điện thoại cũ.</li>
-              <li>Ghi nhận thiết bị, số IMEI/Serial và triệu chứng lỗi.</li>
-              <li>Chụp tối thiểu 2-4 ảnh hiện trạng và kiểm tra niêm phong ốc đáy.</li>
+              <li>Enter customer information or search by an existing phone number.</li>
+              <li>Record the device, IMEI/Serial number, and reported issue.</li>
+              <li>Capture at least 2–4 condition photos and check the bottom screws and seals.</li>
             </ol>
             <div class="p-2.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 mt-2">
-              💡 <em>Trong bản demo, phiếu mẫu <strong>#RF-20260911-001</strong> đã được nạp sẵn dữ liệu chuẩn để kiểm nghiệm toàn bộ quy trình.</em>
+              💡 <em>In the demo, sample order <strong>#RF-20260911-001</strong> is preloaded with representative data for the full workflow.</em>
             </div>
           </div>
         `,
-        confirmText: 'Mở phiếu mẫu',
-        cancelText: 'Đóng',
+        confirmText: 'Open sample order',
+        cancelText: 'Close',
         onConfirm: () => {
           window.location.hash = '#/orders/RF-20260911-001';
         }
@@ -79,3 +79,4 @@ function setupTableInteractions(tableWrapper) {
     });
   });
 }
+

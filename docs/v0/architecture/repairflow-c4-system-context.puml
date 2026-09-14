@@ -1,0 +1,19 @@
+@startuml repairflow-c4-system-context
+!include <C4/C4_Context>
+
+LAYOUT_LEFT_RIGHT()
+title RepairFlow — C4 System Context
+
+Person(owner, "Owner / Manager", "Đăng nhập, quản lý workspace và điều phối toàn bộ phiếu sửa chữa")
+Person(receptionist, "Receptionist / Front Desk", "Ghi nhận tiếp nhận, hiện trạng, phụ kiện và bàn giao theo staff profile")
+Person(technician, "Technician", "Chẩn đoán, lập báo giá, sửa chữa và kiểm tra chất lượng theo staff profile")
+Person(customer, "Customer", "Xem chẩn đoán, báo giá và duyệt hoặc từ chối qua customer link")
+System(repairflow, "RepairFlow", "Quản lý vòng đời phiếu sửa chữa, evidence, quote, approval, QC, handover, warranty và audit")
+
+Rel(owner, repairflow, "Quản lý vận hành và dữ liệu")
+Rel(receptionist, repairflow, "Ghi nhận và điều phối")
+Rel(technician, repairflow, "Chẩn đoán và thực hiện kỹ thuật")
+Rel(customer, repairflow, "Xem và quyết định quote qua public link")
+
+SHOW_LEGEND()
+@enduml

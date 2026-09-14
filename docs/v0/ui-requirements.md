@@ -1,84 +1,84 @@
-# RepairFlow — Yêu cầu UX/UI
+# RepairFlow — UX/UI Requirements
 
-## 1. Mục tiêu tài liệu
+## 1. Document purpose
 
-Tài liệu này mô tả yêu cầu UX/UI cho RepairFlow — hệ thống quản lý quy trình sửa chữa thiết bị cá nhân. Giao diện phải giúp cửa hàng tạo ra một chuỗi bằng chứng rõ ràng từ lúc tiếp nhận thiết bị đến khi chẩn đoán, báo giá, sửa chữa, bàn giao và bảo hành.
+This document defines the UX/UI requirements for RepairFlow, a workflow management system for personal device repair. The interface must help the shop create a clear evidence trail from device intake through diagnosis, quotation, repair, handover, and warranty.
 
-Mỗi phiếu sửa chữa là một workspace trung tâm. Mọi thông tin liên quan đến khách hàng, thiết bị, hiện trạng, báo giá, công việc, kiểm tra chất lượng và bàn giao phải truy cập được từ cùng một hồ sơ.
+Each repair order is the central workspace. Customer, device, condition, quotation, work, quality-check, and handover information must be reachable from the same record.
 
-## 2. Nguyên tắc thiết kế
+## 2. Design principles
 
-- Mỗi trạng thái phải cho người dùng biết bước tiếp theo và người chịu trách nhiệm.
-- Bằng chứng quan trọng như ảnh, checklist, báo giá và quyết định của khách phải dễ tìm lại.
-- Không cho phép bỏ qua các bước bắt buộc trước khi chuyển trạng thái.
-- Giao diện nhân viên có đầy đủ thông tin nghiệp vụ; giao diện khách hàng chỉ hiển thị thông tin cần thiết và dễ hiểu.
-- Nút hành động chính thay đổi theo trạng thái hiện tại của phiếu.
-- Ngôn ngữ giao diện dùng thuật ngữ dễ hiểu với nhân viên cửa hàng và khách hàng, không phụ thuộc vào mã trạng thái nội bộ.
+- Every status tells the user the next step and the responsible person.
+- Important evidence such as photos, checklists, quotations, and customer decisions is easy to find again.
+- Required steps cannot be skipped before a status transition.
+- Staff UI contains the operational detail; customer UI shows only necessary, understandable information.
+- Primary actions change with the current order status.
+- UI copy uses clear terms for staff and customers and does not depend on internal status codes.
 
-## 3. Vai trò và điểm vào chính
+## 3. Roles and primary entry points
 
-### Mô hình truy cập MVP
+### MVP access model
 
-- Chỉ Owner/Manager nhìn thấy màn hình đăng nhập và sử dụng phiên nội bộ.
-- Receptionist/Technician không có tài khoản riêng; quản lý thao tác trên giao diện và chọn đúng hồ sơ nhân sự cho từng bước.
-- Không hiển thị “Đăng nhập kỹ thuật viên”. “Việc của kỹ thuật viên” là bộ lọc theo hồ sơ được phân công.
-- Customer vẫn truy cập public link bằng token, không cần tài khoản.
+- Only Owner/Manager sees the login screen and uses an internal session.
+- Receptionist/Technician have no separate accounts; the Manager operates the UI and selects the correct staff profile for each step.
+- Do not display a “Technician login”. “Technician work” is a filter by assigned staff profile.
+- Customers access a public link with a token and do not need an account.
 
 ### Receptionist/Front Desk
 
-Ưu tiên các tác vụ:
+Priority tasks:
 
-- Tạo phiếu.
-- Ghi nhận hiện trạng.
-- Gửi link báo giá.
-- Bàn giao thiết bị.
-- Các thao tác được thực hiện trong phiên Owner/Manager; không có login riêng trong MVP.
+- Create an order.
+- Record condition.
+- Send a quotation link.
+- Hand over the device.
+- All actions use the Owner/Manager session; there is no separate login in the MVP.
 
 ### Technician
 
-Ưu tiên các tác vụ:
+Priority tasks:
 
-- Xem việc được phân công.
-- Chẩn đoán.
-- Lập và cập nhật báo giá.
-- Ghi nhận sửa chữa.
-- Kiểm tra chất lượng.
-- Kỹ thuật viên là hồ sơ được gán vào phiếu; không có login riêng trong MVP.
+- View assigned work.
+- Diagnose.
+- Create and update quotations.
+- Record repair work.
+- Perform quality checks.
+- A Technician is a staff profile assigned to the order; there is no separate login in the MVP.
 
 ### Manager/Owner
 
-Ưu tiên các tác vụ:
+Priority tasks:
 
-- Theo dõi Dashboard.
-- Phân công nhân viên.
-- Theo dõi phiếu trễ hoặc đang chờ xử lý.
-- Xem báo cáo và lịch sử thao tác.
+- Monitor the dashboard.
+- Assign staff.
+- Track overdue and waiting orders.
+- Review reports and activity history.
 
 ### Customer
 
-Không cần tài khoản trong MVP. Khách truy cập thông tin thông qua link bảo mật được cấp cho đúng phiếu và báo giá.
+No account is required in the MVP. The customer accesses information through a secure link issued for the correct order and quotation.
 
-## 4. Luồng nghiệp vụ tổng thể
+## 4. Overall business flow
 
-```text
+~~~text
 Dashboard
-    → Tạo phiếu sửa chữa
-    → Tiếp nhận khách và thiết bị
-    → Ghi nhận hiện trạng và bằng chứng
-    → Chẩn đoán
-    → Lập báo giá
-    → Gửi link cho khách
-    → Khách duyệt hoặc từ chối
-    → Tiến hành sửa chữa
-    → Kiểm tra chất lượng
-    → Sẵn sàng bàn giao
-    → Bàn giao và kích hoạt bảo hành
-    → Lịch sử sửa chữa
-```
+    → Create repair order
+    → Intake customer and device
+    → Record condition and evidence
+    → Diagnose
+    → Create quotation
+    → Send customer link
+    → Customer approves or rejects
+    → Perform repair
+    → Quality check
+    → Ready for handover
+    → Handover and activate warranty
+    → Repair history
+~~~
 
-### Luồng trạng thái nội bộ
+### Internal status flow
 
-```text
+~~~text
 received
     → diagnosing
     → waiting_for_approval
@@ -88,321 +88,322 @@ received
     → ready_for_pickup
     → handed_over
     → warranty_active
-```
+~~~
 
-Nếu kiểm tra chất lượng không đạt, phiếu quay lại `repairing`.
+When quality check fails, the order returns to `repairing`.
 
-## 5. Cấu trúc điều hướng nội bộ
+## 5. Internal navigation
 
-Thanh điều hướng chính gồm:
+The primary navigation includes:
 
-- **Dashboard**: tổng quan tiến độ và các phiếu cần xử lý.
-- **Phiếu sửa chữa**: danh sách, tìm kiếm, lọc và tạo phiếu mới.
-- **Việc của tôi**: các phiếu được phân công cho nhân viên hiện tại.
-- **Khách hàng**: hồ sơ và lịch sử sửa chữa theo khách hàng.
-- **Thiết bị**: thông tin thiết bị và lịch sử theo serial number hoặc mã nhận diện.
-- **Thông báo**: báo giá chờ duyệt, phiếu quá hạn, phiếu sẵn sàng bàn giao.
-- **Cài đặt**: cửa hàng, nhân viên, vai trò và chính sách quy trình.
+- **Dashboard:** overall progress and orders requiring attention.
+- **Repair Orders:** list, search, filtering, and new-order creation.
+- **My Work:** orders assigned to the current staff profile.
+- **Customers:** customer profiles and repair history.
+- **Devices:** device information and history by serial number or identifier.
+- **Notifications:** quotations awaiting approval, overdue orders, and ready-for-handover orders.
+- **Settings:** shop, staff, roles, and workflow policies.
 
-## 6. Yêu cầu màn hình và luồng chi tiết
+## 6. Screen and flow requirements
 
 ### 6.1. Dashboard
 
-Dashboard phải trả lời nhanh các câu hỏi:
+The dashboard must answer quickly:
 
-- Có bao nhiêu phiếu đang xử lý theo từng trạng thái?
-- Phiếu nào đang chờ khách duyệt?
-- Phiếu nào quá thời gian dự kiến?
-- Phiếu nào sẵn sàng bàn giao?
-- Nhân viên nào đang có phiếu được phân công?
+- How many orders are in each status?
+- Which orders are waiting for customer approval?
+- Which orders are past their expected completion time?
+- Which orders are ready for handover?
+- Which staff profiles have assigned work?
 
-Các thẻ chỉ số đề xuất:
+Suggested KPI cards:
 
-- Đang tiếp nhận/chẩn đoán.
-- Chờ khách duyệt.
-- Đang sửa chữa.
-- Chờ kiểm tra chất lượng.
-- Sẵn sàng bàn giao.
-- Quá hạn.
+- Intake/diagnosis in progress.
+- Waiting for customer approval.
+- Repairing.
+- Waiting for quality check.
+- Ready for handover.
+- Overdue.
 
-Mỗi thẻ phải dẫn đến danh sách đã được lọc tương ứng.
+Each card links to the corresponding filtered list.
 
-### 6.2. Danh sách phiếu sửa chữa
+### 6.2. Repair-order list
 
-Mỗi dòng phiếu hiển thị:
+Each order row displays:
 
-- Mã phiếu.
-- Tên khách hàng.
-- Thiết bị.
-- Trạng thái.
-- Người phụ trách chính.
-- Ngày tiếp nhận.
-- Ngày dự kiến hoàn tất.
-- Dấu hiệu quá hạn nếu có.
+- Order code.
+- Customer name.
+- Device.
+- Status.
+- Primary staff profile.
+- Intake date.
+- Expected completion date.
+- An overdue indicator when applicable.
 
-Bộ lọc tối thiểu:
+Minimum filters:
 
-- Trạng thái.
-- Người phụ trách.
-- Ngày tiếp nhận.
-- Phiếu quá hạn.
-- Phiếu đang chờ khách.
+- Status.
+- Staff profile.
+- Intake date.
+- Overdue orders.
+- Orders waiting for the customer.
 
-### 6.3. Tạo phiếu sửa chữa
+### 6.3. Create repair order
 
-#### Bước 1: Chọn hoặc tạo khách hàng
+#### Step 1: Select or create a customer
 
-Form gồm:
+The form includes:
 
-- Tên khách hàng.
-- Số điện thoại.
+- Customer name.
+- Phone number.
 - Email.
-- Ghi chú.
+- Notes.
 
-Nếu số điện thoại đã tồn tại, hệ thống phải đề xuất hồ sơ khách hàng cũ để tránh tạo trùng.
+When a phone number already exists, suggest the existing customer profile to prevent duplicates.
 
-#### Bước 2: Chọn hoặc tạo thiết bị
+#### Step 2: Select or create a device
 
-Form gồm:
+The form includes:
 
-- Loại thiết bị.
-- Hãng và model.
-- Serial number hoặc mã nhận diện.
-- Ghi chú thiết bị.
+- Device type.
+- Brand and model.
+- Serial number or identifier.
+- Device notes.
 
-Nếu thiết bị đã có lịch sử, hiển thị nhanh các phiếu sửa chữa trước đó.
+When the device has history, show recent repair orders.
 
-#### Bước 3: Ghi nhận vấn đề khách mô tả
+#### Step 3: Record the reported issue
 
-Form gồm:
+The form includes:
 
-- Vấn đề khách gặp phải.
-- Thời điểm bắt đầu nếu biết.
-- Trạng thái bật nguồn.
-- Phụ kiện nhận kèm.
-- Ngày dự kiến hoàn tất.
-- Ghi chú tiếp nhận.
+- Customer-reported issue.
+- Start time, when known.
+- Power state.
+- Received accessories.
+- Expected completion date.
+- Intake notes.
 
-Sau khi lưu, hệ thống tạo mã phiếu dễ đọc và duy nhất trong workspace, ví dụ `RF-20260911-001`.
+After saving, the system creates a human-readable, workspace-unique order code such as `RF-20260911-001`.
 
-### 6.4. Ghi nhận hiện trạng và bằng chứng
+### 6.4. Record condition and evidence
 
-Đây là bước bắt buộc trước khi bắt đầu chẩn đoán hoặc sửa chữa. Giao diện kết hợp checklist, ghi chú và ảnh.
+This is required before diagnosis or repair begins. The interface combines a checklist, notes, and photos.
 
-Các nhóm kiểm tra đề xuất:
+Suggested checks:
 
-- Ngoại hình: trầy, móp, nứt, vỡ.
-- Màn hình.
+- Exterior: scratches, dents, cracks, and breaks.
+- Screen.
 - Camera.
-- Loa và micro.
-- Nút bấm.
-- Cổng sạc.
-- Wi-Fi và Bluetooth.
-- Tình trạng bật nguồn.
-- Phụ kiện đi kèm.
-- Ghi chú khác.
+- Speaker and microphone.
+- Buttons.
+- Charging port.
+- Wi-Fi and Bluetooth.
+- Power state.
+- Included accessories.
+- Additional notes.
 
-Ảnh phải hiển thị dưới dạng thumbnail, có thể ghi chú từng ảnh và đánh dấu ảnh quan trọng. Có thể dùng hướng dẫn chụp mặt trước, mặt sau, cạnh bên và vùng hư hỏng.
+Photos display as thumbnails, support captions, and can be marked important. The UI may guide the user to capture the front, back, edges, and damaged area.
 
-Nếu checklist hoặc bằng chứng tối thiểu chưa hoàn tất, hiển thị:
+If the minimum checklist or evidence is incomplete, show:
 
-```text
-Chưa hoàn tất hiện trạng. Chưa thể chuyển sang chẩn đoán.
-```
+~~~text
+Condition record is incomplete. The order cannot move to diagnosis.
+~~~
 
-### 6.5. Chi tiết phiếu sửa chữa
+### 6.5. Repair-order detail
 
-Đây là workspace trung tâm của nhân viên.
+This is the central staff workspace.
 
 #### Header
 
-Hiển thị:
+Display:
 
-- Mã phiếu.
-- Tên khách hàng.
-- Thiết bị.
-- Trạng thái hiện tại.
-- Người phụ trách và các vai trò liên quan.
-- Ngày dự kiến hoàn tất.
-- Nút hành động chính theo trạng thái.
+- Order code.
+- Customer.
+- Device.
+- Current status.
+- Primary and related staff profiles.
+- Expected completion date.
+- Primary action for the current status.
 
-Nút hành động đề xuất:
+Suggested actions:
 
-| Trạng thái | Nhãn hiển thị | Hành động chính |
+| Status | Display label | Primary action |
 | --- | --- | --- |
-| `received` | Đã tiếp nhận | Bắt đầu chẩn đoán |
-| `diagnosing` | Đang chẩn đoán | Tạo báo giá |
-| `waiting_for_approval` | Chờ khách duyệt | Sao chép hoặc gửi link |
-| `approved` | Đã duyệt | Bắt đầu sửa |
-| `repairing` | Đang sửa | Hoàn tất sửa chữa |
-| `quality_check` | Kiểm tra chất lượng | Ghi nhận kết quả |
-| `ready_for_pickup` | Sẵn sàng bàn giao | Tạo biên bản bàn giao |
+| `received` | Received | Start diagnosis |
+| `diagnosing` | Diagnosing | Create quotation |
+| `waiting_for_approval` | Waiting for customer approval | Copy or send link |
+| `approved` | Approved | Start repair |
+| `repairing` | Repairing | Complete repair |
+| `quality_check` | Quality check | Record result |
+| `ready_for_pickup` | Ready for handover | Create handover record |
 
-#### Nội dung phiếu
+#### Order content
 
-Chia thành các section hoặc tab:
+Use sections or tabs:
 
-1. Tổng quan.
-2. Hiện trạng và bằng chứng.
-3. Chẩn đoán và báo giá.
-4. Công việc sửa chữa.
-5. Kiểm tra chất lượng.
-6. Bàn giao và bảo hành.
-7. Timeline lịch sử.
+1. Overview.
+2. Condition and evidence.
+3. Diagnosis and quotation.
+4. Repair work.
+5. Quality check.
+6. Handover and warranty.
+7. History timeline.
 
-Timeline nên luôn hiển thị ở cạnh phải hoặc cuối màn hình, gồm thời điểm, người thực hiện, hành động, ghi chú và tài liệu liên quan.
+The timeline should remain visible on the side or at the end of the page. It includes time, actor, action, note, and related documents.
 
-Ví dụ:
+Example:
 
-```text
-09:10 — Linh tiếp nhận thiết bị
-09:45 — Nam hoàn tất chẩn đoán
-10:20 — Đã gửi báo giá phiên bản 1
-11:05 — Khách đã duyệt báo giá
-13:30 — Hoàn tất sửa chữa
-14:00 — Đạt kiểm tra chất lượng
-```
+~~~text
+09:10 — Linh received the device
+09:45 — Nam completed the diagnosis
+10:20 — Quotation version 1 sent
+11:05 — Customer approved the quotation
+13:30 — Repair completed
+14:00 — Quality check passed
+~~~
 
-### 6.6. Chẩn đoán và báo giá
+### 6.6. Diagnosis and quotation
 
-#### Chẩn đoán
+#### Diagnosis
 
-Form gồm:
+The form includes:
 
-- Kết quả kiểm tra.
-- Nguyên nhân lỗi.
-- Đề xuất xử lý.
-- Thời gian sửa dự kiến.
-- Người chẩn đoán.
-- Ảnh hoặc ghi chú kỹ thuật.
+- Test findings.
+- Root cause.
+- Proposed solution.
+- Expected repair duration.
+- Diagnosing staff profile.
+- Technical photos or notes.
 
-#### Báo giá
+#### Quotation
 
-Mỗi dòng báo giá gồm:
+Each quotation line includes:
 
-- Loại: linh kiện hoặc công sửa.
-- Mô tả.
-- Số lượng.
-- Đơn giá.
-- Lý do thay thế hoặc sửa chữa.
-- Thời gian dự kiến.
+- Type: part or labor.
+- Description.
+- Quantity.
+- Unit price.
+- Replacement or repair reason.
+- Expected duration.
 
-Cuối báo giá hiển thị tạm tính, tổng tiền, ghi chú gửi khách và phiên bản báo giá.
+The quotation footer displays subtotal, total, customer note, and quotation version.
 
-Báo giá phải có ba hành động: **Lưu nháp**, **Gửi link khách hàng** và **Tạo phiên bản mới**. Báo giá đã gửi hoặc đã duyệt ở trạng thái chỉ đọc. Mọi thay đổi sau đó phải tạo phiên bản mới và yêu cầu khách quyết định lại.
+Quotation actions are **Save draft**, **Send customer link**, and **Create new version**. Sent or approved quotations are read-only. Any later change creates a new version and requires a new customer decision.
 
-### 6.7. Giao diện khách hàng qua link
+### 6.7. Customer link interface
 
-Khách hàng không cần tạo tài khoản. Trang public tập trung vào thông tin cần xem và quyết định cần thực hiện.
+Customers do not create accounts. The public page focuses on information to review and the decision to make.
 
-Nội dung đề xuất:
+Suggested content:
 
-1. Tên cửa hàng, mã phiếu và thiết bị.
-2. Tiến độ sửa chữa.
-3. Tình trạng thiết bị lúc tiếp nhận.
-4. Kết quả chẩn đoán.
-5. Chi tiết báo giá.
-6. Thời gian dự kiến.
-7. Ảnh liên quan.
-8. Nút **Đồng ý sửa chữa**.
-9. Nút **Từ chối hoặc trao đổi**.
+1. Shop name, order code, and device.
+2. Repair progress.
+3. Device condition at intake.
+4. Diagnosis result.
+5. Quotation details.
+6. Expected completion time.
+7. Relevant photos.
+8. **Approve repair** button.
+9. **Reject or discuss** button.
 
-Khi khách duyệt, hiển thị bước xác nhận gồm tên người xác nhận, phiên bản báo giá và thời gian. Sau khi ghi nhận, nút duyệt bị khóa để tránh gửi lặp.
+When the customer approves, show a confirmation step with the confirming name, quotation version, and time. After recording the decision, disable the approval button to prevent duplicate submissions.
 
-### 6.8. Sửa chữa và kiểm tra chất lượng
+### 6.8. Repair and quality check
 
-#### Sửa chữa
+#### Repair
 
-Màn hình quản lý công việc kỹ thuật gồm:
+The technical work screen includes:
 
-- Danh sách công việc đã được duyệt.
-- Checklist thực hiện.
-- Ghi chú tiến độ.
-- Thời gian bắt đầu và kết thúc.
-- Ảnh sau sửa.
-- Linh kiện thực tế đã sử dụng.
+- Approved work list.
+- Execution checklist.
+- Progress notes.
+- Start and end time.
+- After-repair photos.
+- Actual parts used.
 
-UI phải phân biệt rõ bốn trạng thái của công việc: **đề xuất**, **đã duyệt**, **đã thực hiện** và **đã kiểm tra**.
+The UI clearly distinguishes four work states: **proposed**, **approved**, **performed**, and **checked**.
 
-#### Kiểm tra chất lượng
+#### Quality check
 
-Checklist nên gồm:
+The checklist should include:
 
-- Lỗi ban đầu đã được xử lý chưa.
-- Thiết bị có khởi động bình thường không.
-- Chức năng liên quan có hoạt động không.
-- Có phát sinh lỗi mới không.
-- Ngoại hình sau sửa.
-- Ảnh sau sửa.
-- Kết luận đạt hoặc không đạt.
-- Ghi chú giới hạn còn lại.
+- Whether the original issue was resolved.
+- Whether the device starts normally.
+- Whether related functions work.
+- Whether new issues appeared.
+- Exterior condition after repair.
+- After-repair photos.
+- Pass/fail conclusion.
+- Remaining limitations.
 
-Nếu không đạt, phiếu quay lại `repairing` và không được chuyển thẳng sang bàn giao.
+When the check fails, return the order to `repairing`; it cannot go directly to handover.
 
-### 6.9. Bàn giao và bảo hành
+### 6.9. Handover and warranty
 
-Form bàn giao gồm:
+The handover form includes:
 
-- Tên người nhận.
-- Ngày giờ bàn giao.
-- Phụ kiện trả lại.
-- Tình trạng cuối.
-- Ghi chú.
-- Xác nhận bàn giao.
-- Người thực hiện bàn giao.
-- Thời hạn bảo hành hoặc ngày hết hạn.
+- Recipient name.
+- Handover date and time.
+- Returned accessories.
+- Final condition.
+- Notes.
+- Handover confirmation.
+- Handover staff profile.
+- Warranty duration or expiry date.
 
-Sau khi lưu:
+After saving:
 
-- Chuyển trạng thái sang `handed_over`.
-- Kích hoạt bảo hành từ ngày bàn giao.
-- Khóa các thông tin quan trọng của phiếu.
-- Đưa phiếu vào lịch sử khách hàng và thiết bị.
+- Move the order to `handed_over`.
+- Activate warranty from the handover time.
+- Lock important order information.
+- Add the order to customer and device history.
 
-## 7. Trạng thái lỗi và ngoại lệ
+## 7. Error and exception states
 
-UX phải có trạng thái và thông báo rõ cho các trường hợp:
+UX must clearly handle:
 
-- Link khách hàng hết hạn hoặc đã bị thu hồi.
-- Khách từ chối báo giá.
-- Báo giá được thay đổi sau khi khách đã duyệt.
-- Checklist hiện trạng chưa hoàn tất.
-- Thiếu ảnh bằng chứng.
-- Kiểm tra chất lượng không đạt.
-- Phiếu quá thời gian dự kiến.
-- Thiết bị đã có phiếu sửa chữa đang mở.
-- Nhân viên bị vô hiệu hóa nhưng vẫn còn phiếu được phân công.
+- Expired or revoked customer links.
+- Customer rejection.
+- A quotation changed after customer approval.
+- Incomplete condition checklist.
+- Missing evidence photos.
+- Failed quality check.
+- An order past its expected completion time.
+- A device with another open repair order.
+- An inactive staff profile that still owns an assignment.
 
-## 8. Danh sách màn hình MVP
+## 8. MVP screen list
 
-1. Đăng nhập Owner/Manager.
+1. Owner/Manager login.
 2. Dashboard.
-3. Danh sách phiếu sửa chữa.
-4. Tạo phiếu sửa chữa.
-5. Chi tiết phiếu sửa chữa.
-6. Ghi nhận hiện trạng và ảnh.
-7. Chẩn đoán.
-8. Báo giá theo phiên bản.
-9. Trang public cho khách hàng.
-10. Checklist sửa chữa.
-11. Kiểm tra chất lượng.
-12. Bàn giao và bảo hành.
-13. Hồ sơ khách hàng.
-14. Hồ sơ thiết bị.
-15. Timeline và audit log cơ bản.
+3. Repair-order list.
+4. Create repair order.
+5. Repair-order detail.
+6. Condition and photo evidence.
+7. Diagnosis.
+8. Versioned quotation.
+9. Customer public page.
+10. Repair checklist.
+11. Quality check.
+12. Handover and warranty.
+13. Customer profile.
+14. Device profile.
+15. Timeline and basic audit log.
 
-## 9. Tiêu chí nghiệm thu UX/UI
+## 9. UX/UI acceptance criteria
 
-- Người dùng luôn nhìn thấy trạng thái hiện tại và bước tiếp theo của phiếu.
-- Owner/Manager có thể hoàn tất luồng tạo phiếu và ghi nhận staff profile Receptionist mà không cần rời khỏi luồng.
-- Quản lý chỉ chọn và ghi nhận Technician trong phạm vi hồ sơ nhân sự đang active; Technician không có session riêng trong MVP.
-- Khách hàng có thể xem báo giá, hiểu nội dung cần duyệt và đưa ra quyết định không cần tài khoản.
-- Không thể bắt đầu sửa nếu chưa có quyết định `approved` cho đúng phiên bản báo giá.
-- Không thể bàn giao nếu checklist chất lượng chưa đạt.
-- Có thể truy ngược từ phiếu đến ảnh, báo giá, quyết định khách, checklist, bàn giao và bảo hành.
-- Giao diện hiển thị rõ các trường hợp link hết hạn, báo giá mới, phiếu quá hạn và kiểm tra không đạt.
+- Users always see the current order status and next step.
+- Owner/Manager can create an order and attribute the Receptionist profile without leaving the flow.
+- Managers can select and record only active Technician profiles; Technicians have no separate session in the MVP.
+- Customers can understand the quotation and decide without an account.
+- Repair cannot start without an `approved` decision for the correct quotation version.
+- Handover cannot occur before the quality checklist passes.
+- Users can trace an order to photos, quotations, customer decisions, checklists, handover, and warranty.
+- The UI clearly handles expired links, new quotation versions, overdue orders, and failed quality checks.
 
-## 10. Tài liệu liên quan
+## 10. Related documents
 
-- [README sản phẩm](../../README.md)
-- [Kiến trúc và yêu cầu hệ thống](./architecture-and-requirements.md)
+- [Product README](../../README.md)
+- [Architecture and system requirements](./architecture-and-requirements.md)
+

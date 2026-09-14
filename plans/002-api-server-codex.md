@@ -1,122 +1,115 @@
-# 002 — RepairFlow API server implementation for Codex
+# 002 — RepairFlow API Server Implementation for Codex
 
 ## Goal
 
-Codex xây API server modular monolith bằng FastAPI, PostgreSQL schema/migrations bằng SQL và test suite cho MVP RepairFlow. Server phải thực thi Owner/Manager management access, tenant isolation, staff-profile assignment, state machine, quote immutability, public-link security và transaction rules theo các quyết định/fixture hiện có trong [docs/v0](../docs/v0/README.md). Chưa tạo hoặc coi API contract là tài liệu đã freeze.
+Build the RepairFlow modular monolith API with FastAPI, PostgreSQL, SQL migrations, and a test suite for the MVP. The server must enforce Owner/Manager management access, tenant isolation, staff-profile assignment, the repair-order state machine, quotation immutability, public-link security, and transaction rules from the approved decisions and fixtures in [docs/v0](../docs/v0/README.md). Do not create or treat an API contract as frozen.
 
 ## Scope
 
-- Health endpoint, Owner/Manager management auth session và current user.
-- Workspace membership, management role và staff-profile responsibility.
-- Customer, device, repair order, evidence metadata/file handling.
-- Diagnosis, quote draft/sent/version, customer decision.
-- Public customer link view/approve/reject, expiry/revoke/rate limit/audit.
-- Repair work logs, repair/quality/handover checklists.
-- Handover, warranty, status history, audit log và normalized timeline.
-- Dashboard, order list/filter, customer/device history.
-- Migration, seed, local run instructions và bằng chứng kiểm thử local.
+- Health endpoint, Owner/Manager management sessions, and current-user lookup.
+- Workspace membership, management role, and staff-profile responsibility.
+- Customer, device, repair order, evidence metadata, and file handling.
+- Diagnosis, quotation draft/version, customer decision, and public customer-link view.
+- Expiry, revoke, rate-limit, redaction, and access audit for public links.
+- Repair work logs, repair/quality/handover checklists, warranty, status history, audit log, and normalized timeline.
+- Dashboard, order list/filter, and customer/device history.
+- Migrations, seed data, local run instructions, and test evidence.
 
-## Execution model cho Codex
+## Execution model
 
-Đây là task packet riêng cho Codex. Thực thi theo [master plan v1](./000-repairflow-v1-implementation.md), đọc [requirements closure](../docs/v0/requirements-closure.md), rồi luôn chạy song song với task UI cùng mã cluster. Không chờ toàn bộ API hoàn tất mới bắt đầu hoặc bàn giao toàn bộ cho Antigravity.
+This is the Codex task packet. Execute it through the cluster map in [000 — master plan](./000-repairflow-v1-implementation.md), read [requirements closure](../docs/v0/requirements-closure.md), and pair every cluster with the matching Antigravity UI task. Do not complete the entire API before the UI starts.
 
-| Cluster | Codex task cards | Kết quả Codex phải bàn giao trong cluster |
+| Cluster | Codex task cards | Codex deliverable |
 | --- | --- | --- |
-| C0 | C0-S01..S05 | FastAPI/DB foundation, migration proof, baseline fixture |
-| C1 | C1-S01..S04 | Owner/Manager auth, session, me, tenant dependency và tests |
-| C2 | C2-S01..S04 | Customer/device/order transaction và intake assignment |
-| C3 | C3-S01..S04 | Intake checklist, private evidence, signed URL và file tests |
-| C4 | C4-S01..S04 | Diagnosis, quote draft/version, decimal totals và audit |
-| C5 | C5-S01..S05 | Send quote, public token, public DTO, decision và concurrency tests |
-| C6 | C6-S01..S04 | Approved transition, work log, repair checklist, after evidence |
-| C7 | C7-S01..S04 | QC pass/fail, rework và state guard |
-| C8 | C8-S01..S05 | Handover, warranty, history, timeline và duplicate protection |
-| C9 | C9-S01..S04 | Dashboard/list/filter/overdue/needs attention |
-| C10 | C10-S01..S06 | Seed, security/concurrency suite, runtime và local verification |
+| C0 | C0-S01..S05 | FastAPI/DB foundation, migration proof, and baseline fixture |
+| C1 | C1-S01..S04 | Owner/Manager auth, session, current user, tenant dependency, and tests |
+| C2 | C2-S01..S04 | Customer/device/order transaction and intake assignment |
+| C3 | C3-S01..S04 | Intake checklist, private evidence, signed URL, and file tests |
+| C4 | C4-S01..S04 | Diagnosis, quote draft/version, decimal totals, and audit |
+| C5 | C5-S01..S05 | Quote sending, public token, public DTO, decision, and concurrency tests |
+| C6 | C6-S01..S04 | Approved transition, work log, repair checklist, and after-repair evidence |
+| C7 | C7-S01..S04 | QC pass/fail, rework, and state guard |
+| C8 | C8-S01..S05 | Handover, warranty, history, timeline, and duplicate protection |
+| C9 | C9-S01..S04 | Dashboard, list, filter, overdue, and needs-attention queries |
+| C10 | C10-S01..S06 | Seed, security/concurrency suite, runtime checks, and local verification |
 
-Mỗi task card phải tạo hoặc cập nhật shared fixture, test proof và ghi rõ trạng thái trong kết quả task. Khi server logic chưa hoàn tất, Codex phải cung cấp fixture/stub rõ trạng thái để UI không bị block.
+Every task must create or update the shared fixture, test proof, and status evidence for its cluster. When server behavior is incomplete, provide a clearly labeled fixture or stub so the UI is not blocked.
 
-## Out of Scope
+## Out of scope
 
-- Sửa `src/ui/**`, HTML/CSS, mock data hoặc UI route.
-- Payment/inventory/accounting/notification worker/AI diagnosis.
-- Bất kỳ dữ liệu nào ngoài [database model](../docs/v0/database-requirements.md#5-đặc-tả-bảng-và-cột) nếu chưa có quyết định nghiệp vụ.
-- Trả token thô, internal note hoặc mã mở khóa trong public response.
+- Editing \`src/ui/**\`, HTML/CSS, mock data, or UI routes.
+- Payment, inventory, accounting, notification workers, or AI diagnosis.
+- Adding data outside the [database model](../docs/v0/database-requirements.md) without a Product decision.
+- Returning raw tokens, internal notes, or unlock codes in public responses.
+- Creating API handoff or release documentation.
 
-## Input Files
+## Input files
 
 - [AGENTS.md](../AGENTS.md).
-- [README.md](../README.md), nhất là MVP Scope, statuses, business rules và demo scenario.
-- [architecture-and-requirements.md](../docs/v0/architecture-and-requirements.md), §§2–7, 8, 11–12.
-- [database-requirements.md](../docs/v0/database-requirements.md), §§3, 5, 8–14.
-- [usecase.md](../docs/v0/usecase.md), các main/alternative/failure flow của cluster đang làm.
-- Shared fixtures và quyết định Product trong [docs/v0](../docs/v0/README.md); không đọc archive như nguồn hiện hành.
+- [README.md](../README.md), especially MVP scope, statuses, business rules, and the demo scenario.
+- [architecture-and-requirements.md](../docs/v0/architecture-and-requirements.md).
+- [database-requirements.md](../docs/v0/database-requirements.md).
+- [usecase.md](../docs/v0/usecase.md).
+- Shared fixtures and Product decisions in [docs/v0](../docs/v0/README.md); never use archive files as current requirements.
 
-## Output Files
+## Output files
 
-- `src/app/**` — application entry, config, modules, repositories/services, management auth, file adapter.
-- `src/db/migrations/**` — migrations theo thứ tự database §12.
-- `src/db/seed/**` — demo workspace/staff profiles/management access/order.
-- `tests/**` — unit/integration/security tests.
-- `tests/fixtures/**` hoặc fixture directory hiện có — dữ liệu test dùng chung giữa server và UI nếu cần.
+- \`src/app/**\`: application entry, config, modules, repositories/services, management auth, and file adapter.
+- \`src/db/migrations/**\`: ordered migrations.
+- \`src/db/seed/**\`: demo workspace, staff profiles, management access, and order seed.
+- \`tests/**\`: unit, integration, security, and concurrency tests.
+- \`tests/fixtures/**\` or the existing shared-fixture directory.
+- \`.env.example\` or a runtime sample when required; never commit a real secret.
+- Do not edit \`src/ui/app.bundle.js\` directly.
 
-## Files To Write
+## Technical checklist by cluster
 
-- API source theo feature trước, loại file sau; không tạo một file “god service”.
-- Migration và seed files cho toàn bộ bảng MVP.
-- Test fixtures không chứa dữ liệu khách hàng thật.
-- `.env.example` hoặc runtime config sample nếu runtime cần; không commit secret thật trong `.env`.
-- Nếu runtime sinh OpenAPI tự động thì chỉ xem đó là output kỹ thuật; không dùng nó để ngầm chốt nghiệp vụ chưa được Product duyệt.
+- [x] **A1/C0 — Runtime inventory.** Python 3.12, FastAPI/Uvicorn, SQLAlchemy/psycopg, PostgreSQL Docker, SQL versioning, and the runner at \`src/db/migrate.py\` are recorded and have local proof.
+- [x] **A2/C0 — API boundary.** \`src/app/\` contains the entrypoint, config, error envelope, request ID, and health check.
+- [x] **A3/C0 — Database foundation.** Migrations 0001–0006 and the migration runner cover the current MVP tables.
+- [ ] **A4/C0–C2 — Constraints and indexes.** Apply foreign keys, unique/partial unique constraints, money constraints, timestamp policy, and required indexes. Never use floating point for money.
+- [ ] **A5/C1 — Management access and tenant context.** Implement login/logout/current-user/session for Owner/Manager only, membership lookup, inactive/locked rejection, current workspace context, and workspace-scoped repository queries. Do not create credentials or sessions for Receptionist/Technician.
+- [ ] **A6/C1–C2 — Permissions and staff assignment.** Enforce internal permissions in the API and validate same-workspace, correct-role, active staff profiles before assignment. Preserve actor history.
+- [ ] **A7/C2 — Intake vertical slice.** Implement customer/device search/create and the \`POST /repair-orders\` transaction: customer/device, \`received\` order, intake staff, initial status history, and audit.
+- [ ] **A8/C3–C4 — Detail/evidence/diagnosis.** Implement detail DTO, timeline aggregation, evidence validation/private storage/signed URL, diagnosis create, and public redaction.
+- [ ] **A9/C4–C5 — Quote vertical slice.** Implement draft CRUD, server-side line totals, send-link transaction, immutable sent/approved quote, version creation, and audit. Cover \`QUOTE_IMMUTABLE\` and \`INVALID_TRANSITION\`.
+- [ ] **A10/C5 — Public decision.** Implement hashed-token lookup, expiry/revoke/rate limit, public redaction, approve/reject transaction, idempotency/conflict, and decision snapshot.
+- [ ] **A11/C6–C7 — Repair/QC.** Implement status transitions, work logs, repair checklist, and quality checklist pass/fail. Quality failure must return the order to \`repairing\`.
+- [ ] **A12/C8 — Handover/warranty/history.** Implement handover transaction, returned accessories/final condition, \`handed_over\`, warranty activation from handover, and customer/device history.
+- [ ] **A13/C9 — Dashboard/list.** Implement KPI/pipeline/needs-attention, filters including derived \`overdue\`, pagination, and staff activities from approved semantics and fixtures.
+- [ ] **A14/C10 — Seed and reproducibility.** Seed one demo workspace, one Owner/Manager access principal, Receptionist/Technician staff profiles, and a complete README scenario. Generate a new public token on every seed; never hard-code a secret.
+- [ ] **A15/C10 — Shared-fixture verification.** Test response JSON, nullable fields, enum names, money strings, timestamps, error codes, and public redaction with the shared fixture. Mark unapproved shapes as open decisions.
+- [ ] **A16/C10 — Local verification.** Record commands, migration/seed proof, test evidence, and known gaps in the task result; do not create API handoff, release notes, or production status.
 
-## Technical checklist mapped to clusters
+## Invariants to test
 
-A1–A16 dưới đây là checklist kỹ thuật. Đây không phải thứ tự “làm xong server rồi mới làm UI”; mỗi mục phải được thực thi bên trong cluster tương ứng và review cùng Antigravity.
+- Apply \`workspace_id\` scoping even to tables without a direct workspace column.
+- Quotes in \`sent\`, \`approved\`, \`rejected\`, \`superseded\`, or \`expired\` state cannot update items.
+- Approval/rejection applies only to a \`sent\` quote, the correct link and version, and one valid decision.
+- Repair cannot start without an approved decision for the correct quote.
+- An order cannot become ready for pickup before the quality checklist passes.
+- Handover cannot occur before \`ready_for_pickup\`.
+- Warranty starts at handover unless an authorized exception has a reason.
+- Status history, audit, evidence, and decisions are not hard-deleted in normal flows.
+- \`isOverdue\` is derived from expected completion and terminal-state rules; it is not a status.
+- Only Owner/Manager access principals can call internal APIs. Inactive staff profiles cannot receive new assignments, while old history remains intact.
 
-- [x] **A1/C0 — Inventory runtime.** Runtime đã chốt là Python 3.12 + FastAPI/Uvicorn + SQLAlchemy/psycopg + PostgreSQL Docker; migrations dùng SQL versioning và runner tại `src/db/migrate.py`; phải có test hoặc command proof chạy local.
-- [x] **A2/C0 — Scaffold API boundary.** Tạo `src/app/` với entrypoint, config, error envelope, request ID và health check; không chạm `src/ui/**`.
-- [x] **A3/C0 — Database foundation.** Tạo SQL migrations `0001`–`0006` và runner tại `src/db/migrations/`/`src/db/migrate.py` cho toàn bộ bảng MVP theo [database §12](../docs/v0/database-requirements.md#12-migration-và-seed-data).
-- [ ] **A4/C0–C2 — Constraints and indexes.** Áp dụng FK, unique/partial unique, money constraints, timestamp policy và index trong [database §8](../docs/v0/database-requirements.md#8-unique-constraint-và-index). Không dùng float cho tiền.
-- [ ] **A5/C1 — Management access and tenant context.** Implement login/logout/me/session chỉ cho Owner/Manager, membership lookup, access-principal inactive/locked rejection, current workspace context và scope mọi repository query theo workspace. Không tạo credential/session cho Receptionist/Technician.
-- [ ] **A6/C1–C2 — Management permissions and staff assignment.** Enforce quyền nội bộ ở API cho Owner/Manager; validate staff profile cùng workspace, đúng role vận hành và đang active trước khi assignment; không ghi đè actor history.
-- [ ] **A7/C2 — Intake vertical slice.** Implement customer/device search/create và `POST /repair-orders` transaction: create/get customer/device, order `received`, intake staff, initial status history và audit.
-- [ ] **A8/C3–C4 — Detail/evidence/diagnosis.** Implement detail DTO, timeline aggregation, evidence validation/private storage/signed URL, diagnosis create; redact internal fields ở public DTO.
-- [ ] **A9/C4–C5 — Quote vertical slice.** Implement draft CRUD, server-side line totals, send link transaction, immutable sent/approved quote, version creation và audit. Bao phủ `QUOTE_IMMUTABLE`/`INVALID_TRANSITION`.
-- [ ] **A10/C5 — Public decision.** Implement hash token lookup, expiry/revoke/rate limit, public redaction, approve/reject transaction, idempotency/conflict và customer decision snapshot.
-- [ ] **A11/C6–C7 — Repair/QC.** Implement status transition endpoint, work logs, repair checklist, quality checklist pass/fail; quality fail phải đưa order về `repairing`.
-- [ ] **A12/C8 — Handover/warranty/history.** Implement handover transaction, returned accessories/final condition, `handed_over`, warranty activation từ ngày bàn giao, customer/device history.
-- [ ] **A13/C9 — Dashboard/list.** Implement KPI/pipeline/needs attention, order filters including derived `overdue`, pagination và staff activities theo business semantics và shared fixtures đã chốt.
-- [ ] **A14/C10 — Seed and reproducibility.** Seed một workspace demo, một management access principal Owner/Manager, staff profiles Receptionist/Technician và một order hoàn chỉnh theo README demo; public token phải tạo mới khi seed và không hard-code secret.
-- [ ] **A15/C10 — Shared-fixture verification.** Test response JSON, nullable fields, enum names, money strings, timestamps, error codes và public redaction bằng fixture dùng chung; mọi shape chưa được Product chốt phải ghi là open decision, không tự freeze.
-- [ ] **A16/C10 — Local verification.** Ghi lệnh chạy, migration/seed proof, test evidence và known gaps trong kết quả task; không tạo API handoff, release note hoặc production status document.
+## Testing plan
 
-## Invariants phải test
+- **Unit:** transition table, quote totals, overdue calculation, permission matrix, staff assignment, token hash/expiry, and DTO redaction.
+- **Integration:** migration/seed, route groups, tenant isolation, session expiry, public-link lifecycle, quote versions, QC fail/pass, and handover transaction.
+- **Concurrency/idempotency:** duplicate approve requests, repeated quote send, simultaneous quote versions, and stale transitions.
+- **Security:** cross-workspace IDs, inactive/locked access, inactive staff assignment, revoked/expired tokens, file MIME/size, and sensitive-field redaction.
+- **Regression:** the README demo scenario and the query shapes in [database requirements](../docs/v0/database-requirements.md).
 
-- `workspace_id` luôn được áp dụng, kể cả bảng không có cột trực tiếp.
-- Quote đã `sent`, `approved`, `rejected`, `superseded` hoặc `expired` không được update items.
-- Approval/rejection chỉ áp dụng cho quote `sent`, đúng link, đúng version và chỉ một quyết định hợp lệ.
-- Không bắt đầu sửa nếu thiếu decision `approved` đúng quote.
-- Không ready for pickup nếu quality checklist chưa `passed`.
-- Không handover nếu order chưa `ready_for_pickup`.
-- Warranty bắt đầu từ ngày handover, trừ exception có role và reason.
-- Status history/audit/evidence/decision không bị hard-delete trong flow thông thường.
-- `isOverdue` được tính từ expected completion + final-state rule, không ghi thành status `overdue`.
-- Chỉ access principal Owner/Manager có thể gọi internal API; staff profile inactive không được nhận assignment mới nhưng lịch sử cũ vẫn giữ.
+## Acceptance criteria
 
-## Testing Plan
+- [ ] \`GET /health\`, run commands, migration/seed proof, and test evidence are locally verified.
+- [ ] Each cluster has clear fixture and decision evidence; do not claim a frozen API contract or release readiness without Product approval.
+- [ ] Tenant isolation and management permissions are tested with valid sessions/IDs from different workspaces.
+- [ ] The server calculates quote totals; old versions are immutable and decisions trace to a link.
+- [ ] Invalid state transitions are rejected with stable error codes.
+- [ ] Public links expose only customer-required data and enforce expiry/revoke and duplicate-decision protection.
+- [ ] Handover creates warranty according to policy and a complete timeline.
+- [ ] Seed data reproduces the demo scenario and lets Antigravity run the UI smoke flow against the shared fixture semantics.
 
-- **Unit:** pure transition table, quote total, overdue calculation, management permission matrix, staff-profile assignment, token hash/expiry, DTO redaction.
-- **Integration:** migration up/seed, all route groups, tenant isolation, Owner/Manager session expiry, public link lifecycle, quote version flow, quality fail/pass and handover transaction.
-- **Concurrency/idempotency:** two approve requests, send quote twice, simultaneous quote version, stale status transition.
-- **Security:** forbidden cross-workspace IDs, inactive/locked management access, inactive staff-profile assignment, revoked/expired token, file MIME/size, no sensitive fields in public DTO/logs.
-- **Regression:** demo scenario from README và query shapes trong [database §11](../docs/v0/database-requirements.md#11-query-mẫu-theo-use-case).
-
-## Acceptance Criteria
-
-- [ ] `GET /health`, lệnh chạy, migration/seed proof và test evidence được kiểm chứng local.
-- [ ] Mỗi cluster có fixture/decision evidence rõ ràng; không tuyên bố API contract hoặc release readiness khi chưa được Product yêu cầu và chốt.
-- [ ] Tenant isolation và management permissions được test bằng access session/IDs hợp lệ nhưng khác workspace.
-- [ ] Quote totals do server tính; version cũ immutable và decision traceable đến link.
-- [ ] State machine chặn transition sai và trả error code ổn định.
-- [ ] Public link chỉ lộ dữ liệu cần cho khách, có expiry/revoke và chống quyết định lặp.
-- [ ] Handover tạo warranty đúng policy và timeline đủ actor/time/event.
-- [ ] Seed có thể dựng demo scenario và Antigravity có thể chạy UI smoke bằng shared fixture/endpoint semantics của cluster.

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-full">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RepairFlow - Hệ thống Quản trị Quy trình Sửa chữa Thiết bị</title>
+  <title>RepairFlow - Device Repair Workflow Management System</title>
 
   <!-- Google Fonts: Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -62,7 +62,7 @@
         <button type="button" class="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-sky-700 text-[18px]">storefront</span>
-            <span>Cửa hàng Minh Tâm</span>
+            <span>Minh Tâm Store</span>
           </div>
           <span class="material-symbols-outlined text-slate-400 text-[16px]">unfold_more</span>
         </button>
@@ -72,35 +72,35 @@
       <nav class="px-3 space-y-1 text-xs font-semibold text-slate-600">
         <a href="#/dashboard" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-800 transition-colors" data-route="dashboard">
           <span class="material-symbols-outlined text-[20px]">dashboard</span>
-          <span>Tổng quan</span>
+          <span>Overview</span>
         </a>
         <a href="#/orders/RF-20260911-001" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-800 transition-colors" data-route="order-detail">
           <span class="material-symbols-outlined text-[20px]">assignment</span>
-          <span>Phiếu sửa chữa</span>
+          <span>Repair Orders</span>
         </a>
         <a href="#/customer/RF-20260911-001" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-800 transition-colors" data-route="customer-link">
           <span class="material-symbols-outlined text-[20px]">phone_iphone</span>
-          <span>Link khách hàng (Mobile)</span>
+          <span>Customer Link (Mobile)</span>
         </a>
         <a href="javascript:void(0)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
           <span class="material-symbols-outlined text-[20px]">checklist</span>
-          <span>Việc của tôi</span>
+          <span>My Work</span>
         </a>
         <a href="javascript:void(0)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
           <span class="material-symbols-outlined text-[20px]">group</span>
-          <span>Khách hàng</span>
+          <span>Customers</span>
         </a>
         <a href="javascript:void(0)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
           <span class="material-symbols-outlined text-[20px]">devices</span>
-          <span>Thiết bị</span>
+          <span>Devices</span>
         </a>
         <a href="javascript:void(0)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
           <span class="material-symbols-outlined text-[20px]">notifications</span>
-          <span>Thông báo</span>
+          <span>Notifications</span>
         </a>
         <a href="javascript:void(0)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 transition-colors">
           <span class="material-symbols-outlined text-[20px]">settings</span>
-          <span>Cài đặt</span>
+          <span>Settings</span>
         </a>
       </nav>
     </div>
@@ -109,11 +109,11 @@
     <div class="p-3">
       <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs">
         <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-          <span>Trạng thái xưởng</span>
+          <span>Workshop status</span>
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         </div>
-        <div class="font-extrabold text-slate-800 text-sm">14/18 Bàn có thợ</div>
-        <div class="text-slate-400 text-[11px] mt-0.5">Đang xử lý 28 thiết bị</div>
+        <div class="font-extrabold text-slate-800 text-sm">14/18 Benches staffed</div>
+        <div class="text-slate-400 text-[11px] mt-0.5">28 devices in progress</div>
       </div>
     </div>
   </aside>
@@ -134,7 +134,7 @@
         </div>
         <div class="relative flex-1">
           <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[18px]">search</span>
-          <input type="text" id="global-search-input" placeholder="Tìm phiếu (RF-...), SĐT, khách hàng..." class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-sky-600 outline-none transition-all"/>
+          <input type="text" id="global-search-input" placeholder="Search orders (RF-...), phone, or customer..." class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-sky-600 outline-none transition-all"/>
         </div>
       </div>
 
@@ -143,14 +143,14 @@
         <!-- View Quick Switcher Pills -->
         <div class="hidden lg:flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600">
           <a href="#/dashboard" class="quick-nav-pill px-3 py-1 rounded-lg hover:text-slate-900" data-nav="dashboard">Dashboard</a>
-          <a href="#/orders/RF-20260911-001" class="quick-nav-pill px-3 py-1 rounded-lg hover:text-slate-900" data-nav="order-detail">Chi tiết phiếu</a>
-          <a href="#/customer/RF-20260911-001" class="quick-nav-pill px-3 py-1 rounded-lg hover:text-slate-900" data-nav="customer-link">Link khách hàng</a>
+          <a href="#/orders/RF-20260911-001" class="quick-nav-pill px-3 py-1 rounded-lg hover:text-slate-900" data-nav="order-detail">Order Details</a>
+          <a href="#/customer/RF-20260911-001" class="quick-nav-pill px-3 py-1 rounded-lg hover:text-slate-900" data-nav="customer-link">Customer Link</a>
         </div>
 
         <!-- Shop Live Status -->
         <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-          Cửa hàng đang mở
+          Store is open
         </span>
 
         <!-- Notification Bell -->
@@ -165,7 +165,7 @@
         <div class="flex items-center gap-2.5 pl-2 border-l border-slate-200">
           <div class="text-right hidden sm:block">
             <div class="text-xs font-bold text-slate-800">Minh Tâm</div>
-            <div class="text-[10.5px] text-slate-400">Quản lý điều hành</div>
+            <div class="text-[10.5px] text-slate-400">Operations Manager</div>
           </div>
           <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-slate-200"/>
         </div>
@@ -183,3 +183,4 @@
   <script src="app.bundle.js"></script>
 </body>
 </html>
+
