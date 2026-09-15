@@ -71,9 +71,12 @@ Quy ước khác:
 ### 2.2. Mô hình truy cập và nhân sự trong MVP
 
 - Một workspace đại diện cho một cửa hàng nhỏ trong MVP.
-- Chỉ Owner/Manager có access credential và session để sử dụng API nội bộ.
+- Access principal có thể thuộc Owner, Manager, Receptionist hoặc Technician;
+  quyền gọi API nội bộ phụ thuộc role, membership và assignment.
 - `users` là bảng hồ sơ nhân sự dùng chung cho Owner, Manager, Receptionist và Technician; bảng này không lưu password.
-- Receptionist/Technician không có credential/session riêng; `user_id` trong assignment, work log, diagnosis, QC và audit được hiểu là ID hồ sơ nhân sự.
+- Receptionist/Technician có thể có credential/session riêng khi được cấp
+  account; `user_id` trong assignment, work log, diagnosis, QC và audit vẫn là
+  ID hồ sơ nhân sự.
 - Khách hàng không có bản ghi đăng nhập; quyền public được cấp bằng token hash trong `customer_links`.
 - Nếu dùng auth provider bên ngoài, database chỉ lưu mapping access principal với workspace; không lưu secret plaintext.
 
@@ -94,7 +97,8 @@ membership_status:
     invited | active | suspended | removed
 ```
 
-`owner`, `manager` là các role có thể đăng nhập trong MVP. `receptionist`, `technician` là role vận hành của hồ sơ nhân sự và không có credential riêng.
+`owner`, `manager`, `receptionist` và `technician` là các role có thể được cấp
+account trong MVP. Account không mặc định tồn tại cho mọi staff profile.
 
 ### 3.2. Phiếu sửa chữa
 
@@ -214,7 +218,9 @@ erDiagram
 
 ### 5.2. `users` — hồ sơ nhân sự
 
-Đại diện cho hồ sơ nhân sự của cửa hàng, không mặc định là tài khoản đăng nhập. Không lưu password hoặc credential trong bảng này. Access credential/session của Owner/Manager thuộc access module riêng.
+Đại diện cho hồ sơ nhân sự của cửa hàng, không trực tiếp lưu password hoặc
+credential. Access principal/session thuộc access module riêng và có thể được
+mapping tới staff profile khi nhân sự cần đăng nhập.
 
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
 | --- | --- | --- | --- | --- |
@@ -223,7 +229,7 @@ erDiagram
 | `email` | `citext` hoặc `varchar(320)` | Có | `NULL` | Email liên hệ; chỉ dùng làm login identifier nếu access module chọn email |
 | `phone` | `varchar(32)` | Có | `NULL` | Số điện thoại nhân viên |
 | `status` | `varchar(16)` | Không | `'active'` | `active`, `inactive`, `locked` |
-| `last_login_at` | `timestamptz` | Có | `NULL` | Legacy/optional; không áp dụng cho Technician/Receptionist không có login |
+| `last_login_at` | `timestamptz` | Có | `NULL` | Legacy/optional; profile chưa được cấp account sẽ không có login |
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 | `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật |
 
@@ -231,7 +237,8 @@ erDiagram
 
 Liên kết hồ sơ nhân sự với workspace và lưu vai trò vận hành.
 
-Membership không đồng nghĩa với việc nhân sự có thể đăng nhập. Chỉ Owner/Manager được cấp access credential trong MVP.
+Membership xác định workspace, role và trạng thái của nhân sự. Membership không
+tự động tạo account; account chỉ được cấp khi có nhu cầu truy cập trực tiếp.
 
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
 | --- | --- | --- | --- | --- |
@@ -1032,15 +1039,17 @@ MVP hiện dùng SQL versioned migrations với runner tại `src/db/migrate.py`
 | `0005_execution_handover` | Work log, checklist, handover và warranty |
 | `0006_status_audit_indexes` | Status history, audit log và index/unique index |
 
-Migration tiếp theo (khi triển khai access module) phải ghi rõ mapping credential/session của Owner/Manager. Không tạo credential cho hồ sơ Technician/Receptionist.
+Migration access module phải ghi rõ mapping credential/session với staff profile,
+trạng thái account và chính sách revoke. Không lưu credential trong bảng `users`.
 
 Lệnh nâng schema local: `python -m src.db.migrate`.
 
 ### Seed tối thiểu cho môi trường demo
 
 - Một workspace demo.
-- Một Owner/Manager access principal.
-- Các hồ sơ Receptionist và Technician để dùng cho assignment; không tạo tài khoản đăng nhập cho các hồ sơ này.
+- Các access principal cần cho demo theo role được cấp.
+- Các hồ sơ Receptionist và Technician để dùng cho assignment; profile không có
+  account vẫn được hỗ trợ.
 - Một customer.
 - Một device.
 - Một repair order hoàn chỉnh theo demo scenario trong README.
@@ -1055,7 +1064,8 @@ Seed không được dùng token public cố định trong môi trường thật
 - Người thực hiện từng giai đoạn được lưu bằng FK riêng, không ghi đè lịch sử.
 - `status_history` phục vụ timeline; `audit_logs` phục vụ bảo mật và truy vết.
 - Bảo hành bắt đầu từ ngày bàn giao, trừ khi Owner/Manager ghi nhận ngoại lệ.
-- Chỉ Owner/Manager có access credential; `users`/membership không mặc định là tài khoản đăng nhập.
+- Access principal có thể thuộc Owner/Manager/Receptionist/Technician; `users`/
+  membership không mặc định là account nếu chưa được cấp mapping.
 - MVP không dùng các trường “doanh thu đã thu”, “COD” hoặc “thanh toán” nếu chưa có module thanh toán.
 
 ## 14. Tiêu chí nghiệm thu database
@@ -1076,5 +1086,6 @@ Seed không được dùng token public cố định trong môi trường thật
 ## 15. Tài liệu liên quan
 
 - [README sản phẩm](../../README.md)
-- [Kiến trúc và yêu cầu hệ thống](./architecture-and-requirements.md)
-- [Yêu cầu UX/UI](./ui-requirements.md)
+- [Kiến trúc và yêu cầu hệ thống](./03-business-and-domain-requirements.md)
+- [Yêu cầu UX/UI](./06-ui-requirements.md)
+- [Authentication và authorization tối thiểu](./07-authentication-and-authorization.md)

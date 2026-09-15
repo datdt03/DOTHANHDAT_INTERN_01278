@@ -5,8 +5,8 @@ LAYOUT_LEFT_RIGHT()
 title RepairFlow — C4 System Context
 
 Person(owner, "Owner / Manager", "Đăng nhập, quản lý workspace và điều phối toàn bộ phiếu sửa chữa")
-Person(receptionist, "Receptionist / Front Desk", "Ghi nhận tiếp nhận, hiện trạng, phụ kiện và bàn giao theo staff profile")
-Person(technician, "Technician", "Chẩn đoán, lập báo giá, sửa chữa và kiểm tra chất lượng theo staff profile")
+Person(receptionist, "Receptionist / Front Desk", "Account tùy chọn; ghi nhận tiếp nhận, hiện trạng, phụ kiện và bàn giao theo quyền")
+Person(technician, "Technician", "Account tùy chọn; chẩn đoán, lập báo giá, sửa chữa và kiểm tra chất lượng theo assignment")
 Person(customer, "Customer", "Xem chẩn đoán, báo giá và duyệt hoặc từ chối qua customer link")
 System(repairflow, "RepairFlow", "Quản lý vòng đời phiếu sửa chữa, evidence, quote, approval, QC, handover, warranty và audit")
 

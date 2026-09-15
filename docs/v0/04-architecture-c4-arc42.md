@@ -4,9 +4,9 @@
 >
 > Tài liệu này là view kiến trúc tổng hợp của RepairFlow theo arc42 và C4.
 > Các business rule chi tiết vẫn lấy từ
-> [architecture-and-requirements.md](./architecture-and-requirements.md),
-> [usecase.md](./usecase.md), [database-requirements.md](./database-requirements.md)
-> và [requirements-closure.md](./requirements-closure.md).
+> [03-business-and-domain-requirements.md](./03-business-and-domain-requirements.md),
+> [02-use-cases.md](./02-use-cases.md), [05-database-requirements.md](./05-database-requirements.md)
+> và [01-requirements-closure.md](./01-requirements-closure.md).
 
 ## 0. Mục tiêu của tài liệu
 
@@ -44,11 +44,12 @@ Chi tiết product goal và MVP scope nằm trong [README.md](../../README.md).
 
 Các ràng buộc hiện tại:
 
-- Chỉ Owner/Manager có management session trong MVP.
+- Owner/Manager, Receptionist và Technician có thể có management session khi
+  được cấp account và membership hợp lệ.
 - Customer dùng public link token có hạn dùng và có thể thu hồi; không có tài
   khoản dài hạn.
-- Receptionist và Technician là staff profile để phân công và truy vết, không
-  có credential riêng trong MVP.
+- Receptionist và Technician vẫn là staff profile để phân công và truy vết;
+  account là tùy chọn theo nhu cầu trực tiếp sử dụng hệ thống.
 - Backend/API là nơi kiểm tra permission, business rule, state transition,
   total và transaction.
 - Database chính là PostgreSQL; schema được quản lý bằng SQL migration có
@@ -56,7 +57,7 @@ Các ràng buộc hiện tại:
 - MVP không bao gồm payment, inventory, AI diagnosis, multi-branch,
   notification worker bắt buộc hoặc data warehouse.
 
-Các policy còn mở phải được giữ trong [requirements-closure.md](./requirements-closure.md)
+Các policy còn mở phải được giữ trong [01-requirements-closure.md](./01-requirements-closure.md)
 và không được biến thành contract bắt buộc khi chưa có Product sign-off.
 
 ## 3. Context and Scope
@@ -68,10 +69,22 @@ và không được biến thành contract bắt buộc khi chưa có Product si
 Source PlantUML: [repairflow-c4-system-context.puml](./architecture/repairflow-c4-system-context.puml).
 
 RepairFlow tương tác với Owner/Manager, Customer và các staff profile trong
-quy trình vận hành. Object Storage và notification chưa được coi là actor
-nghiệp vụ; chúng xuất hiện ở container/deployment view khi cần.
+quy trình vận hành. Receptionist và Technician có thể được cấp account để
+truy cập giới hạn; profile không có account vẫn được dùng để phân công.
+Object Storage và notification chưa được coi là actor nghiệp vụ; chúng xuất
+hiện ở container/deployment view khi cần.
 
-### 3.2. In scope / out of scope
+### 3.2. Use Case Overview
+
+Sơ đồ Use Case tổng quan mô tả các actor, use case MVP và quan hệ chính trong
+quy trình sửa chữa. Receptionist và Technician có thể là staff profile có
+account tùy nhu cầu hoặc profile không có session riêng. Sơ đồ cố ý gom các use case chi tiết thành
+các mục tiêu lớn để dễ đọc; UC-13 và UC-14 vẫn được đặc tả trong tài liệu Use
+Case nhưng không đưa vào overview vì chúng là luồng quản trị và ngoại lệ.
+
+Source PlantUML: [repairflow-usecase-overview.puml](./architecture/repairflow-usecase-overview.puml).
+
+### 3.3. In scope / out of scope
 
 In scope: repair order, customer, device, intake evidence, diagnosis, quote
 version, customer decision, repair work, quality check, handover, warranty,
@@ -80,7 +93,7 @@ timeline, audit và dashboard vận hành cơ bản.
 Out of scope trong MVP: thanh toán, tồn kho, AI diagnosis, định giá tự động,
 nhiều chi nhánh, tài khoản khách hàng dài hạn và email/SMS tự động.
 
-Chi tiết phạm vi nghiệp vụ nằm trong [usecase.md](./usecase.md).
+Chi tiết phạm vi nghiệp vụ nằm trong [02-use-cases.md](./02-use-cases.md).
 
 ## 4. Solution Strategy
 
@@ -95,7 +108,7 @@ Chi tiết phạm vi nghiệp vụ nằm trong [usecase.md](./usecase.md).
 
 Quyết định công nghệ hiện tại: FastAPI + Uvicorn, SQLAlchemy + psycopg,
 PostgreSQL 18 Alpine và SQL migrations. Baseline này đã được mô tả trong
-[architecture-and-requirements.md](./architecture-and-requirements.md).
+[03-business-and-domain-requirements.md](./03-business-and-domain-requirements.md).
 
 ## 5. Building Block View
 
@@ -123,7 +136,7 @@ Source PlantUML: [repairflow-c4-component.puml](./architecture/repairflow-c4-com
 
 Component boundary đề xuất:
 
-- Identity and Management Session.
+- Identity and Access Session.
 - Repair Order Lifecycle.
 - Evidence and Diagnosis.
 - Quote and Customer Decision.
@@ -158,8 +171,8 @@ API và database:
 
 Các transition quan trọng phải atomic: create order, send quote, customer
 decision, quality-check transition và handover/warranty. Chi tiết state machine
-và transaction rule nằm trong [architecture-and-requirements.md](./architecture-and-requirements.md)
-và [database-requirements.md](./database-requirements.md).
+và transaction rule nằm trong [03-business-and-domain-requirements.md](./03-business-and-domain-requirements.md)
+và [05-database-requirements.md](./05-database-requirements.md).
 
 ## 7. Deployment View
 
@@ -193,7 +206,7 @@ Các concern này là kiến trúc xuyên suốt; không đặt business rule qu
 ## 9. Architecture Decisions
 
 Decision log hiện tại được quản lý trong
-[requirements-closure.md](./requirements-closure.md). Mỗi decision trước khi
+[01-requirements-closure.md](./01-requirements-closure.md). Mỗi decision trước khi
 đóng cần có owner, ngày chốt, lý do, phương án bị loại, impact lên
 server/UI/database/test và scenario success/alternative/failure.
 
@@ -247,7 +260,7 @@ rõ để Product chốt hoặc loại khỏi phạm vi.
 | Evidence | Ảnh, checklist và ghi chú hiện trạng/sau sửa. |
 | Quote version | Snapshot báo giá bất biến được khách quyết định. |
 | Customer link | Link public có token, hạn dùng và khả năng thu hồi. |
-| Staff profile | Hồ sơ Receptionist/Technician dùng để phân công và audit; không phải login account trong MVP. |
+| Staff profile | Hồ sơ Receptionist/Technician dùng để phân công và audit; có thể được mapping với account nếu cần truy cập trực tiếp. |
 | Quality check | Checklist và kết luận đạt/không đạt trước bàn giao. |
 
 ## 13. Mục tiêu triển khai sau khi tài liệu được Product duyệt
@@ -288,8 +301,9 @@ PlantUML.
 ## Tài liệu liên quan
 
 - [Product README](../../README.md)
-- [Requirements closure](./requirements-closure.md)
-- [Use cases](./usecase.md)
-- [Detailed architecture and requirements](./architecture-and-requirements.md)
-- [Database requirements](./database-requirements.md)
-- [UI requirements](./ui-requirements.md)
+- [Requirements closure](./01-requirements-closure.md)
+- [Use cases](./02-use-cases.md)
+- [Business and domain requirements](./03-business-and-domain-requirements.md)
+- [Database requirements](./05-database-requirements.md)
+- [UI requirements](./06-ui-requirements.md)
+- [Authentication and authorization](./07-authentication-and-authorization.md)

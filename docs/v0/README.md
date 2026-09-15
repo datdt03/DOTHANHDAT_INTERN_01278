@@ -2,43 +2,49 @@
 
 ## Role
 
-\`docs/v0/\` contains the product discussion, business analysis, scope, and decisions for RepairFlow phase v0.
+`docs/v0/` contains the product discussion, business analysis, scope, and decisions for RepairFlow phase v0.
 
-It is the reference used to create implementation plans when the user requests them. These documents are not LLM task instructions, API contracts, or release handoffs.
+These documents are the product source of truth used to prepare implementation plans when the user requests them. They are not LLM task instructions, API contracts, or release handoffs.
 
-Always read [docs/README.md](../README.md) first to understand phase boundaries and the documentation workflow.
+Read [the documentation guide](../README.md) first. It defines the documentation boundaries, decision labels, and phase rules.
 
-## v0 status
+## Phase status
 
-- **Phase status:** \`OPEN — Gate D0 is not achieved\`.
+- **Phase status:** `OPEN — Gate D0 is not achieved`.
 - Product is still in requirements analysis and closure; business clusters C1–C10 are not open.
-- FastAPI, PostgreSQL, and SQL migrations are currently local technical foundations.
+- FastAPI, PostgreSQL, and SQL migrations are local technical foundations.
 - C0 has a health endpoint, PostgreSQL 18-alpine, six SQL migrations, and a four-test baseline.
 - C0 still needs a shared fixture convention, UI adapter boundary, and mock/runtime boundary.
-- C1–C10 business flows are not implemented; the UI remains a prototype/mock baseline.
+- C1–C10 business flows are not implemented; the UI remains a prototype backed by mock data.
 - The decision backlog has 73 items: 44 P0 and 29 P1 items without formal closure.
-- The high-level access direction is confirmed: only Owner/Manager can log in; Customer, Receptionist, and Technician do not have separate accounts. Detailed policies remain in the decision backlog.
-- Do not create an API contract, API handoff, or release documentation without a specific request and the corresponding decision.
+- Owner, Manager, Receptionist and Technician may receive accounts with fixed role and assignment access. Staff profiles without accounts have no session; Customer has no long-lived account and uses a public link. Detailed scope is in [07-authentication-and-authorization.md](./07-authentication-and-authorization.md).
 
-## Active documents
+Do not create an API contract, API handoff, or release documentation without a specific request and the corresponding Product decision.
 
-| File | Contents |
-| --- | --- |
-| [requirements-closure.md](./requirements-closure.md) | Open issues, decision backlog, and Gate D0. |
-| [usecase.md](./usecase.md) | User stories, personas, main flows, alternative flows, and acceptance baseline. |
-| [architecture-c4-arc42.md](./architecture-c4-arc42.md) | Canonical architecture narrative using arc42 sections and PlantUML C4 views. |
-| [architecture-and-requirements.md](./architecture-and-requirements.md) | Roles, access model, business rules, state machine, and target architecture. |
-| [database-requirements.md](./database-requirements.md) | Data model, ERD, constraints, indexes, and transaction guidance. |
-| [ui-requirements.md](./ui-requirements.md) | Screens, UX flows, UI states, and acceptance baseline. |
+## Reading order and document status
 
-## Phase transitions
+Read the active documents in this order:
 
-- Create \`docs/v1/\` only when the user explicitly opens or approves phase v1.
+| Order | Document | Status | Source of truth for |
+| --- | --- | --- | --- |
+| 01 | [Requirements closure](./01-requirements-closure.md) | `ACTIVE — Gate D0 open` | Open questions, decision backlog, and the build gate. |
+| 02 | [Use cases](./02-use-cases.md) | `ACTIVE — open policies remain` | Actors, user stories, main flows, alternative flows, failure flows, and acceptance baseline. |
+| 03 | [Business and domain requirements](./03-business-and-domain-requirements.md) | `ACTIVE — open decisions remain` | Roles, access model, business rules, state machine, and domain data. |
+| 04 | [Architecture — C4 + arc42](./04-architecture-c4-arc42.md) | `ACTIVE — open decisions remain` | Canonical architecture narrative, C4 views, and architecture decisions. |
+| 05 | [Database requirements](./05-database-requirements.md) | `ACTIVE — open decisions remain` | Data model, ERD, constraints, indexes, and transaction guidance. |
+| 06 | [UI requirements](./06-ui-requirements.md) | `ACTIVE — prototype baseline` | Screens, UX flows, UI states, and acceptance criteria. |
+| 07 | [Authentication and authorization](./07-authentication-and-authorization.md) | `DECIDED — minimum scope` | Account scope, role permissions, data visibility, and auth boundaries. |
+
+Document status describes the state of the document. Requirement labels inside the documents must still use `DECIDED`, `OPEN`, `PROPOSED`, `DRAFT`, or `ARCHIVED` correctly.
+
+## Phase rules
+
+- Create `docs/v1/` only when the user explicitly opens or approves phase v1.
 - Each new phase gets its own directory and must not overwrite v0 history.
 - Add only Product-approved decisions to active phase documentation.
-- Keep unresolved content in the decision backlog; do not convert it into a mandatory contract or API requirement.
-- Create files in \`plans/\` only when the user asks for implementation instructions.
+- Keep unresolved content in [01-requirements-closure.md](./01-requirements-closure.md); do not convert it into a mandatory contract or API requirement.
+- Create files in `plans/` only when the user asks for implementation instructions.
 
 ## Archive
 
-\`archive/\` contains old drafts for historical reference only. It is not a source of truth. LLMs must not use archived files to infer new API behavior, release status, or business rules.
+`archive/` contains old drafts for historical reference only. It is not a source of truth. LLMs must not use archived files to infer new API behavior, release status, or business rules.

@@ -23,12 +23,13 @@ Active phase documentation must live inside its phase directory. Do not create d
 2. Read this file to understand documentation boundaries.
 3. Read \`docs/v0/README.md\` to identify the current phase and active documents.
 4. Read only the documents directly relevant to the task:
-   - \`requirements-closure.md\` for open questions and the decision backlog.
-   - \`usecase.md\` for actors, user stories, main flows, alternative flows, and failure flows.
-   - \`architecture-c4-arc42.md\` for the canonical C4 views and arc42 architecture narrative.
-   - \`architecture-and-requirements.md\` for roles, states, security, audit, and business rules.
-   - \`database-requirements.md\` for entities, schema, constraints, indexes, and transactions.
-   - \`ui-requirements.md\` for screens, UX, states, and acceptance criteria.
+   - \`01-requirements-closure.md\` for open questions and the decision backlog.
+   - \`02-use-cases.md\` for actors, user stories, main flows, alternative flows, and failure flows.
+   - \`03-business-and-domain-requirements.md\` for roles, states, security, audit, and business rules.
+   - \`04-architecture-c4-arc42.md\` for the canonical C4 views and arc42 architecture narrative.
+   - \`05-database-requirements.md\` for entities, schema, constraints, indexes, and transactions.
+   - \`06-ui-requirements.md\` for screens, UX, states, and acceptance criteria.
+   - \`07-authentication-and-authorization.md\` for account scope, role-based access, and minimum data visibility.
 5. Find similar content before creating a new file or section.
 6. If documentation, code, and a new request conflict, stop and identify the conflict before deciding product behavior.
 
@@ -49,7 +50,7 @@ Do not promote a default, mock UI behavior, endpoint name, or code inference to 
 - Confirm the phase first; the current phase is \`v0\`.
 - Update the appropriate active file under \`docs/v0/\`; do not create a duplicate at \`docs/\` root.
 - Keep one source of truth for each topic and link to it instead of copying content.
-- Keep \`architecture-c4-arc42.md\` as the architecture view/index and keep detailed business rules in \`architecture-and-requirements.md\`.
+- Keep \`04-architecture-c4-arc42.md\` as the architecture view/index and keep detailed business rules in \`03-business-and-domain-requirements.md\`.
 - Use scope, actors, preconditions, expected results, alternative flows, failure flows, related data, and acceptance criteria when documenting a business flow.
 - Put unresolved questions in the decision backlog with an \`OPEN\` or \`PROPOSED\` label.
 - Add decisions to active requirements only after Product confirms them.
@@ -66,7 +67,7 @@ While v0 is open, an LLM must not create or treat the following as official with
 - A new \`docs/v1/\` directory.
 - A new file in \`plans/\` when the user has not asked for an implementation plan.
 
-If a gap needs Product discussion, add it to \`docs/v0/requirements-closure.md\` as \`OPEN\` or \`PROPOSED\`; do not pretend that a contract or business rule is frozen.
+If a gap needs Product discussion, add it to \`docs/v0/01-requirements-closure.md\` as \`OPEN\` or \`PROPOSED\`; do not pretend that a contract or business rule is frozen.
 
 ## Plan rules
 
