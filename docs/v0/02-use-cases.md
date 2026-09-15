@@ -20,7 +20,7 @@ Tài liệu này không mở rộng phạm vi MVP sang thanh toán, tồn kho, A
 
 ### 1.1. Trạng thái đặc tả và các điểm cần chốt thêm
 
-Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy path, alternative flow cùng acceptance test. Trước khi triển khai business API, các policy chưa được quyết định hoàn toàn như correction intake, quote/payment boundary, unclaimed device, retention, concurrency và deployment phải được chốt theo [requirements closure](./01-requirements-closure.md). Không tự suy ra policy mới từ UI mock hoặc từ một endpoint riêng lẻ.
+Các use case dưới đây là baseline nghiệp vụ và đã mô tả happy path, alternative flow cùng acceptance test. Trước khi triển khai business API, các policy chưa được quyết định hoàn toàn như correction intake, quote/payment boundary, unclaimed device và concurrency phải được chốt theo [requirements closure](./01-requirements-closure.md). Retention đã có mặc định v0 là không tự động xóa; deployment và monitoring được tạm thời để sau. Không tự suy ra policy mới từ UI mock hoặc từ một endpoint riêng lẻ.
 
 ## 2. Nguồn yêu cầu và cách đọc tài liệu
 
