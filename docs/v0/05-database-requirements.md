@@ -475,6 +475,11 @@ phải lưu tối thiểu hash OTP, kênh gửi, destination snapshot, thời đ
 số lần thử và thời điểm xác thực thành công. OTP hợp lệ là điều kiện để xem
 public DTO, quyết định quote hoặc xác nhận/ký bàn giao và hoàn trả.
 
+Mặc định kỹ thuật v0 đã chốt: OTP 6 chữ số, hết hạn sau 5 phút, tối đa 5 lần
+nhập sai; gửi lại sau 60 giây và tối đa 3 lần trong 15 phút. Rate limit áp dụng
+theo IP, customer link và số điện thoại/email, vượt giới hạn thì khóa tạm 15
+phút. Customer session sau OTP có hiệu lực 30 phút. OTP phải là one-time use.
+
 ### 5.14. `repair_work_logs`
 
 Nhật ký công việc thực tế của kỹ thuật viên.
@@ -1024,6 +1029,15 @@ Trong transaction bàn giao:
 - Rate limit endpoint public và endpoint quyết định báo giá.
 - Audit log không cho nhân viên thường update/delete.
 - Ghi audit cho: gửi link, mở link, duyệt/từ chối quote, thu hồi link, tạo quote version, hủy phiếu, đổi trạng thái ngoại lệ, sửa handover và thay đổi phân quyền.
+
+### 10.1. Retention và backup v0
+
+- Không tự động hard-delete repair order, audit log, evidence hoặc chữ ký trong
+  MVP.
+- Backup database mỗi ngày và giữ 14 bản gần nhất.
+- Phải có bước kiểm tra khôi phục backup trước khi dùng thật.
+- Thời hạn retention/xóa dữ liệu chi tiết và quy trình backup production sẽ
+  được bổ sung sau khi có chính sách chính thức của workspace.
 
 ## 11. Query mẫu theo use case
 

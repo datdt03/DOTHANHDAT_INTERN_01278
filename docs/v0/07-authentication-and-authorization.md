@@ -196,12 +196,26 @@ nhưng không được làm lộ sự tồn tại của dữ liệu workspace kh
 - Login/logout cho các account đã được cấp.
 - Password/credential không lưu plaintext.
 - Session có expiry và có thể revoke khi account bị khóa hoặc credential được
-  reset.
+  reset. Mặc định v0: idle timeout 30 phút và absolute session expiry 8 giờ.
 - Trạng thái account/membership `active`, `inactive`, `locked`, `suspended`
   được kiểm tra ở Backend/API.
 - Rate limit và audit cho login thất bại, login thành công, logout, reset và
   permission denied theo mức cần thiết.
 - Manual reset/recovery do Owner hoặc quy trình hỗ trợ nội bộ thực hiện.
+
+### Mặc định kỹ thuật đã chốt cho customer link
+
+- OTP gồm 6 chữ số và hết hạn sau 5 phút.
+- Một OTP challenge được nhập sai tối đa 5 lần; vượt giới hạn thì challenge
+  bị khóa.
+- Chỉ cho phép gửi lại sau 60 giây và tối đa 3 lần trong 15 phút.
+- Rate limit áp dụng đồng thời theo IP, customer link và số điện thoại/email;
+  khi vượt giới hạn thì khóa tạm 15 phút.
+- Chỉ lưu hash OTP, không lưu mã OTP dạng plaintext. OTP chỉ được dùng một lần.
+- Sau khi OTP hợp lệ, customer session có hiệu lực 30 phút; hết phiên phải
+  xác thực lại OTP.
+- OTP được gửi tới số điện thoại hoặc email đã được ghi nhận cho Customer hoặc
+  người được ủy quyền.
 
 ### Không thiết kế trong MVP
 
@@ -209,7 +223,8 @@ nhưng không được làm lộ sự tồn tại của dữ liệu workspace kh
 - Self-signup.
 - Tài khoản dùng chung.
 - OAuth, Google login, SSO, SAML hoặc service account.
-- MFA/2FA, passkey hoặc sinh trắc học bắt buộc.
+- MFA/2FA, passkey hoặc sinh trắc học bắt buộc trong MVP. MFA cho Owner/Manager
+  được đưa vào giai đoạn sau.
 - Custom role, permission editor hoặc ACL riêng cho từng user.
 - Impersonation/login-as.
 - Cross-workspace access hoặc workspace switching phức tạp.
@@ -217,14 +232,13 @@ nhưng không được làm lộ sự tồn tại của dữ liệu workspace kh
 - Email/SMS tự động cho invite hoặc reset.
 - Device trust, IP allowlist, geo restriction và session management nâng cao.
 
-## 7. Những nội dung chưa chốt chi tiết
+## 7. Những nội dung để sau MVP
 
 Các nội dung dưới đây chưa được biến thành contract bắt buộc trong v0:
 
-- Thời lượng idle timeout và absolute session expiry cụ thể.
 - Chính sách độ phức tạp credential.
 - Kênh và quy trình gửi invite/reset tự động trong tương lai.
-- Có bắt buộc MFA sau MVP hay không.
+- Chính sách MFA bắt buộc sau MVP.
 - Field nào cần mask một phần, ví dụ customer phone đối với Technician.
 
 Các điểm này không làm thay đổi định hướng đã chốt: staff có thể được cấp

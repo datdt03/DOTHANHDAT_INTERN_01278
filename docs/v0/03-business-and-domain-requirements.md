@@ -532,7 +532,7 @@ Một số luật cần áp dụng:
 
 - Mỗi access principal đăng nhập bằng credential riêng; không dùng một credential chung cho cả tiệm nếu hệ thống đã triển khai qua Internet.
 - Mật khẩu/PIN phải được hash và không lưu plaintext.
-- Session có thời hạn, cookie `HttpOnly`, bật `Secure` khi chạy qua HTTPS và có cơ chế đăng xuất.
+- Session có thời hạn, cookie `HttpOnly`, bật `Secure` khi chạy qua HTTPS và có cơ chế đăng xuất. Mặc định v0 là idle timeout 30 phút và absolute session expiry 8 giờ.
 - Receptionist/Technician có thể có credential/session riêng nếu được cấp
   account; staff profile không có account vẫn do quản lý chọn khi nhập dữ liệu
   hoặc phân công.
@@ -550,6 +550,11 @@ Một số luật cần áp dụng:
   version mới, link của version cũ bị thu hồi; khi phiếu đã `handed_over`,
   `returned` hoặc `cancelled`, link không còn quyền quyết định.
 - Không đưa thông tin cá nhân hoặc dữ liệu báo giá vào URL.
+- OTP gồm 6 chữ số, hết hạn sau 5 phút, tối đa 5 lần nhập sai; chỉ gửi lại sau
+  60 giây và tối đa 3 lần trong 15 phút. Rate limit áp dụng theo IP, customer
+  link và số điện thoại/email; vượt giới hạn thì khóa tạm 15 phút.
+- OTP chỉ lưu dưới dạng hash và chỉ dùng một lần. Sau khi xác thực, customer
+  session có hiệu lực 30 phút rồi phải xác thực lại.
 - Áp dụng rate limit cho trang public và các thao tác duyệt.
 - Link chỉ cho phép xem đúng phiếu được cấp quyền.
 - Ghi nhận thời điểm truy cập và quyết định của khách.
@@ -562,14 +567,16 @@ Một số luật cần áp dụng:
 - Không cho phép file được upload thực thi trực tiếp trên server.
 - Mã hóa dữ liệu khi truyền và khi lưu trữ.
 - Không lưu mã mở khóa thiết bị nếu không thật sự cần.
-- Có chính sách lưu trữ và xóa dữ liệu theo yêu cầu của cửa hàng.
+- Trong MVP không tự động xóa phiếu, audit, ảnh hoặc chữ ký. Chính sách
+  retention và xóa dữ liệu chi tiết sẽ được bổ sung sau khi có yêu cầu pháp lý
+  hoặc chính sách chính thức của workspace.
 
 ### Audit và khôi phục
 
 - Audit log không được cho phép nhân viên thường sửa hoặc xóa.
 - Các hành động nhạy cảm phải lưu actor, thời gian, đối tượng và lý do.
-- Có backup tự động database.
-- Kiểm thử khôi phục backup trước khi dùng thật.
+- Backup database mỗi ngày, giữ 14 bản gần nhất.
+- Phải kiểm thử khôi phục backup trước khi dùng thật.
 - Có quy trình xử lý khi lộ link, sửa nhầm báo giá hoặc gửi nhầm thông tin.
 
 ## 8. Theo dõi, dashboard và báo cáo
@@ -683,7 +690,7 @@ Các nguyên tắc dữ liệu:
 
 ### Có thể để sau MVP
 
-- MFA bắt buộc cho từng vai trò.
+- MFA bắt buộc cho Owner/Manager và các vai trò khác.
 - Email/SMS tự động.
 - Lịch làm việc và phân ca.
 - Quản lý kho và tồn linh kiện.
