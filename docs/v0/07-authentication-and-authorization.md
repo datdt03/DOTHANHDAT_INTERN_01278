@@ -31,10 +31,12 @@ hợp, không được dùng việc ẩn menu hoặc ẩn nút làm cơ chế b�
 | AUTH-004 | Customer không có tài khoản dài hạn; tiếp tục dùng public link có token, expiry và revoke. | `DECIDED` |
 | AUTH-005 | Phân quyền tối thiểu dùng role cố định kết hợp `workspace_id` và assignment của repair order. | `DECIDED` |
 | AUTH-006 | Mặc định từ chối truy cập (`deny by default`); mọi quyền đọc/ghi phải được Backend/API kiểm tra. | `DECIDED` |
-| AUTH-007 | Receptionist và Technician chỉ được xem order được giao hoặc dữ liệu trực tiếp cần cho trách nhiệm của họ; không được xem toàn bộ workspace. | `DECIDED` |
+| AUTH-007 | Technician chỉ được xem order được giao hoặc dữ liệu trực tiếp cần cho trách nhiệm; Receptionist được tra cứu operational projection read-only của toàn bộ order trong workspace. | `DECIDED` |
 | AUTH-008 | Owner có toàn quyền quản trị workspace và access. Manager có toàn quyền vận hành nhưng không mặc định quản lý credential của Owner. | `DECIDED` |
 | AUTH-009 | Không triển khai chức năng đăng nhập thay người khác (`impersonation`). Khi Manager thao tác thay staff, audit phải lưu cả người đăng nhập và staff profile được ghi nhận. | `DECIDED` |
 | AUTH-010 | MVP dùng một workspace context cho mỗi phiên; không cho đọc/ghi chéo workspace. | `DECIDED` |
+| AUTH-011 | MVP đăng nhập bằng email của access principal do Owner/Manager tạo; không dùng Google Login hoặc OAuth. | `DECIDED` |
+| AUTH-012 | Receptionist được tra cứu read-only toàn bộ order trong cùng workspace qua operational projection để trả lời khách; quyền ghi vẫn giới hạn ở order/tác vụ được phân công. | `DECIDED` |
 
 ## 3. Mô hình actor và account
 
@@ -75,7 +77,8 @@ Không được ghi đè người đăng nhập bằng staff profile hoặc ngư
 
 Customer không đăng nhập vào khu vực nội bộ. Customer chỉ được xem dữ liệu
 được cấp trong public link cụ thể và chỉ được quyết định trên quote version
-được link đó tham chiếu.
+được link đó tham chiếu. Customer có thể gửi yêu cầu hủy; việc ghi nhận và
+chuyển trạng thái do Receptionist hoặc người nội bộ có trách nhiệm thực hiện.
 
 ## 4. Phân quyền tối thiểu
 
@@ -91,32 +94,46 @@ Ký hiệu:
 | --- | --- | --- | --- | --- | --- |
 | Workspace và cấu hình cửa hàng | Full | View/vận hành | — | — | — |
 | Staff, role và assignment | Full | Full vận hành | — | — | — |
-| Dashboard và danh sách order | Full workspace | Full workspace | Assigned/relevant | Assigned/relevant | — |
-| Customer và device | Full workspace | Full workspace | Relevant order | Assigned order | Public subset |
+| Dashboard và danh sách order | Full workspace | Full workspace | Operational read-only toàn workspace | Assigned/relevant | — |
+| Customer và device | Full workspace | Full workspace | Operational lookup cần cho hỗ trợ khách | Assigned order | Public subset |
 | Tạo customer/device/order | Full | Full | Assigned/được cấp quyền | — mặc định | — |
 | Intake, phụ kiện, hiện trạng | Full | Full | Assigned | Assigned khi được giao | Public subset |
-| Diagnosis và technical evidence | Full | View/review | View tối thiểu | Assigned | Public subset |
-| Quote draft | Full | Review/ngoại lệ | View | Assigned, khi còn draft | — |
+| Diagnosis và technical evidence | Full | View/review | Chỉ xem tóm tắt có thể trao đổi với khách | Assigned | Public subset |
+| Quote draft | Full | Review/ngoại lệ | Chỉnh giá/chiết khấu trong phạm vi được giao | Chỉnh kỹ thuật/hạng mục trong phạm vi được giao, khi còn draft | — |
 | Quote sent/approved | View và xử lý theo quyền | View và xử lý theo quyền | View/gửi link | View, không sửa | Public + decision |
 | Customer link | Tạo/revoke/version | Tạo/revoke/version | Gửi link được cấp quyền | — mặc định | Mở link hợp lệ |
-| Repair work và repair checklist | Full | Điều phối/review | View trạng thái | Assigned | — |
+| Hủy/yêu cầu hoàn trả | Full | Full vận hành | Hủy trước sửa hoặc xác nhận hoàn trả trong phạm vi trách nhiệm | Xác nhận khi đang sửa trong phạm vi `repairer` | Gửi yêu cầu; không tự đổi trạng thái nội bộ |
+| Repair work và repair checklist | Full | Điều phối/review | View tiến độ | Assigned | — |
 | Quality check | Full | Review/ngoại lệ | View kết quả | Assigned responsibility `quality_checker` | Public subset |
-| Handover và warranty | Full | Full vận hành | Assigned | View | Public subset |
-| Timeline nghiệp vụ | Full | Full | Assigned/relevant | Assigned/relevant | Public subset |
+| Handover | Full | Full vận hành | View trạng thái; ghi handover khi được phân công | View | Public subset |
+| Timeline nghiệp vụ | Full | Full | Operational read-only toàn workspace | Assigned/relevant | Public subset |
 | Audit log và metadata bảo mật | Full | View theo policy | — | — | — |
 
 ### 4.1. Quy tắc riêng cho Receptionist
 
-Receptionist được xem và thao tác dữ liệu phục vụ tiếp nhận hoặc bàn giao của
-order được giao, gồm customer contact cần thiết, device, issue, intake
-checklist, evidence, trạng thái, quote summary và handover form.
+Receptionist có hai phạm vi rõ ràng:
+
+1. Có thể tra cứu mọi order trong cùng workspace ở chế độ read-only để trả lời
+   khách, gồm customer/device định danh cần thiết, trạng thái hiện tại, giai
+   đoạn đã hoàn tất, bước tiếp theo, lý do đang chờ, tóm tắt lỗi/chẩn đoán an
+   toàn để trao đổi, tiến độ sửa, thời gian dự kiến, QC và bàn giao.
+2. Có thể tạo/cập nhật dữ liệu intake hoặc handover chỉ trên order/tác vụ được
+   phân công và theo quyền của account.
 
 Receptionist không được:
 
 - Sửa diagnosis hoặc quote đã gửi/đã duyệt.
-- Xem audit metadata, token hash, credential, session hoặc dữ liệu ngoài
-  order liên quan.
+- Xem audit metadata, token hash, credential, session hoặc raw internal notes.
 - Tự thay đổi assignment hoặc quyền của nhân sự.
+
+Khi order chưa bắt đầu sửa chữa thực tế (`received`, `diagnosing`,
+`waiting_for_approval` hoặc `approved`), Receptionist có thể thực hiện hủy
+trong phạm vi intake/relevant order. Khi order đang `repairing`, Receptionist
+không xác nhận quyết định dừng sửa; việc hoàn tất trả máy có thể do
+Receptionist đang được giao bước hoàn trả hoặc Receptionist khác cùng role
+thực hiện,
+không bắt buộc trùng người tiếp nhận hoặc người ghi nhận yêu cầu. Lý do hủy
+hoặc hoàn trả là bắt buộc và phải được ghi vào status history cùng audit log.
 
 ### 4.2. Quy tắc riêng cho Technician
 
@@ -126,6 +143,10 @@ baseline evidence, diagnosis liên quan, quote hiện hành và các hạng mụ
 
 Technician được tạo/cập nhật diagnosis, quote draft, repair work, repair
 evidence và quality check khi có assignment/responsibility tương ứng.
+Khi order đang `repairing`, Technician đang giữ responsibility `repairer` có
+thể xác nhận hoặc từ chối yêu cầu hủy; nếu xác nhận thì phải ghi tình trạng
+hiện tại để chuyển sang luồng hoàn trả. Nếu từ chối, phải ghi lý do và order
+tiếp tục `repairing`.
 
 Technician không được:
 
@@ -140,6 +161,10 @@ Technician không được:
   hành và audit theo policy.
 - Manager được xem toàn bộ dữ liệu vận hành trong workspace, phân công, xử lý
   order, quote, link, QC, handover và các trường hợp quá hạn.
+- Owner/Manager là người duy nhất được thêm, thay đổi hoặc kết thúc assignment.
+  Có thể thay thế trực tiếp người đang handle task khi người đó chưa đủ kỹ
+  năng hoặc không phù hợp; phải ghi lý do, gán người mới và giữ assignment,
+  thao tác cùng audit history cũ.
 - Manager không được mặc định quản lý credential của Owner hoặc thay đổi
   chính sách access cấp hệ thống.
 
@@ -150,7 +175,9 @@ Backend/API phải kiểm tra tối thiểu theo thứ tự:
 1. Session còn hợp lệ và access principal đang active.
 2. Membership thuộc workspace hiện tại và chưa bị suspend/removed.
 3. Role có quyền thực hiện action.
-4. Với Receptionist/Technician, order có assignment/responsibility phù hợp.
+4. Với thao tác ghi của Receptionist/Technician, order có
+   assignment/responsibility phù hợp. Receptionist được phép dùng operational
+   read projection trên toàn workspace cho các thao tác đọc đã giới hạn field.
 5. Entity liên quan có cùng workspace và không tạo liên kết chéo tenant.
 6. Field trả về phải dùng projection phù hợp với role; không trả dư dữ liệu
    nhạy cảm rồi trông chờ UI tự ẩn.
@@ -191,7 +218,6 @@ nhưng không được làm lộ sự tồn tại của dữ liệu workspace kh
 
 Các nội dung dưới đây chưa được biến thành contract bắt buộc trong v0:
 
-- Login identifier chính thức là email, phone hay username.
 - Thời lượng idle timeout và absolute session expiry cụ thể.
 - Chính sách độ phức tạp credential.
 - Kênh và quy trình gửi invite/reset tự động trong tương lai.
@@ -204,7 +230,17 @@ account, nhưng quyền luôn bị giới hạn bởi role, workspace và assign
 ## 8. Acceptance baseline
 
 - Account inactive/locked hoặc membership suspended không thể tạo session mới.
-- Receptionist không thể đọc order không được giao bằng cách gọi trực tiếp API.
+- Order trước khi bắt đầu sửa có thể được hủy với lý do bắt buộc; order đang
+  `repairing` phải qua xác nhận của Technician phụ trách hoặc Owner và luồng
+  hoàn trả do Receptionist thực hiện.
+- Yêu cầu hủy bị từ chối khi đang `repairing` phải giữ order ở `repairing` và
+  lưu lý do từ chối.
+- Hoàn trả phải có Customer xác nhận đã nhận máy và chữ ký; Receptionist khác
+  cùng role vẫn có thể là người thực hiện.
+- Receptionist có thể đọc operational projection của order không được giao,
+  nhưng không thể ghi hoặc đọc dữ liệu kỹ thuật/audit ngoài projection đó.
+- Receptionist không thể cập nhật order ngoài assignment/responsibility.
+- MVP login dùng email của account do Owner/Manager tạo; không có Google Login.
 - Technician không thể đọc order ngoài assignment hoặc sửa quote đã sent/approved.
 - Customer không thể dùng một public link để đọc order/quote khác.
 - Manager thao tác thay staff phải lưu cả acting account và attributed staff
