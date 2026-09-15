@@ -68,15 +68,17 @@ export function SkeletonLoader({
   width = '100%',
   height = '16px',
   className,
+  style,
 }: {
   width?: string | number;
   height?: string | number;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <div
       className={joinClasses('rf-skeleton', className)}
-      style={{ width, height }}
+      style={{ width, height, ...style }}
       aria-hidden="true"
     />
   );

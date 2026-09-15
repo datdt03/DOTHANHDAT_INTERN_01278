@@ -34,6 +34,7 @@ export interface RoleCapabilities {
     route: string;
     icon: string;
     isPrimaryAction?: boolean;
+    badgeCount?: number;
   }>;
 }
 
@@ -102,10 +103,11 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
         navigationItems: [
           { label: 'Tổng quan', route: '#/dashboard', icon: 'overview' },
           { label: 'Phiếu sửa chữa', route: '#/orders', icon: 'orders' },
-          { label: 'Hàng chờ công việc', route: '#/my-work', icon: 'queue' },
+          { label: 'Hàng chờ công việc', route: '#/my-work', icon: 'queue', badgeCount: 5 },
           { label: 'Khách hàng', route: '#/customers', icon: 'customers' },
-          { label: 'Thiết bị & lịch sử', route: '#/devices', icon: 'devices' },
-          { label: 'Quản trị', route: '#/settings', icon: 'settings' },
+          { label: 'Thiết bị và lịch sử', route: '#/devices', icon: 'devices' },
+          { label: 'Nhân sự & phân công', route: '#/staff-assignments', icon: 'staff' },
+          { label: 'Quy trình cửa hàng', route: '#/workflow-config', icon: 'workflow' },
         ],
       };
     case 'receptionist':

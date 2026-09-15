@@ -35,6 +35,7 @@ business rule, API field, permission mới hoặc state transition mới.
 - MVP dùng tiếng Việt.
 - Không có Google Login hoặc OAuth. Staff đăng nhập bằng email của account do
   Owner/Manager tạo.
+- Chuẩn hóa 100% Monochrome Line SVG cho icon (`currentColor`), cấm dùng emoji hệ thống (📊, 📋, ⏳,...) hoặc icon nhiều màu sặc sỡ làm rối giao diện; không lạm dụng icon, ưu tiên typography-first.
 
 ### 2.2. Màn hình vào hệ thống theo vai trò
 

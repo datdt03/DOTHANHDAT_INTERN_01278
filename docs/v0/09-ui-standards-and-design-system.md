@@ -97,6 +97,26 @@ Mỗi giai đoạn trong luồng sửa chữa có một nhận diện màu sắc
 - **Receptionist High-Frequency Mobile**: `390 × 844 px` (màn tiếp nhận nhanh và tra cứu cơ động).
 - **Mức kiểm tra responsive trung gian**: `1280 × 800 px` và `768 × 1024 px` (sidebar tự động thu gọn thành backdrop menu trượt).
 
+### 2.5. Quy Chuẩn Icon & Chống Lạm Dụng Icon (Icon Standards & Anti-Spam)
+
+1. **Tuyệt đối không dùng Emoji và Icon sặc sỡ**:
+   - Nghiêm cấm hoàn toàn việc sử dụng emoji hệ thống (như 📊, 📋, ⏳, 👥, 📱, ⚙, 🏢, ⚠️, 📭, 🎨...) hay icon 3D nhiều màu trên toàn bộ giao diện.
+   - Các icon nhiều màu phá vỡ tỷ lệ 85/15, tạo cảm giác "AI làm vội / đồ thị đồ chơi" và gây phân tán thị giác nghiêm trọng trong vận hành xưởng.
+2. **Quy chuẩn 100% Monochrome Line SVG (Nét mảnh đơn sắc)**:
+   - Toàn bộ icon trong hệ thống phải là SVG vector nét mảnh (`stroke-width: 1.75px`, kích thước chuẩn 14×14px đến 18×18px).
+   - Icon bắt buộc sử dụng `stroke="currentColor"`. Màu icon luôn đồng bộ 100% với màu chữ:
+     - Bình thường: Màu xám Slate (`--rf-text-muted: #64748b`).
+     - Khi hover hoặc active: Màu xanh thương hiệu (`--rf-primary: #0284c7`).
+   - Mọi icon dùng chung phải được quản lý tập trung trong `src/ui/shared/components/icons.tsx`.
+3. **Chống lạm dụng icon (No Icon Spamming)**:
+   - Ưu tiên Typography-first: Nhãn chữ rõ ràng, độ đậm chuẩn, khoảng cách thoáng đãng.
+   - Không gắn icon trang trí bừa bãi vào tiêu đề trang, nhãn trường nhập liệu, status badge hay nút bấm phụ.
+   - Icon chỉ được dùng ở các vị trí thực sự có giá trị chức năng/định vị:
+     - Thanh điều hướng chính (Sidebar navigation) để định vị nhanh mục làm việc.
+     - Ô tìm kiếm toàn cục (Kính lúp).
+     - Điều hướng và điều khiển (Mũi tên chevron, nút đóng modal X, nút đăng xuất).
+     - Trạng thái trống (Empty state) với hình minh họa nét mảnh tối giản.
+
 ---
 
 ## 3. Quy Trình & Luồng Giao Diện (UX & Workflow Architecture)

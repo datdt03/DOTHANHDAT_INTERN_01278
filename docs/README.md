@@ -30,6 +30,8 @@ Active phase documentation must live inside its phase directory. Do not create d
    - \`05-database-requirements.md\` for entities, schema, constraints, indexes, and transactions.
    - \`06-ui-requirements.md\` for screens, UX, states, and acceptance criteria.
    - \`07-authentication-and-authorization.md\` for account scope, role-based access, and minimum data visibility.
+   - \`08-ui-design-blueprint-and-stitch-handoff.md\` for visual screen catalog and viewport targets.
+   - \`09-ui-standards-and-design-system.md\` for UI standards, 85/15 palette, monochrome line icon rules, and design system.
 5. Find similar content before creating a new file or section.
 6. If documentation, code, and a new request conflict, stop and identify the conflict before deciding product behavior.
 

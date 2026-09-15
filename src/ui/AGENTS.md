@@ -51,6 +51,10 @@ generated bundle manually.
   - **TUYỆT ĐỐI KHÔNG** nhồi nhét quá nhiều màu sắc hoặc tạo nhiều điểm nhấn màu vào cùng một khung giao diện.
   - Mỗi thẻ (card) hoặc khung nhìn chỉ có tối đa 1 điểm nhấn màu duy nhất (Primary focal point).
   - Màu bổ trợ (Semantic Status) phải dùng tone pastel dịu nhẹ (`--rf-status-*-bg`), không được dùng màu neon gắt, chói mắt.
+- **Quy chuẩn Icon & Chống Lạm Dụng Icon (BẮT BUỘC - No Emoji / Monochrome Line SVG Only)**:
+  - **TUYỆT ĐỐI KHÔNG DÙNG EMOJI HOẶC ICON NHIỀU MÀU SẶC SỠ**: Cấm hoàn toàn việc sử dụng emoji hệ thống (📊, 📋, ⏳, 👥, 📱, ⚙, 🏢, ⚠️, 📭, 🎨...) hay icon 3D nhiều màu trên toàn bộ màn hình. Chúng phá vỡ hệ màu 85/15, tạo cảm giác "AI làm vội / đồ họa đồ chơi" thiếu nghiêm túc.
+  - **100% Monochrome Line SVG**: Toàn bộ icon bắt buộc là vector SVG nét mảnh (`stroke-width: 1.75px`, kích thước chuẩn 14 - 18px), sử dụng `stroke="currentColor"`. Màu icon luôn đồng bộ với chữ: bình thường là xám Slate (`#64748b`), khi active hoặc hover tự động chuyển sang màu xanh Sky Blue (`#0284c7`). Mọi icon dùng chung phải lấy từ `src/ui/shared/components/icons.tsx`.
+  - **Chống lạm dụng icon (No Icon Spamming)**: Không gắn icon trang trí bừa bãi vào tiêu đề trang, nhãn input, chip hay nút bấm phụ. Ưu tiên Typography-first (chữ rõ ràng, tinh gọn). Icon chỉ dùng ở các vị trí thực sự có giá trị chức năng/định vị (Sidebar menu, kính lúp tìm kiếm, chevron, nút đóng, nút logout).
 - **Typography**:
   - Giao diện chính: `Montserrat`, sans-serif.
   - Mã phiếu (`RF-2026-XXXX`), Serial máy, số tiền VNĐ: bắt buộc dùng `JetBrains Mono` (`.rf-font-mono` hoặc component `<OrderCode />`).

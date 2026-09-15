@@ -20,7 +20,7 @@ Completion criteria: type-check/build pass, API access chỉ qua adapter, shell 
 - `config/runtime-config.ts` centralizes API URL, timeout, and preview mode.
 - `app-shell.tsx` is a stable facade. The concrete implementations are split
   into `internal-shell.tsx`, `customer-link-shell.tsx`, and `status-screens.tsx`.
-- `shared/components/` contains the unified shared layout components (`AppHeader`, `AppSidebar`, `AppFooter`, `CustomerHeader`, `CustomerFooter`) and primitives (`ui-primitives.tsx`: `BrandMark`, `PrimaryButton`, `SecondaryButton`, `IconButton`, `TextButton`, `StatusBadge`, `OrderCode`, `Card`, `SkeletonLoader`).
+- `shared/components/` contains the unified shared layout components (`AppHeader`, `AppSidebar`, `AppFooter`, `CustomerHeader`, `CustomerFooter`), monochrome SVG icon suite (`icons.tsx`), and primitives (`ui-primitives.tsx`: `BrandMark`, `PrimaryButton`, `SecondaryButton`, `IconButton`, `TextButton`, `StatusBadge`, `OrderCode`, `Card`, `SkeletonLoader`).
 - `shared/styles/tokens.css` defines the unified Design Tokens following the 85% Slate / 15% Sky `#0284c7` rule with 10 repair status semantic colors.
 - `mocks/demo-shell.ts` contains preview-only data. It is not an API contract.
 - `?preview=1` opens the internal shell without requiring the backend. Preview is
@@ -46,6 +46,10 @@ Completion criteria: type-check/build pass, API access chỉ qua adapter, shell 
 7. Prefer one responsibility per module. Split a module when it owns more than
    one independently changing concern; do not create abstractions only for line
    count.
+8. **Strict Icon Standard (No Emojis / No Multi-Color Icons / No Icon Spamming)**:
+   - Absolutely NO system emojis (📊, 📋, ⏳, 👥, 📱, ⚙, 🏢, etc.) or multi-colored icons anywhere.
+   - Use 100% Monochrome Line SVG icons from `shared/components/icons.tsx` (`stroke="currentColor"`, stroke 1.75px).
+   - Do NOT spam icons: use them strictly where needed for functional navigation and controls; keep page titles, forms, badges, and general buttons typography-first.
 
 ## Extension points
 

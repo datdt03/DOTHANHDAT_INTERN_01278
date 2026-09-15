@@ -17,6 +17,7 @@ Each repair order is the central workspace. Customer, device, condition, quotati
 - The visual interface is redesigned from scratch for v0; the existing prototype is a functional reference only, not a visual constraint.
 - The first visual design pass covers Manager, Receptionist, Technician, and Customer rather than designing only the current prototype routes.
 - Vietnamese is the MVP display language.
+- Strictly monochrome line SVG icons only; system emojis and multi-colored icons are prohibited across all interfaces to maintain the 85% Slate / 15% Sky Blue system and eliminate visual noise/clutter; avoid icon spamming and keep badges, buttons, and content typography-first.
 
 ## 3. Roles and primary entry points
 

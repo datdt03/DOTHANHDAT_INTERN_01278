@@ -11,8 +11,10 @@ import {
   IconPalette,
   IconQueue,
   IconSettings,
+  IconStaff,
   IconStore,
   IconToday,
+  IconWorkflow,
 } from './icons';
 import { BrandMark, IconButton } from './ui-primitives';
 
@@ -21,6 +23,8 @@ export interface AppSidebarProps {
   onSelect?: (label: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
   storeName?: string;
   storeSubtitle?: string;
   capacity?: {
@@ -51,6 +55,10 @@ function renderNavIcon(iconId: string) {
       return <IconDevices size={16} />;
     case 'settings':
       return <IconSettings size={16} />;
+    case 'staff':
+      return <IconStaff size={16} />;
+    case 'workflow':
+      return <IconWorkflow size={16} />;
     case 'today':
       return <IconToday size={16} />;
     case 'lookup':
@@ -67,8 +75,9 @@ export function AppSidebar({
   onSelect,
   isOpen = false,
   onClose,
+  isCollapsed = false,
+  onToggleCollapse,
   storeName = 'Minh Tâm Store',
-  storeSubtitle = 'Cửa hàng chính',
   capacity = { active: 14, total: 18, devicesCount: 28 },
   userName = 'Minh Tâm',
   userRole = 'Quản lý vận hành',
@@ -83,31 +92,34 @@ export function AppSidebar({
 
   return (
     <>
-      <aside className={`app-sidebar${isOpen ? ' app-sidebar--open' : ''}`}>
-        <div>
-          <div className="brand-block">
-            <BrandMark />
-            <div>
+      <aside className={`app-sidebar${isOpen ? ' app-sidebar--open' : ''}${isCollapsed ? ' app-sidebar--collapsed' : ''}`}>
+        {/* Tier 1: Brand Header Zone (Exact 64px, aligned with TopBar) */}
+        <div className="brand-block">
+          <BrandMark />
+          {!isCollapsed && (
+            <div className="brand-block__text">
               <strong>RepairFlow</strong>
-              <span>{storeName}</span>
+              <span>Trung tâm điều hành</span>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="workspace-switcher">
-            <span className="workspace-switcher__icon" aria-hidden="true">
-              <IconStore size={15} />
-            </span>
-            <span>
-              <small>Cửa hàng</small>
-              <strong>{storeName}</strong>
-            </span>
-            <span className="workspace-switcher__chevron" aria-hidden="true">
-              ⌄
-            </span>
-          </div>
+        {/* Tier 2: Scrollable Navigation Area (Flexible, middle zone) */}
+        <div className="sidebar-scrollable-area">
+          {!isCollapsed && (
+            <div className="workspace-context" title="Không gian làm việc của phiên">
+              <span className="workspace-context__icon" aria-hidden="true">
+                <IconStore size={14} />
+              </span>
+              <div className="workspace-context__info">
+                <small>Cửa hàng hiện tại</small>
+                <strong>{storeName}</strong>
+              </div>
+            </div>
+          )}
 
           <nav className="main-nav" aria-label="Điều hướng chính theo vai trò">
-            <span className="nav-section-label">Không gian làm việc</span>
+            {!isCollapsed && <span className="nav-section-label">Không gian làm việc</span>}
             {navItems.map((item) => {
               const isActive = activeItem === item.label;
               return (
@@ -115,6 +127,7 @@ export function AppSidebar({
                   key={item.label}
                   type="button"
                   className={`nav-item${isActive ? ' nav-item--active' : ''}`}
+                  title={isCollapsed ? item.label : undefined}
                   onClick={() => {
                     window.location.hash = item.route;
                     onSelect?.(item.label);
@@ -124,15 +137,24 @@ export function AppSidebar({
                   <span className="nav-item__icon" aria-hidden="true">
                     {renderNavIcon(item.icon)}
                   </span>
-                  <span>{item.label}</span>
+                  {!isCollapsed && <span className="nav-item__label">{item.label}</span>}
+                  {!isCollapsed && typeof item.badgeCount === 'number' && (
+                    <span
+                      className={`nav-item__badge ${isActive ? 'nav-item__badge--active' : ''}`}
+                      aria-label={`${item.badgeCount} cần xử lý`}
+                    >
+                      {item.badgeCount}
+                    </span>
+                  )}
                 </button>
               );
             })}
 
-            <span className="nav-section-label nav-section-label--spaced">Hệ thống</span>
+            {!isCollapsed && <span className="nav-section-label nav-section-label--spaced">Hệ thống</span>}
             <button
               type="button"
               className={`nav-item${activeItem === 'Thư viện UI' ? ' nav-item--active' : ''}`}
+              title={isCollapsed ? 'Thư viện UI (Showcase)' : undefined}
               onClick={() => {
                 window.location.hash = '#/showcase';
                 onSelect?.('Thư viện UI');
@@ -142,13 +164,13 @@ export function AppSidebar({
               <span className="nav-item__icon" aria-hidden="true">
                 <IconPalette size={16} />
               </span>
-              <span>Thư viện UI (Showcase)</span>
+              {!isCollapsed && <span>Thư viện UI (Showcase)</span>}
             </button>
           </nav>
         </div>
 
         <div className="sidebar-footer">
-          {capacity && (
+          {!isCollapsed && capacity && (
             <div className="capacity-card">
               <div className="capacity-card__heading">
                 <span>Trạng thái xưởng</span>
@@ -159,7 +181,7 @@ export function AppSidebar({
             </div>
           )}
 
-          {onSwitchRole && (
+          {!isCollapsed && onSwitchRole && (
             <div className="sidebar-role-selector">
               <span className="sidebar-role-label">Chuyển vai trò test:</span>
               <div className="sidebar-role-chips">
@@ -192,29 +214,44 @@ export function AppSidebar({
           )}
 
           <div className="sidebar-user">
-            <div className="avatar avatar--small" aria-hidden="true">
-              {userInitials}
-            </div>
-            <div>
-              <strong>{userName}</strong>
-              <span>{userRole}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {onSimulateTimeout && (
-                <IconButton
-                  label="Hết hạn phiên"
-                  onClick={onSimulateTimeout}
-                  title="Test hết hạn phiên (UI-A03)"
-                >
-                  <IconHourglass size={14} />
-                </IconButton>
-              )}
-              {onLogout && (
-                <IconButton label="Đăng xuất" onClick={onLogout} title="Đăng xuất tài khoản">
-                  <IconLogout size={14} />
-                </IconButton>
-              )}
-            </div>
+            {isCollapsed ? (
+              <div
+                className="avatar avatar--small"
+                onClick={onLogout}
+                role={onLogout ? 'button' : undefined}
+                tabIndex={onLogout ? 0 : undefined}
+                title={onLogout ? `${userName} (${userRole}) — Bấm để đăng xuất` : `${userName} (${userRole})`}
+                aria-label={onLogout ? `Đăng xuất tài khoản ${userName}` : userName}
+              >
+                {userInitials}
+              </div>
+            ) : (
+              <>
+                <div className="avatar avatar--small" aria-hidden="true">
+                  {userInitials}
+                </div>
+                <div>
+                  <strong>{userName}</strong>
+                  <span>{userRole}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {onSimulateTimeout && (
+                    <IconButton
+                      label="Hết hạn phiên"
+                      onClick={onSimulateTimeout}
+                      title="Test hết hạn phiên (UI-A03)"
+                    >
+                      <IconHourglass size={14} />
+                    </IconButton>
+                  )}
+                  {onLogout && (
+                    <IconButton label="Đăng xuất" onClick={onLogout} title="Đăng xuất tài khoản">
+                      <IconLogout size={14} />
+                    </IconButton>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </aside>

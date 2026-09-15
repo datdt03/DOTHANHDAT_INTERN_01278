@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { IconButton } from './ui-primitives';
-import { IconLookup } from './icons';
+import { IconButton, PrimaryButton } from './ui-primitives';
+import { IconBell, IconLookup, IconMenu, IconPlus } from './icons';
 
 export interface BreadcrumbItem {
   label: string;
@@ -8,75 +8,103 @@ export interface BreadcrumbItem {
 }
 
 export interface AppHeaderProps {
+  title?: string;
   breadcrumbs?: BreadcrumbItem[];
   onOpenMobileMenu?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
   searchPlaceholder?: string;
+  searchValue?: string;
   onSearchChange?: (value: string) => void;
+  storeName?: string;
   storeStatus?: string;
   notificationCount?: number;
   userName?: string;
   userRole?: string;
   userInitials?: string;
+  onCreateOrder?: () => void;
   actions?: ReactNode;
 }
 
 export function AppHeader({
+  title,
   breadcrumbs = [{ label: 'RepairFlow' }, { label: 'Tổng quan' }],
   onOpenMobileMenu,
-  searchPlaceholder = 'Tìm đơn, số điện thoại hoặc khách hàng...',
+  isSidebarCollapsed = false,
+  onToggleSidebar,
+  searchPlaceholder = 'Tìm mã phiếu, SĐT khách, tên khách, thiết bị... (Ctrl + K)',
+  searchValue,
   onSearchChange,
-  storeStatus = 'Đang mở cửa',
+  storeName = 'Minh Tâm Store • TT Điều hành',
+  storeStatus = 'Đang hoạt động',
   notificationCount = 3,
   userName = 'Minh Tâm',
-  userRole = 'Quản lý',
+  userRole = 'Quản lý vận hành',
   userInitials = 'MT',
+  onCreateOrder,
   actions,
 }: AppHeaderProps) {
+  const displayTitle =
+    title || (breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].label : 'Tổng quan');
+
   return (
     <header className="topbar">
-      {onOpenMobileMenu && (
+      {onToggleSidebar ? (
+        <button
+          type="button"
+          className="sidebar-toggle-btn"
+          onClick={onToggleSidebar}
+          aria-label={isSidebarCollapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
+          title={isSidebarCollapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
+        >
+          <IconMenu size={18} />
+        </button>
+      ) : onOpenMobileMenu ? (
         <IconButton
           label="Mở điều hướng"
           className="mobile-menu-button"
           onClick={onOpenMobileMenu}
         >
-          ☰
+          <IconMenu size={18} />
         </IconButton>
-      )}
+      ) : null}
 
-      <nav className="breadcrumb" aria-label="Đường dẫn trang">
-        {breadcrumbs.map((item, idx) => (
-          <span key={item.label} className="breadcrumb-segment">
-            {idx > 0 && <span className="breadcrumb-separator" aria-hidden="true"> / </span>}
-            {idx === breadcrumbs.length - 1 ? (
-              <strong>{item.label}</strong>
-            ) : (
-              <span>{item.label}</span>
-            )}
+      <div className="topbar-left">
+        <h1 className="topbar-page-title">{displayTitle}</h1>
+
+        {storeName && (
+          <span className="topbar-store" title="Chi nhánh / Không gian làm việc">
+            <span className="online-dot" aria-hidden="true" />
+            <span>{storeName}</span>
           </span>
-        ))}
-      </nav>
+        )}
+      </div>
 
       <label className="global-search">
         <IconLookup size={15} aria-hidden="true" />
         <input
+          value={searchValue}
           placeholder={searchPlaceholder}
           onChange={(e) => onSearchChange?.(e.target.value)}
           aria-label="Tìm kiếm toàn cục"
         />
+        <kbd className="search-kbd" aria-hidden="true">Ctrl K</kbd>
       </label>
 
       <div className="topbar-actions">
         {actions}
 
-        {storeStatus && (
-          <span className="store-status">
-            <span className="online-dot" aria-hidden="true" /> {storeStatus}
-          </span>
-        )}
+        <PrimaryButton
+          className="topbar-create-btn"
+          onClick={onCreateOrder || (() => { window.location.hash = '#/orders'; })}
+          title="Tạo phiếu sửa chữa mới"
+        >
+          <IconPlus size={15} aria-hidden="true" />
+          <span>Tạo phiếu mới</span>
+        </PrimaryButton>
 
         <IconButton label="Thông báo" className="notification-button">
-          ♢
+          <IconBell size={18} />
           {notificationCount > 0 && (
             <span className="notification-count">{notificationCount}</span>
           )}
@@ -84,6 +112,10 @@ export function AppHeader({
 
         <div className="topbar-user" title={`${userName} (${userRole})`}>
           <div className="avatar" aria-label={userName}>{userInitials}</div>
+          <div className="topbar-user__info">
+            <strong>{userName}</strong>
+            <span>{userRole}</span>
+          </div>
         </div>
       </div>
     </header>

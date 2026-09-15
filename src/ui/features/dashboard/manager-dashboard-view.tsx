@@ -1,125 +1,236 @@
-import { demoMetrics, demoOrders, demoPipeline } from '../../mocks/demo-shell';
-import {
-  OrderCode,
-  PrimaryButton,
-  SecondaryButton,
-  StatusBadge,
-  TextButton,
-  IconButton,
-} from '../../shared/components';
+import { useState, useEffect, useCallback } from 'react';
+import type {
+  DashboardFilterKey,
+  DashboardViewModel,
+  DashboardViewState,
+  InterventionOrder,
+} from './types';
+import { dashboardApi } from '../../shared/api/dashboard-api';
+import { DashboardKpiGrid } from './components/dashboard-kpi-grid';
+import { DashboardPipeline } from './components/dashboard-pipeline';
+import { DashboardInterventionTable } from './components/dashboard-intervention-table';
+import { DashboardAlertsPanel } from './components/dashboard-alerts-panel';
+import { DashboardWorkloadPanel } from './components/dashboard-workload-panel';
+import { DashboardOrderDetailModal } from './components/dashboard-order-detail-modal';
+import { IconAlertTriangle, IconClock, IconRefresh } from '../../shared/components/icons';
+import { PrimaryButton, SecondaryButton } from '../../shared/components/ui-primitives';
 
 export function ManagerDashboardView() {
+  const [viewState, setViewState] = useState<DashboardViewState>('ready');
+  const [data, setData] = useState<DashboardViewModel | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<DashboardFilterKey>('all');
+  const [selectedOrder, setSelectedOrder] = useState<InterventionOrder | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Load dashboard data based on simulated viewState
+  const loadDashboard = useCallback(async (state: DashboardViewState = viewState) => {
+    if (state === 'loading') {
+      setIsRefreshing(true);
+      return;
+    }
+
+    setIsRefreshing(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await dashboardApi.getDashboardOverview({
+        forceEmpty: state === 'empty',
+        simulateError: state === 'error',
+        delayMs: 120,
+      });
+
+      setData(result);
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Không thể tải dữ liệu vận hành. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [viewState]);
+
+  useEffect(() => {
+    void loadDashboard(viewState);
+  }, [viewState, loadDashboard]);
+
+  const handleStateChange = (newState: DashboardViewState) => {
+    setViewState(newState);
+  };
+
+  const handleFilterSelect = (filterKey: DashboardFilterKey) => {
+    setActiveFilter(filterKey);
+  };
+
+  const handleManualRefresh = () => {
+    void loadDashboard(viewState);
+  };
+
   return (
-    <div className="view-container">
-      {/* Page Heading */}
-      <section className="page-heading">
-        <div>
-          <span className="eyebrow">Thứ Tư, 16 tháng 9, 2026 • Trung tâm điều hành</span>
-          <h1>Chào buổi sáng, Quản lý Minh Tâm <span aria-hidden="true">👋</span></h1>
-          <p>Tình hình vận hành và phân bổ luồng việc cửa hàng hôm nay.</p>
-        </div>
-        <PrimaryButton>
-          <span aria-hidden="true">＋</span> Tạo phiếu mới
-        </PrimaryButton>
-      </section>
-
-      {/* Metrics Row - Single Flat Strip with subtle dividers (No box-in-box) */}
-      <section className="metric-strip" aria-label="Chỉ số vận hành">
-        {demoMetrics.map((metric, idx) => (
-          <div key={metric.label} className="metric-strip__item">
-            <span className="metric-label">{metric.label}</span>
-            <div className="metric-value-row">
-              <strong className="metric-value">{metric.value}</strong>
-              <span className="metric-hint">{metric.hint}</span>
-            </div>
+    <div className="rf-dashboard-view">
+      {/* 1. Page Heading */}
+      <section className="rf-page-heading">
+        <div className="rf-page-heading__content">
+          <div className="rf-page-heading__title-row">
+            <h1 className="rf-page-heading__title">Tổng quan vận hành</h1>
+            <span className="rf-live-indicator">
+              <span className="online-dot" aria-hidden="true" />
+              <span>Trực tuyến</span>
+            </span>
           </div>
-        ))}
-      </section>
-
-      {/* Structured Content Grid */}
-      <section className="content-grid">
-        {/* Pipeline Progression */}
-        <article className="panel">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow">Theo dõi luồng việc</span>
-              <h2>Tiến độ phiếu sửa chữa</h2>
-            </div>
-            <TextButton>Xem tất cả <span aria-hidden="true">→</span></TextButton>
-          </div>
-          <div className="pipeline-list">
-            {demoPipeline.map((step) => (
-              <div className="pipeline-step" key={step.label}>
-                <div className={`pipeline-step__marker pipeline-step__marker--${step.tone}`}>
-                  {step.count}
-                </div>
-                <span>{step.label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="pipeline-progress"><span /></div>
-          <div className="pipeline-footer">
-            <span>38 phiếu trong luồng</span>
-            <span>Cập nhật vừa xong</span>
-          </div>
-        </article>
-
-        {/* Workload Capacity */}
-        <article className="panel">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow">Phân bổ công việc</span>
-              <h2>Tải của đội ngũ</h2>
-            </div>
-            <IconButton label="Tùy chọn tải công việc">⋯</IconButton>
-          </div>
-          <div className="workload-summary">
-            <strong>78%</strong>
-            <span>công suất đang sử dụng</span>
-          </div>
-          <div className="workload-bar"><span /></div>
-          <div className="workload-legend">
-            <span><i className="legend-dot legend-dot--blue" /> Đang xử lý <strong>28</strong></span>
-            <span><i className="legend-dot legend-dot--gray" /> Còn trống <strong>8</strong></span>
-          </div>
-          <p className="muted-copy">Cửa hàng còn đủ năng lực tiếp nhận khoảng 8 thiết bị mới trong hôm nay.</p>
-        </article>
-      </section>
-
-      {/* Priority Watchlist Table */}
-      <section className="panel orders-panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Cần chú ý</span>
-            <h2>Phiếu cần theo dõi xử lý</h2>
-          </div>
-          <SecondaryButton>Mở danh sách phiếu đầy đủ</SecondaryButton>
-        </div>
-        <div className="orders-table-wrap">
-          <table className="orders-table">
-            <thead>
-              <tr>
-                <th>Mã phiếu</th>
-                <th>Khách hàng</th>
-                <th>Thiết bị</th>
-                <th>Trạng thái hiện tại</th>
-                <th>Cập nhật gần nhất</th>
-              </tr>
-            </thead>
-            <tbody>
-              {demoOrders.map((order) => (
-                <tr key={order.id}>
-                  <td><OrderCode code={order.id} /></td>
-                  <td><strong className="customer-name">{order.customer}</strong></td>
-                  <td>{order.device}</td>
-                  <td><StatusBadge label={order.status} tone={order.tone} /></td>
-                  <td className="muted-cell">{order.updated}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <p className="rf-page-heading__desc">
+            Theo dõi các điểm nghẽn, phiếu quá hạn, yêu cầu cần duyệt và điều phối nhân sự xử lý kịp thời.
+          </p>
         </div>
       </section>
+
+      {/* 2. Stale or Failed Refresh Alert */}
+      {viewState === 'stale' && (
+        <div className="rf-stale-banner" role="alert">
+          <IconClock size={16} className="rf-stale-banner__icon" aria-hidden="true" />
+          <div className="rf-stale-banner__content">
+            <strong>Dữ liệu được cập nhật 25 phút trước.</strong>
+            <span>Làm mới tự động thất bại do mạng chập chờn. Thông tin hiển thị có thể chưa phải mới nhất.</span>
+          </div>
+          <SecondaryButton
+            className="rf-stale-banner__btn"
+            onClick={handleManualRefresh}
+            title="Làm mới lại dữ liệu ngay"
+          >
+            <IconRefresh size={13} aria-hidden="true" />
+            <span>Thử làm mới lại</span>
+          </SecondaryButton>
+        </div>
+      )}
+
+      {/* 3. Network Error Screen */}
+      {viewState === 'error' && (
+        <section className="rf-error-card" role="alert">
+          <div className="rf-error-card__icon" aria-hidden="true">
+            <IconAlertTriangle size={32} />
+          </div>
+          <h2 className="rf-error-card__title">Không thể tải dữ liệu bảng điều khiển</h2>
+          <p className="rf-error-card__message">
+            {errorMessage || 'Máy chủ phản hồi chậm hoặc kết nối mạng bị gián đoạn. Vui lòng kiểm tra lại đường truyền.'}
+          </p>
+          <div className="rf-error-card__actions">
+            <PrimaryButton onClick={handleManualRefresh}>
+              <IconRefresh size={15} aria-hidden="true" />
+              <span>Thử kết nối lại</span>
+            </PrimaryButton>
+            <SecondaryButton onClick={() => handleStateChange('ready')}>
+              Quay lại chế độ xem chuẩn
+            </SecondaryButton>
+          </div>
+        </section>
+      )}
+
+      {/* 4. Normal / Ready / Loading / Empty Content */}
+      {viewState !== 'error' && (
+        <>
+          {/* Row 1: 4 KPI Cards Lớn (Không dùng 6-7 card) */}
+          <DashboardKpiGrid
+            metrics={data?.metrics || []}
+            activeFilter={activeFilter}
+            onSelectFilter={handleFilterSelect}
+            isLoading={viewState === 'loading' || isRefreshing}
+          />
+
+          {/* Row 2: Pipeline Summary Strip (Dải nhỏ 5 bước) */}
+          <DashboardPipeline
+            stages={data?.pipeline || []}
+            activeFilter={activeFilter}
+            onSelectFilter={handleFilterSelect}
+            isLoading={viewState === 'loading' || isRefreshing}
+          />
+
+          {/* Row 3: Bảng “Phiếu cần can thiệp” (Vùng trọng tâm nhất) */}
+          <DashboardInterventionTable
+            orders={data?.interventionOrders || []}
+            activeFilter={activeFilter}
+            onSelectFilter={handleFilterSelect}
+            onSelectOrder={(order) => setSelectedOrder(order)}
+            isLoading={viewState === 'loading' || isRefreshing}
+          />
+
+          {/* Row 4: Hai Panels Song Song — Cảnh báo vận hành & Tải nhân viên */}
+          <section className="rf-dashboard-bottom-grid">
+            {/* Panel Cảnh báo vận hành */}
+            <DashboardAlertsPanel
+              alerts={data?.alerts || []}
+              onSelectAlert={handleFilterSelect}
+              isLoading={viewState === 'loading' || isRefreshing}
+            />
+
+            {/* Panel Tải công việc đội ngũ KTV */}
+            <DashboardWorkloadPanel
+              workload={data?.workload || []}
+              availableStaffCount={data?.availableStaffCount ?? 1}
+              isLoading={viewState === 'loading' || isRefreshing}
+            />
+          </section>
+        </>
+      )}
+
+      {/* 5. Drill-down Order Detail Modal */}
+      {selectedOrder && (
+        <DashboardOrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onAction={(order) => {
+            // Simulated action trigger
+            alert(`Thao tác [${order.nextActionText}] cho phiếu ${order.orderCode} đã được ghi nhận.`);
+          }}
+        />
+      )}
+
+      {/* 6. Floating Dev State Switcher (Công cụ kiểm thử trạng thái dành cho reviewer/tester) */}
+      <aside className="rf-floating-dev-bar" role="region" aria-label="Kiểm thử các trạng thái bắt buộc">
+        <span className="rf-floating-dev-bar__label">DEV:</span>
+        <div className="rf-floating-dev-bar__buttons">
+          <button
+            type="button"
+            className={`rf-state-btn ${viewState === 'ready' ? 'rf-state-btn--active' : ''}`}
+            onClick={() => handleStateChange('ready')}
+            title="Xem giao diện chuẩn với dữ liệu hoạt động"
+          >
+            Chuẩn
+          </button>
+          <button
+            type="button"
+            className={`rf-state-btn ${viewState === 'loading' ? 'rf-state-btn--active' : ''}`}
+            onClick={() => handleStateChange('loading')}
+            title="Xem trạng thái Skeleton loading"
+          >
+            Loading
+          </button>
+          <button
+            type="button"
+            className={`rf-state-btn ${viewState === 'empty' ? 'rf-state-btn--active' : ''}`}
+            onClick={() => handleStateChange('empty')}
+            title="Xem trạng thái không có phiếu cần can thiệp"
+          >
+            Trống
+          </button>
+          <button
+            type="button"
+            className={`rf-state-btn ${viewState === 'error' ? 'rf-state-btn--active' : ''}`}
+            onClick={() => handleStateChange('error')}
+            title="Xem trạng thái lỗi mạng"
+          >
+            Lỗi mạng
+          </button>
+          <button
+            type="button"
+            className={`rf-state-btn ${viewState === 'stale' ? 'rf-state-btn--active' : ''}`}
+            onClick={() => handleStateChange('stale')}
+            title="Xem trạng thái dữ liệu cũ (Stale refresh)"
+          >
+            Dữ liệu cũ
+          </button>
+        </div>
+      </aside>
     </div>
   );
 }
+

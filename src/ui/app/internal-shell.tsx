@@ -31,12 +31,14 @@ function resolveNavLabelFromHash(hash: string, role: UserRole): string {
   const clean = hash.replace(/\/$/, '');
   if (clean === '#/showcase' || clean === '#showcase') return 'Thư viện UI';
   if (clean === '#/settings') return 'Quản trị';
+  if (clean === '#/staff-assignments') return 'Nhân sự & phân công';
+  if (clean === '#/workflow-config') return 'Quy trình cửa hàng';
   if (clean === '#/lookup') return 'Tra cứu tiến độ';
   if (clean === '#/today') return 'Hôm nay';
   if (clean === '#/my-work') return 'Hàng chờ công việc';
   if (clean === '#/orders') return 'Phiếu sửa chữa';
   if (clean === '#/customers') return 'Khách hàng';
-  if (clean === '#/devices') return 'Thiết bị & lịch sử';
+  if (clean === '#/devices') return 'Thiết bị và lịch sử';
   if (clean === '#/reception-queue') return 'Hàng chờ tiếp nhận';
   if (clean === '#/assigned-orders') return 'Phiếu được phân công';
 
@@ -84,6 +86,25 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
 
   const currentRole = currentUser?.role || 'manager';
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('repairflow_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('repairflow_sidebar_collapsed', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Synchronize hash changes
   useEffect(() => {
@@ -113,6 +134,7 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
         onSelect={handleSelectNav}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
+        isCollapsed={sidebarCollapsed}
         userName={currentUser?.name}
         userRole={currentUser?.roleTitle}
         userInitials={currentUser?.initials}
@@ -126,12 +148,10 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
 
       <div className="app-main">
         <AppHeader
-          breadcrumbs={[
-            { label: 'RepairFlow' },
-            { label: currentUser?.roleTitle || 'Tổng quan' },
-            { label: activeNav },
-          ]}
+          title={activeNav}
           onOpenMobileMenu={() => setMobileNavOpen(true)}
+          isSidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
           userName={currentUser?.name}
           userRole={currentUser?.roleTitle}
           userInitials={currentUser?.initials}
