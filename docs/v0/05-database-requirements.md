@@ -1111,7 +1111,7 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 Phạm vi dưới đây là schema target của MVP. Một số migration/prototype hiện tại
 có thể còn tham chiếu warranty legacy; các tham chiếu đó phải được loại khỏi
 runtime/schema trước khi mở cluster nghiệp vụ. MVP dùng SQL versioned migrations
-với runner tại `src/db/migrate.py`:
+với migration runner thuộc backend ASP.NET Core/.NET:
 
 | Version | Phạm vi |
 | --- | --- |
@@ -1125,7 +1125,10 @@ với runner tại `src/db/migrate.py`:
 Migration access module phải ghi rõ mapping credential/session với staff profile,
 trạng thái account và chính sách revoke. Không lưu credential trong bảng `users`.
 
-Lệnh nâng schema local: `python -m src.db.migrate`.
+Entrypoint và command nâng schema local của target .NET sẽ được chốt trong
+`plans/v0/c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md`.
+Runner mới phải giữ nguyên thứ tự, constraint và semantics của các version
+migration đã chốt; không dùng lại runtime Python đã bị loại bỏ.
 
 ### Seed tối thiểu cho môi trường demo
 

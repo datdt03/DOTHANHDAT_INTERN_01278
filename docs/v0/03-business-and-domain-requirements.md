@@ -48,10 +48,23 @@ Public Customer Link ───┘                   │
 
 ### Baseline công nghệ triển khai
 
-- **API**: Python 3.12+, FastAPI và Uvicorn; mã nguồn đặt tại `src/app/`.
-- **Database access**: SQLAlchemy 2.x và driver `psycopg`.
-- **Schema migration**: SQL versioned migrations; runner và các version đặt tại `src/db/`.
+- **Backend/API bắt buộc**: ASP.NET Core Web API trên .NET, triển khai dạng
+  modular monolith. Đây là boundary duy nhất cho authentication, permission,
+  workflow, business rule, transaction và response contract.
+- **Web UI**: React + Vite + TypeScript cho Internal Web UI và Customer Link
+  UI. Vite đảm nhiệm dev/build; React chỉ render UI và không chứa business rule
+  hay business API.
+- **Database access target**: Entity Framework Core và provider Npgsql cho
+  PostgreSQL.
+- **Schema migration**: SQL versioned migrations, được thực thi bởi migration
+  runner của backend .NET; giữ nguyên contract schema và thứ tự migration đã
+  chốt.
 - **Local database**: PostgreSQL 18 Alpine chạy bằng Docker Compose; cấu hình qua biến môi trường, không commit secret.
+
+**Implementation note:** Python/FastAPI tại `src/app/`, `src/db/` và test
+prototype đã được loại bỏ để reset implementation. C0 target phải dựng lại
+health endpoint, migration runner và test baseline bằng ASP.NET Core/.NET; đây
+không phải thay đổi requirements hay business scope.
 
 ## 3. Vai trò và phân quyền
 

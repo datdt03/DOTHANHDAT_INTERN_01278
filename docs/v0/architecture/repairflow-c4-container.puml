@@ -10,9 +10,9 @@ Person(receptionist, "Receptionist / Front Desk", "Staff profile; account tùy c
 Person(technician, "Technician", "Staff profile; account tùy chọn")
 
 System_Boundary(repairflow, "RepairFlow") {
-    Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard, repair-order workspace và các màn hình vận hành")
-    Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Trang public hiển thị diagnosis, quote và customer decision")
-    Container(api, "Backend / API", "Python, FastAPI, Uvicorn", "Authentication, permission, workflow, quote, public link, audit và response envelope")
+    Container(internalUi, "Internal Web UI", "React, Vite, TypeScript", "Dashboard, repair-order workspace và các màn hình vận hành")
+    Container(customerUi, "Customer Link UI", "React, Vite, TypeScript", "Trang public hiển thị diagnosis, quote và customer decision")
+    Container(api, "Backend / API", "ASP.NET Core Web API, .NET", "Authentication, permission, workflow, quote, public link, audit và response envelope")
     ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Workspace, customers, devices, repair orders, evidence, quotes, decisions, QC, handover và audit")
 }
 
@@ -24,7 +24,7 @@ Rel(technician, internalUi, "Truy cập theo account/assignment hoặc được 
 Rel(customer, customerUi, "Mở customer link")
 Rel(internalUi, api, "HTTPS / JSON")
 Rel(customerUi, api, "HTTPS / public token")
-Rel(api, database, "SQLAlchemy / psycopg")
+Rel(api, database, "EF Core / Npgsql")
 Rel(api, objectStorage, "Signed URL và object metadata")
 
 SHOW_LEGEND()

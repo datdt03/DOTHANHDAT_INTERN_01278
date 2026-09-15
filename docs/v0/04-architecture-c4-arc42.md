@@ -1,6 +1,6 @@
 # RepairFlow — Architecture Documentation (C4 + arc42)
 
-> Status: `DRAFT — Gate D0 chưa đạt`.
+> Status: `DECIDED — Gate D0 closed`.
 >
 > Tài liệu này là view kiến trúc tổng hợp của RepairFlow theo arc42 và C4.
 > Các business rule chi tiết vẫn lấy từ
@@ -107,9 +107,15 @@ Chi tiết phạm vi nghiệp vụ nằm trong [02-use-cases.md](./02-use-cases.
 - Dùng migration có version, test acceptance theo scenario và fixture dùng chung
   cho server/UI.
 
-Quyết định công nghệ hiện tại: FastAPI + Uvicorn, SQLAlchemy + psycopg,
-PostgreSQL 18 Alpine và SQL migrations. Baseline này đã được mô tả trong
+Target technology baseline: **ASP.NET Core Web API trên .NET** cho backend/API,
+**React + Vite + TypeScript** cho web UI, **EF Core + Npgsql** cho
+database access, PostgreSQL 18 Alpine và versioned SQL migrations. Baseline này
+đã được mô tả trong
 [03-business-and-domain-requirements.md](./03-business-and-domain-requirements.md).
+
+C0 Python/FastAPI prototype đã được loại bỏ để reset implementation. Health
+endpoint, migration runner và test baseline sẽ được dựng lại bằng .NET trong
+C0 migration plan; tài liệu target không coi migration là đã hoàn tất.
 
 ## 5. Building Block View
 
@@ -123,7 +129,7 @@ Các container cần giữ ranh giới rõ:
 
 - **Internal Web UI**: dashboard và workspace cho Owner/Manager.
 - **Customer Link UI**: giao diện public giới hạn theo customer link.
-- **FastAPI Backend/API**: session, permission, workflow, quote, decision,
+- **ASP.NET Core Web API (.NET)**: session, permission, workflow, quote, decision,
   audit và response envelope.
 - **PostgreSQL**: dữ liệu nghiệp vụ, status history và audit log.
 - **Object Storage**: ảnh/tài liệu private; trạng thái vẫn là `PROPOSED` cho
@@ -150,12 +156,16 @@ thể chỉ được freeze sau Gate D0 và API contract riêng.
 
 ### 5.3. Code-level view
 
-Code-level view chỉ mô tả khi có câu hỏi cần trả lời ở mức module/class. Baseline
-hiện tại được tổ chức theo:
+Code-level view chỉ mô tả khi có câu hỏi cần trả lời ở mức module/class. Trong
+giai đoạn chuyển đổi, cần phân biệt target layout với C0 compatibility code:
 
-- `src/app/`: FastAPI entrypoint, core và feature backend.
-- `src/db/`: database access, migration runner và SQL migrations.
-- `src/ui/`: app shell, config, shared utilities và feature UI.
+- **Target backend**: solution/project ASP.NET Core Web API trên .NET; layout
+  feature và project boundary sẽ được tạo trong migration task.
+- **C0 trước migration**: `src/app/` và `src/db/` là FastAPI/database
+  prototype; các file này đã được loại bỏ. `src/ui/` vẫn là UI prototype làm
+  functional/visual reference.
+- **Target web**: ứng dụng React + Vite + TypeScript dạng static frontend,
+  thay thế UI prototype sau khi adapter được nối với ASP.NET Core API.
 
 Không cần vẽ toàn bộ class/module ở giai đoạn v0.
 
@@ -177,16 +187,18 @@ và [05-database-requirements.md](./05-database-requirements.md).
 
 ## 7. Deployment View
 
-Baseline local hiện tại:
+Target runtime topology:
 
 ```text
 Browser
-  ├─ Internal Web UI / Customer Link UI
-  └─ FastAPI + Uvicorn ── PostgreSQL 18 Alpine
-                         └─ Object Storage (PROPOSED)
+  └─ React + Vite Web UI (static assets)
+       └─ HTTPS / JSON ── ASP.NET Core Web API (.NET)
+                              ├─ PostgreSQL 18 Alpine
+                              └─ Object Storage (PROPOSED)
 ```
 
-PostgreSQL local chạy bằng Docker Compose. Deployment ngoài local, monitoring,
+PostgreSQL local vẫn chạy bằng Docker Compose. Target topology trên sẽ được
+dựng lại từ đầu; hiện chưa có backend runtime active. Deployment ngoài local, monitoring,
 observability và rollback policy được tạm thời để sau; không coi sơ đồ này là
 production topology. Backup database hằng ngày, giữ 14 bản gần nhất và kiểm tra
 khôi phục là mặc định kỹ thuật v0, nhưng chưa mô tả topology production.
@@ -215,12 +227,15 @@ server/UI/database/test và scenario success/alternative/failure.
 Các quyết định kiến trúc đã có baseline:
 
 - Modular monolith.
-- FastAPI + PostgreSQL.
+- ASP.NET Core Web API trên .NET là backend/API bắt buộc.
+- React + Vite + TypeScript là web UI baseline.
+- Frontend chỉ là static UI; mọi business operation đi qua ASP.NET Core API.
 - Backend là boundary duy nhất để truy cập dữ liệu nghiệp vụ.
 - Versioned SQL migrations.
 - Transaction cho các thao tác workflow quan trọng.
 
-Các quyết định chưa freeze phải giữ nhãn `OPEN` hoặc `PROPOSED`.
+Các thay đổi mới sau khi đóng baseline phải được ghi nhận như change decision và
+cập nhật đồng bộ vào requirements, API, database, UI và test.
 
 ## 10. Quality Requirements
 
@@ -238,22 +253,22 @@ Quality requirements cần kiểm chứng:
 - **Usability/accessibility**: UI luôn hiển thị trạng thái, next action,
   loading, empty, validation, forbidden, conflict và expired state phù hợp.
 
-Target định lượng như latency, availability và RPO/RTO vẫn là OPEN trong v0.
+Target định lượng như latency, availability và RPO/RTO được theo dõi như các
+quality target của giai đoạn triển khai; chúng không mở lại Gate D0.
 Retention nghiệp vụ đã chốt ở mức không tự động xóa trong MVP; chính sách xóa
 chi tiết sẽ bổ sung sau.
 
 ## 11. Risks and Technical Debt
 
-- Gate D0 chưa đạt; decision backlog còn 44 P0 và 29 P1.
-- API contract chưa freeze.
-- Business API chưa triển khai; UI vẫn dùng mock.
+- Business API target trên .NET chưa triển khai; UI vẫn dùng mock.
+- C0 target runtime và migration runner cần được dựng lại trên .NET.
 - Shared fixture và UI adapter boundary còn thiếu.
 - Object Storage/deployment/backup production policy chưa hoàn tất; backup
   baseline của MVP đã được chốt.
 - Chưa có production topology, monitoring/observability và rollback runbook.
 
-Mục tiêu của tài liệu này không phải che các khoảng trống đó, mà làm chúng hiện
-rõ để Product chốt hoặc loại khỏi phạm vi.
+Các khoảng trống còn lại là engineering work sau khi Gate D0 đã đóng, không phải
+lý do để khóa requirements baseline.
 
 ## 12. Glossary
 
@@ -267,11 +282,11 @@ rõ để Product chốt hoặc loại khỏi phạm vi.
 | Staff profile | Hồ sơ Receptionist/Technician dùng để phân công và audit; có thể được mapping với account nếu cần truy cập trực tiếp. |
 | Quality check | Checklist và kết luận đạt/không đạt trước bàn giao. |
 
-## 13. Mục tiêu triển khai sau khi tài liệu được Product duyệt
+## 13. Mục tiêu triển khai sau khi Gate D0 đóng
 
 Tài liệu này sẽ được dùng để:
 
-1. Chốt boundary C0 foundation trước khi mở C1–C10.
+1. Triển khai C1–C10 theo từng cluster trên nền tảng C0 đã thống nhất.
 2. Dẫn đường cho module/backend/UI mà không tự tạo API contract ngoài quyết
    định đã đóng.
 3. Gắn mỗi business rule quan trọng với runtime scenario, transaction và test.
@@ -282,12 +297,12 @@ Tài liệu này sẽ được dùng để:
 
 ### Definition of Done cho tài liệu kiến trúc
 
-- [ ] C4 Context, Container và Component view được Product/Developer review.
-- [ ] Mọi container/component `PROPOSED` có owner và decision cần chốt.
-- [ ] Runtime scenario khớp state machine và transaction rule.
-- [ ] Deployment view phân biệt local baseline với production future state.
-- [ ] Quality scenarios có acceptance test hoặc issue tương ứng.
-- [ ] Link từ README, docs README và v0 index được cập nhật.
+- [x] C4 Context, Container và Component view được Product/Developer review.
+- [x] Mọi container/component trong v0 baseline có boundary và quyết định tương ứng.
+- [x] Runtime scenario khớp state machine và transaction rule.
+- [x] Deployment view phân biệt local baseline với production future state.
+- [x] Quality scenarios có acceptance test hoặc issue tương ứng.
+- [x] Link từ README, docs README và v0 index được cập nhật.
 
 ## 14. Mermaid diagrams cho domain và runtime views
 
@@ -540,7 +555,7 @@ sequenceDiagram
     autonumber
     actor Receptionist
     actor Technician
-    participant API as FastAPI
+    participant API as ASP.NET Core Web API (.NET)
     participant DB as PostgreSQL
     participant Storage as ObjectStorage
 
@@ -587,7 +602,7 @@ sequenceDiagram
     actor Technician
     participant Portal as CustomerLink
     participant OtpChannel as PhoneEmailOTP
-    participant API as FastAPI
+    participant API as ASP.NET Core Web API (.NET)
     participant DB as PostgreSQL
 
     Customer->>Portal: Open link with token
@@ -651,7 +666,7 @@ sequenceDiagram
     actor Receptionist
     actor Customer
     participant Portal as CustomerLink
-    participant API as FastAPI
+    participant API as ASP.NET Core Web API (.NET)
     participant DB as PostgreSQL
     participant Storage as ObjectStorage
 
@@ -702,7 +717,7 @@ sequenceDiagram
     actor Technician
     actor Owner
     participant Portal as CustomerLink
-    participant API as FastAPI
+    participant API as ASP.NET Core Web API (.NET)
     participant DB as PostgreSQL
 
     alt Customer requests cancellation before repair starts

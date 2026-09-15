@@ -181,6 +181,40 @@ chưa cần tạo frame riêng trong batch đầu.
 | UI-D09 | Timeline nghiệp vụ và audit view theo quyền | Desktop |
 | UI-D10 | Nhân viên, assignment và account settings | Desktop |
 
+## 3.1. Các frame Stitch đã import
+
+Các frame dưới đây được import từ `tmp/stitch_repairflow_v0` để làm visual
+reference cho handoff. Ảnh preview được quản lý tập trung trong
+[`assets/images/`](../../assets/images/); mã HTML gốc được lưu trong
+[`ui-design/stitch/`](./ui-design/stitch/). Việc import frame không tạo thêm
+business rule, API contract hoặc permission mới. Xem danh mục nhanh tại
+[`ui-design/screen-index.md`](./ui-design/screen-index.md).
+
+| ID | Persona và trạng thái | Viewport | Preview | Mã giao diện |
+| --- | --- | --- | --- | --- |
+| UI-A06 | Manager — tổng quan vận hành, happy path | Desktop `1440×1024` | [PNG](../../assets/images/UI-A06-manager-operations-overview-v1.png) | [HTML](./ui-design/stitch/batch-a/UI-A06-manager-operations-overview-v1.html) |
+| UI-A08 | Technician — hàng chờ công việc, có cảnh báo SLA | Desktop `1440×1024` | Chưa có PNG hợp lệ trong export | [HTML](./ui-design/stitch/batch-a/UI-A08-technician-my-work-v1.html) |
+| UI-B02 | Receptionist — tra cứu tiến độ read-only | Desktop `1440×1024` | Chưa có PNG hợp lệ trong export | [HTML](./ui-design/stitch/batch-b/UI-B02-receptionist-operational-lookup-v1.html) |
+| UI-C05/C06 | Customer — theo dõi tiến độ và xem/duyệt báo giá | Mobile `390×844` | [PNG](../../assets/images/UI-C05-C06-customer-progress-quote-v1.png) | [HTML](./ui-design/stitch/batch-c/UI-C05-C06-customer-progress-quote-v1.html) |
+
+### Preview nhanh
+
+![UI-A06 — Manager tổng quan vận hành](../../assets/images/UI-A06-manager-operations-overview-v1.png)
+
+![UI-C05/C06 — Customer theo dõi tiến độ và duyệt báo giá](../../assets/images/UI-C05-C06-customer-progress-quote-v1.png)
+
+Acceptance baseline của các frame đã import:
+
+- Màn hình Manager và Technician là desktop-first; Technician dùng danh sách
+  ưu tiên, không dùng Kanban kéo-thả làm luồng chính.
+- Màn hình Receptionist chỉ hiển thị operational progress ở chế độ read-only;
+  không có action sửa, phân công, đổi trạng thái hoặc thay đổi báo giá.
+- Màn hình Customer không dùng sidebar nội bộ và thể hiện được tiến độ, chẩn
+  đoán, báo giá cùng hành động duyệt/từ chối hoặc trao đổi.
+- Các trạng thái loading, empty, error, OTP, link hết hạn/thu hồi và các state
+  đặc biệt khác vẫn tuân theo [06-ui-requirements.md](./06-ui-requirements.md),
+  dù chưa có frame riêng trong batch import này.
+
 ## 4. Quy tắc tạo prompt cho Stitch
 
 Không yêu cầu Stitch thiết kế toàn bộ sản phẩm trong một prompt. Tạo từng batch
@@ -411,12 +445,11 @@ handoff.
 
 ## 7. Các điểm vẫn thuộc requirements closure
 
-Tài liệu này chốt hướng UI và handoff, nhưng không đóng toàn bộ Gate D0. Các
-chính sách chưa được Product quyết định trong tài liệu requirements closure vẫn
-phải giữ trạng thái OPEN/PROPOSED. Không dùng hình Stitch để tự đóng các câu
-hỏi về cancellation/reopen, retention, concurrency, deployment hoặc các chính
-sách nghiệp vụ khác. Warranty được hoãn khỏi v0 và sẽ có đặc tả riêng khi mở
-module sau này.
+Tài liệu này là một phần của v0 baseline đã chốt và được dùng cho UI/handoff.
+Các thay đổi mới về cancellation/reopen, retention, concurrency, deployment
+hoặc chính sách nghiệp vụ phải được ghi nhận trong source-of-truth tương ứng;
+hình Stitch không tự tạo thêm business rule hoặc permission. Warranty vẫn nằm
+ngoài phạm vi v0 và sẽ có đặc tả riêng khi mở module sau này.
 
 ## 8. Tài liệu liên quan
 

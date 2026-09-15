@@ -4,18 +4,18 @@
 LAYOUT_TOP_DOWN()
 title RepairFlow — C4 Component View (Backend / API)
 
-Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard và repair-order workspace")
-Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Public customer link")
+Container(internalUi, "Internal Web UI", "React, Vite, TypeScript", "Dashboard và repair-order workspace")
+Container(customerUi, "Customer Link UI", "React, Vite, TypeScript", "Public customer link")
 
 System_Boundary(repairflow, "RepairFlow") {
-    Container_Boundary(api, "Backend / API — FastAPI modular monolith") {
-        Component(identity, "Identity and Access Session", "FastAPI module", "Access principal, workspace context và permission theo role/assignment")
-        Component(order, "Repair Order Lifecycle", "FastAPI module", "Create order, assignment, state transition và validation")
-        Component(evidence, "Evidence and Diagnosis", "FastAPI module", "Intake evidence, diagnosis và technical notes")
-        Component(quote, "Quote and Customer Decision", "FastAPI module", "Quote version, public link, approve/reject và immutable snapshot")
-        Component(execution, "Repair Execution and Quality Check", "FastAPI module", "Work log, repair checklist và QC result")
-        Component(handover, "Handover", "FastAPI module", "Handover record và history")
-        Component(audit, "Audit and Timeline", "FastAPI module", "Status history, audit log và timeline projection")
+    Container_Boundary(api, "Backend / API — ASP.NET Core Web API modular monolith") {
+        Component(identity, "Identity and Access Session", ".NET module", "Access principal, workspace context và permission theo role/assignment")
+        Component(order, "Repair Order Lifecycle", ".NET module", "Create order, assignment, state transition và validation")
+        Component(evidence, "Evidence and Diagnosis", ".NET module", "Intake evidence, diagnosis và technical notes")
+        Component(quote, "Quote and Customer Decision", ".NET module", "Quote version, public link, approve/reject và immutable snapshot")
+        Component(execution, "Repair Execution and Quality Check", ".NET module", "Work log, repair checklist và QC result")
+        Component(handover, "Handover", ".NET module", "Handover record và history")
+        Component(audit, "Audit and Timeline", ".NET module", "Status history, audit log và timeline projection")
     }
     ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Nguồn dữ liệu nghiệp vụ")
 }
