@@ -28,7 +28,7 @@ hợp, không được dùng việc ẩn menu hoặc ẩn nút làm cơ chế b�
 | AUTH-001 | Hệ thống cho phép cấp tài khoản cho Owner, Manager, Receptionist và Technician khi nhân sự cần trực tiếp sử dụng hệ thống. | `DECIDED` |
 | AUTH-002 | Tài khoản đăng nhập (`access principal`) tách biệt với hồ sơ nhân sự (`staff profile`). Một staff profile có thể chưa có tài khoản và khi đó không được đăng nhập. | `DECIDED` |
 | AUTH-003 | Không dùng tài khoản chung cho nhiều người. Mỗi tài khoản phải gắn với một người và membership hợp lệ trong workspace. | `DECIDED` |
-| AUTH-004 | Customer không có tài khoản dài hạn; tiếp tục dùng public link có token, expiry và revoke. | `DECIDED` |
+| AUTH-004 | Customer không có tài khoản dài hạn; dùng public link có token, expiry, revoke và bắt buộc xác thực OTP trước khi xem hoặc thực hiện bất kỳ hành động nào. | `DECIDED` |
 | AUTH-005 | Phân quyền tối thiểu dùng role cố định kết hợp `workspace_id` và assignment của repair order. | `DECIDED` |
 | AUTH-006 | Mặc định từ chối truy cập (`deny by default`); mọi quyền đọc/ghi phải được Backend/API kiểm tra. | `DECIDED` |
 | AUTH-007 | Technician chỉ được xem order được giao hoặc dữ liệu trực tiếp cần cho trách nhiệm; Receptionist được tra cứu operational projection read-only của toàn bộ order trong workspace. | `DECIDED` |
@@ -37,6 +37,7 @@ hợp, không được dùng việc ẩn menu hoặc ẩn nút làm cơ chế b�
 | AUTH-010 | MVP dùng một workspace context cho mỗi phiên; không cho đọc/ghi chéo workspace. | `DECIDED` |
 | AUTH-011 | MVP đăng nhập bằng email của access principal do Owner/Manager tạo; không dùng Google Login hoặc OAuth. | `DECIDED` |
 | AUTH-012 | Receptionist được tra cứu read-only toàn bộ order trong cùng workspace qua operational projection để trả lời khách; quyền ghi vẫn giới hạn ở order/tác vụ được phân công. | `DECIDED` |
+| AUTH-013 | Customer hoặc người được ủy quyền chỉ được mở customer link sau khi nhập OTP gửi tới số điện thoại hoặc email đã được ghi nhận; link không được chia sẻ tự do. | `DECIDED` |
 
 ## 3. Mô hình actor và account
 
@@ -75,10 +76,12 @@ Không được ghi đè người đăng nhập bằng staff profile hoặc ngư
 
 ### 3.3. Customer
 
-Customer không đăng nhập vào khu vực nội bộ. Customer chỉ được xem dữ liệu
-được cấp trong public link cụ thể và chỉ được quyết định trên quote version
-được link đó tham chiếu. Customer có thể gửi yêu cầu hủy; việc ghi nhận và
-chuyển trạng thái do Receptionist hoặc người nội bộ có trách nhiệm thực hiện.
+Customer không đăng nhập vào khu vực nội bộ. Customer hoặc người được ủy quyền
+chỉ được xem dữ liệu được cấp trong public link cụ thể sau khi xác thực OTP
+qua số điện thoại hoặc email đã được ghi nhận. Customer chỉ được quyết định
+trên quote version được link đó tham chiếu. Customer có thể gửi yêu cầu hủy;
+việc ghi nhận và chuyển trạng thái do Receptionist hoặc người nội bộ có trách
+nhiệm thực hiện.
 
 ## 4. Phân quyền tối thiểu
 
@@ -99,9 +102,9 @@ Ký hiệu:
 | Tạo customer/device/order | Full | Full | Assigned/được cấp quyền | — mặc định | — |
 | Intake, phụ kiện, hiện trạng | Full | Full | Assigned | Assigned khi được giao | Public subset |
 | Diagnosis và technical evidence | Full | View/review | Chỉ xem tóm tắt có thể trao đổi với khách | Assigned | Public subset |
-| Quote draft | Full | Review/ngoại lệ | Chỉnh giá/chiết khấu trong phạm vi được giao | Chỉnh kỹ thuật/hạng mục trong phạm vi được giao, khi còn draft | — |
-| Quote sent/approved | View và xử lý theo quyền | View và xử lý theo quyền | View/gửi link | View, không sửa | Public + decision |
-| Customer link | Tạo/revoke/version | Tạo/revoke/version | Gửi link được cấp quyền | — mặc định | Mở link hợp lệ |
+| Quote draft | Full | Review/ngoại lệ | View | Chỉnh kỹ thuật, hạng mục và giá trong phạm vi được giao, khi còn draft | — |
+| Quote sent/approved | View và xử lý theo quyền | View và xử lý theo quyền | View | View, không sửa | Public + decision |
+| Customer link | Tạo/revoke/version | Tạo/revoke/version | Gửi/cấp lại link được cấp quyền | — mặc định | Mở link hợp lệ sau OTP |
 | Hủy/yêu cầu hoàn trả | Full | Full vận hành | Hủy trước sửa hoặc xác nhận hoàn trả trong phạm vi trách nhiệm | Xác nhận khi đang sửa trong phạm vi `repairer` | Gửi yêu cầu; không tự đổi trạng thái nội bộ |
 | Repair work và repair checklist | Full | Điều phối/review | View tiến độ | Assigned | — |
 | Quality check | Full | Review/ngoại lệ | View kết quả | Assigned responsibility `quality_checker` | Public subset |

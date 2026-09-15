@@ -199,11 +199,11 @@ erDiagram
     REPAIR_ORDERS ||--o{ CUSTOMER_LINKS : exposes
     QUOTES ||--o{ CUSTOMER_LINKS : reviews
     CUSTOMER_LINKS ||--o{ CUSTOMER_DECISIONS : sources
+    CUSTOMER_LINKS ||--o{ CUSTOMER_LINK_OTP_CHALLENGES : verifies
 
     REPAIR_ORDERS ||--o{ REPAIR_WORK_LOGS : records
     REPAIR_ORDERS ||--o{ CHECKLISTS : uses
     REPAIR_ORDERS ||--o{ HANDOVER_RECORDS : closes
-    REPAIR_ORDERS ||--o{ WARRANTIES : activates
     REPAIR_ORDERS ||--o{ STATUS_HISTORY : changes
 
     WORKSPACES ||--o{ AUDIT_LOGS : owns
@@ -463,12 +463,17 @@ Link public giới hạn quyền xem đúng phiếu/báo giá.
 | `quote_id` | `uuid` | Có | `NULL` | FK → `quotes.id`; bắt buộc với `quote_review` |
 | `purpose` | `varchar(24)` | Không | — | `quote_review` hoặc `status_tracking` |
 | `token_hash` | `varchar(128)` | Không | — | Hash token, unique |
-| `expires_at` | `timestamptz` | Không | — | Thời điểm hết hạn |
+| `expires_at` | `timestamptz` | Không | `created_at + 7 days` | Thời điểm hết hạn mặc định sau 7 ngày |
 | `last_accessed_at` | `timestamptz` | Có | `NULL` | Lần truy cập gần nhất |
 | `revoked_at` | `timestamptz` | Có | `NULL` | Null nghĩa là chưa thu hồi |
 | `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo |
 
 Token thô chỉ xuất hiện khi tạo link và không được lưu trong database. Backend phải kiểm tra `token_hash`, `expires_at`, `revoked_at`, `repair_order_id` và `quote_id` trước mọi thao tác public.
+
+Mọi thao tác public còn yêu cầu OTP. Không lưu OTP dạng plaintext; auth module
+phải lưu tối thiểu hash OTP, kênh gửi, destination snapshot, thời điểm hết hạn,
+số lần thử và thời điểm xác thực thành công. OTP hợp lệ là điều kiện để xem
+public DTO, quyết định quote hoặc xác nhận/ký bàn giao và hoàn trả.
 
 ### 5.14. `repair_work_logs`
 
@@ -859,7 +864,6 @@ customer_links(repair_order_id, expires_at)
 repair_work_logs(repair_order_id, started_at)
 checklists(repair_order_id, checklist_type)
 status_history(repair_order_id, created_at)
-warranties(end_date, status)
 audit_logs(workspace_id, entity_type, entity_id, created_at)
 ```
 
@@ -932,8 +936,8 @@ Khi quote đã gửi/duyệt cần thay đổi:
 Thương lượng giảm giá hoặc bỏ bớt hạng mục sửa chữa vẫn dùng cùng
 `repair_order_id`; không tạo order mới. Quote cũ được giữ nguyên để truy vết.
 Customer trao đổi qua điện thoại hoặc Zalo; Technician điều chỉnh phần kỹ
-thuật/hạng mục và tạo bản nháp version mới, Receptionist chủ yếu điều chỉnh
-giá/chiết khấu và gửi version mới sau khi được kiểm tra theo quyền.
+thuật, hạng mục và giá, tạo bản nháp version mới rồi gửi version mới theo
+quyền. Receptionist không lập hoặc điều chỉnh quote trong MVP.
 Nếu quote hiện tại đã `rejected` nhưng order chưa `returned`, cho phép tạo
 version mới trên cùng order và chuyển lại `waiting_for_approval`. Sau khi order
 đã `returned`, không tạo quote version mới trên order cũ.
@@ -981,12 +985,22 @@ luồng hoàn tất hoặc hoàn trả tương ứng. Không xóa repair order, 
 lịch sử liên quan. Không cho phép cập nhật thêm diagnosis, quote hoặc work log
 vào repair order đã `cancelled` hoặc `returned`.
 
+### 9.7.1. Không thể sửa
+
+Technician được phân công có thể bấm “Không thể sửa” khi xác định thiết bị
+không thể tiếp tục sửa. Hệ thống bắt buộc lưu lý do, actor, thời điểm và audit;
+không yêu cầu Customer approve lại. Order chuyển `repairing` →
+`ready_for_return` và thông báo trên customer link. Customer hoặc người được
+ủy quyền phải xác thực OTP, xác nhận/ký đã nhận máy; Receptionist sau đó hoàn
+tất biên bản và chuyển order sang `returned`.
+
 ### 9.8. Hoàn tất hoàn trả
 
 Chỉ cho phép chuyển `ready_for_return` sang `returned` khi đã có
 `handover_records` ghi nhận người nhận, thông tin cơ bản, tình trạng thiết bị,
-lý do hoàn trả, xác nhận Customer đã nhận máy và chữ ký. Người thực hiện có
-thể là Receptionist khác cùng role với người tiếp nhận ban đầu.
+lý do hoàn trả, xác nhận Customer hoặc người được ủy quyền đã nhận máy và chữ
+ký sau khi xác thực OTP. Người thực hiện có thể là Receptionist khác cùng role
+với người tiếp nhận ban đầu.
 
 ### 9.9. Hoàn tất quality check và bàn giao
 
@@ -1072,7 +1086,7 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 4. `repair_orders`, `repair_order_staff`.
 5. `repair_evidence`, `diagnoses`.
 6. `quotes`, `quote_items`.
-7. `customer_links`, `customer_decisions`.
+7. `customer_links`, `customer_link_otp_challenges`, `customer_decisions`.
 8. `repair_work_logs`, `checklists`.
 9. `handover_records`.
 10. `status_history`, `audit_logs`.

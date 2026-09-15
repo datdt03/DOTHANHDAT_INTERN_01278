@@ -362,6 +362,11 @@ Quotation actions are **Save draft**, **Send customer link**, and **Create new v
 
 Customers do not create accounts. The public page focuses on information to review and the decision to make.
 
+Before showing any order information, the page must request an OTP sent to the
+registered customer or authorized recipient phone number/email. A valid token
+without a valid OTP must not reveal the order, quote, status, evidence or
+handover/return confirmation form.
+
 Suggested content:
 
 1. Shop name, order code, and device.
@@ -375,6 +380,10 @@ Suggested content:
 9. **Reject or discuss** button.
 
 When the customer approves, show a confirmation step with the confirming name, quotation version, and time. After recording the decision, disable the approval button to prevent duplicate submissions.
+
+When the order is ready for handover or return, the same public link also
+shows a confirmation step for the recipient to confirm receipt and sign. The
+order cannot be closed as `handed_over` or `returned` without this confirmation.
 
 ### 6.8. Repair and quality check
 
@@ -416,6 +425,7 @@ The handover form includes:
 - Final condition.
 - Notes.
 - Handover confirmation.
+- Customer-link confirmation and signature.
 - Handover staff profile.
 
 After saving:

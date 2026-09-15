@@ -175,7 +175,7 @@ chưa cần tạo frame riêng trong batch đầu.
 | UI-D03 | Quality check — pass | Desktop |
 | UI-D04 | Quality check — fail và rework | Desktop |
 | UI-D05 | Handover form | Desktop |
-| UI-D06 | Handover confirmation | Mobile |
+| UI-D06 | Customer-link handover/return confirmation | Mobile |
 | UI-D07 | Customer profile và repair history | Desktop |
 | UI-D08 | Device profile và history theo identifier | Desktop |
 | UI-D09 | Timeline nghiệp vụ và audit view theo quyền | Desktop |
@@ -403,6 +403,8 @@ handoff.
 - Intake yêu cầu tối thiểu một ảnh và cho phép thêm ảnh không giới hạn.
 - Customer mobile page có đủ xem tiến độ, báo giá, approve, reject/discuss và
   link expired/revoked.
+- Customer link phải có bước OTP trước khi hiển thị dữ liệu; cùng link dùng để
+  xác nhận và ký khi bàn giao hoặc hoàn trả.
 - Antigravity không được coi hình Stitch là API contract hoặc permission
   contract.
 - Mỗi batch được review trên frame Stitch trước khi mở batch tiếp theo.
