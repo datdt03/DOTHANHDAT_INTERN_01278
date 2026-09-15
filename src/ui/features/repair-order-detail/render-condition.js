@@ -7,9 +7,9 @@ import { escapeHtml } from '../../shared/utils/dom.js';
 export function renderConditionAndDiagnosis(order) {
   const photos = order.intakePhotos || [];
   const diagnosis = order.diagnosis || {
-    hardwareDisplay: 'Đang kiểm tra.',
-    powerAndFeatures: 'Đang đo đạc.',
-    proposedSolution: ['Đang đề xuất phương án.'],
+    hardwareDisplay: 'In progress check.',
+    powerAndFeatures: 'Testing and measurements pending.',
+    proposedSolution: ['Repair plan pending.'],
     checkedItemsCount: 14
   };
 
@@ -19,10 +19,10 @@ export function renderConditionAndDiagnosis(order) {
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-sky-700 text-[18px]">photo_camera</span>
-          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Minh chứng hình ảnh tiếp nhận máy</h2>
+          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Intake photo evidence</h2>
         </div>
         <span class="text-[11px] font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
-          ${photos.length} ảnh đạt chuẩn
+          ${photos.length} approved photos
         </span>
       </div>
 
@@ -45,7 +45,7 @@ export function renderConditionAndDiagnosis(order) {
 
       <div class="mt-3.5 p-3 rounded-xl bg-sky-50/50 border border-sky-100 flex items-center gap-2.5 text-xs text-slate-700">
         <span class="material-symbols-outlined text-emerald-600 text-[18px]">verified</span>
-        <span><strong>Tình trạng ốc & niêm phong:</strong> ${escapeHtml(order.device.sealStatus || '2 ốc đáy hình sao Pentalobe còn nguyên tem. Khách xác nhận thiết bị chưa từng qua sửa chữa tại cửa hàng thứ ba.')}</span>
+        <span><strong>Screw and seal condition:</strong> ${escapeHtml(order.device.sealStatus || 'Two bottom Pentalobe screws retain their original seals. Customer confirmed the device has not been repaired elsewhere.')}</span>
       </div>
     </div>
 
@@ -55,22 +55,22 @@ export function renderConditionAndDiagnosis(order) {
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-sky-700 text-[20px]">psychology</span>
           <div>
-            <h2 class="text-sm font-bold text-slate-900">Kết luận chẩn đoán kỹ thuật</h2>
-            <p class="text-[11px] text-slate-500">Phụ trách: <strong class="text-slate-800">${escapeHtml(order.technicianName)}</strong></p>
+            <h2 class="text-sm font-bold text-slate-900">Technical diagnosis conclusion</h2>
+            <p class="text-[11px] text-slate-500">Assigned to: <strong class="text-slate-800">${escapeHtml(order.technicianName)}</strong></p>
           </div>
         </div>
         <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-          Đã kiểm ${diagnosis.checkedItemsCount || 14} mục
+          Completed checks: ${diagnosis.checkedItemsCount || 14} items
         </span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
-          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Hiện trạng phần cứng hiển thị</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Display hardware condition</div>
           <p class="text-slate-700 leading-relaxed">${escapeHtml(diagnosis.hardwareDisplay)}</p>
         </div>
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
-          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nguồn chính & chức năng phụ trợ</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Power and supporting functions</div>
           <p class="text-slate-700 leading-relaxed">${escapeHtml(diagnosis.powerAndFeatures)}</p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function renderConditionAndDiagnosis(order) {
       <div class="mt-4 p-3.5 rounded-xl bg-sky-50/50 border border-sky-200 text-xs">
         <div class="font-bold text-sky-900 mb-2 flex items-center gap-1.5">
           <span class="material-symbols-outlined text-[17px] text-sky-700">handyman</span>
-          Phương án xử lý đề xuất:
+          Proposed solution:
         </div>
         <ul class="space-y-1.5 text-slate-700 pl-4 list-disc marker:text-sky-600">
           ${diagnosis.proposedSolution.map(sol => `<li>${escapeHtml(sol)}</li>`).join('')}
@@ -87,3 +87,4 @@ export function renderConditionAndDiagnosis(order) {
     </div>
   `;
 }
+

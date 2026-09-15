@@ -1,106 +1,90 @@
-# RepairFlow — Documentation guide for LLM
+# RepairFlow Documentation Guide
 
-## 1. Mục đích
+## Purpose
 
-File này là điểm vào bắt buộc cho LLM trước khi đọc, tạo hoặc cập nhật bất kỳ
-tài liệu nào trong repository. Nó quy định tài liệu nào là nguồn thảo luận sản
-phẩm, tài liệu nào là task triển khai và giới hạn những điều LLM không được tự
-quyết định.
+This file is the required entry point before an LLM reads, creates, or updates documentation in the repository. It defines the product sources of truth, the phase boundaries, the difference between product discussion and implementation tasks, and the decisions an LLM must not make independently.
 
-## 2. Quy tắc phân khu vực
+## Documentation areas
 
-| Khu vực | Vai trò | Quy tắc sử dụng |
+| Area | Role | Usage rule |
 | --- | --- | --- |
-| `docs/README.md` | Quy tắc đọc/viết docs và bản đồ phase | Không chứa nghiệp vụ chi tiết của một phase. |
-| `docs/v0/` | Tài liệu thảo luận, phân tích, phạm vi và quyết định của phase v0 | Đây là phase hiện tại; đọc `docs/v0/README.md` trước các file con. |
-| `docs/v1/`, `docs/v2/`, ... | Tài liệu của phase tương lai | Chỉ tạo khi Product yêu cầu chốt hoặc mở phase tương ứng. |
-| `docs/*/archive/` | Bản nháp/lịch sử | Không phải nguồn sự thật; không dùng để suy ra nghiệp vụ. |
-| `plans/` | Hướng dẫn triển khai cho LLM | Chỉ tạo/cập nhật sau khi người dùng yêu cầu plan; không ghi nhật ký thảo luận vào đây. |
-| `README.md` | Tổng quan repository và cách chạy local | Không thay thế tài liệu nghiệp vụ trong phase. |
+| \`docs/README.md\` | Documentation rules and phase map | Does not contain detailed phase requirements. |
+| \`docs/v0/\` | Product discussion, analysis, scope, and decisions for phase v0 | This is the current phase. Read \`docs/v0/README.md\` first. |
+| \`docs/v1/\`, \`docs/v2/\`, ... | Documentation for future phases | Create only when Product explicitly opens the relevant phase. |
+| \`docs/*/archive/\` | Historical drafts | Not a source of truth; do not infer business behavior from it. |
+| \`plans/\` | LLM implementation instructions | Create or update only when the user requests a plan. Do not store discussion logs here. |
+| \`README.md\` | Product dashboard and local quickstart | Does not replace detailed phase documentation. |
 
-Tài liệu active của phase không đặt trực tiếp ở `docs/` ngoài file README này.
+Active phase documentation must live inside its phase directory. Do not create duplicate active documents directly under \`docs/\`.
 
-## 3. Thứ tự bắt buộc trước khi viết docs
+## Required reading order
 
-1. Đọc `AGENTS.md` ở root và `AGENTS.md` gần khu vực code liên quan.
-2. Đọc file này để xác định ranh giới tài liệu.
-3. Đọc `docs/v0/README.md` để biết phase hiện tại và danh sách tài liệu active.
-4. Chỉ đọc các tài liệu liên quan trực tiếp đến chủ đề đang xử lý:
-   - `requirements-closure.md` cho câu hỏi mở và decision backlog.
-   - `usecase.md` cho actor, user story, main flow, alternative flow và failure flow.
-   - `architecture-and-requirements.md` cho role, state, security, audit và business rules.
-   - `database-requirements.md` cho entity, schema, constraint, index và transaction.
-   - `ui-requirements.md` cho màn hình, UX, state và acceptance criteria.
-5. Tìm nội dung tương tự trước khi tạo file hoặc section mới.
-6. Nếu có mâu thuẫn giữa tài liệu, code và yêu cầu mới, dừng việc chốt nghiệp vụ,
-   nêu rõ file/mâu thuẫn và chờ Product xác nhận.
+1. Read the root \`AGENTS.md\` and the nearest \`AGENTS.md\` for the relevant code area.
+2. Read this file to understand documentation boundaries.
+3. Read \`docs/v0/README.md\` to identify the current phase and active documents.
+4. Read only the documents directly relevant to the task:
+   - \`requirements-closure.md\` for open questions and the decision backlog.
+   - \`usecase.md\` for actors, user stories, main flows, alternative flows, and failure flows.
+   - \`architecture-c4-arc42.md\` for the canonical C4 views and arc42 architecture narrative.
+   - \`architecture-and-requirements.md\` for roles, states, security, audit, and business rules.
+   - \`database-requirements.md\` for entities, schema, constraints, indexes, and transactions.
+   - \`ui-requirements.md\` for screens, UX, states, and acceptance criteria.
+5. Find similar content before creating a new file or section.
+6. If documentation, code, and a new request conflict, stop and identify the conflict before deciding product behavior.
 
-## 4. Phân biệt thông tin đã chốt và thông tin đang mở
+## Decision labels
 
-Mọi tài liệu phase phải phân biệt rõ:
+Every phase document must distinguish:
 
-- `DECIDED`: Product đã chốt; LLM được dùng làm cơ sở triển khai.
-- `OPEN`: câu hỏi hoặc policy chưa chốt; LLM không được dùng làm business rule bắt buộc.
-- `PROPOSED`: phương án đề xuất để Product xem xét; không được coi là quyết định.
-- `DRAFT`: nội dung đang soạn, chưa phải nguồn sự thật.
-- `ARCHIVED`: bản cũ, chỉ giữ lịch sử và phải bỏ qua khi triển khai.
+- \`DECIDED\`: Product has approved it and implementation may use it as a requirement.
+- \`OPEN\`: The question or policy is not settled; implementation must not treat it as mandatory.
+- \`PROPOSED\`: An option is suggested for Product review; it is not a decision.
+- \`DRAFT\`: Work in progress that is not yet the source of truth.
+- \`ARCHIVED\`: Historical content that must be ignored for implementation.
 
-Không biến default đề xuất, mock UI, tên endpoint hoặc suy luận từ code thành
-`DECIDED` nếu chưa có xác nhận của Product.
+Do not promote a default, mock UI behavior, endpoint name, or code inference to \`DECIDED\` without Product confirmation.
 
-## 5. Quy tắc viết tài liệu phase
+## Documentation rules
 
-Khi người dùng yêu cầu viết hoặc cập nhật docs:
+- Confirm the phase first; the current phase is \`v0\`.
+- Update the appropriate active file under \`docs/v0/\`; do not create a duplicate at \`docs/\` root.
+- Keep one source of truth for each topic and link to it instead of copying content.
+- Keep \`architecture-c4-arc42.md\` as the architecture view/index and keep detailed business rules in \`architecture-and-requirements.md\`.
+- Use scope, actors, preconditions, expected results, alternative flows, failure flows, related data, and acceptance criteria when documenting a business flow.
+- Put unresolved questions in the decision backlog with an \`OPEN\` or \`PROPOSED\` label.
+- Add decisions to active requirements only after Product confirms them.
+- Update indexes and links when a file is renamed or moved.
+- Never add secrets, real tokens, real customer data, or production environment details to documentation.
 
-- Xác định phase trước; hiện tại là `v0`.
-- Cập nhật file active phù hợp trong `docs/v0/`, không tạo bản sao ở `docs/` root.
-- Giữ một nguồn sự thật cho mỗi chủ đề; dùng link thay vì sao chép nội dung.
-- Ghi rõ phạm vi, actor, điều kiện trước, kết quả mong đợi, alternative flow,
-  failure flow, dữ liệu liên quan và acceptance criteria khi mô tả nghiệp vụ.
-- Ghi các câu hỏi chưa chốt vào decision backlog với trạng thái `OPEN` hoặc `PROPOSED`.
-- Chỉ ghi quyết định vào phần active sau khi người dùng/Product chốt.
-- Cập nhật mục lục hoặc link liên quan nếu đổi tên/di chuyển file.
-- Không đưa secret, token thật, dữ liệu khách hàng thật hoặc thông tin môi trường thật vào docs.
+## Content that must not be invented
 
-## 6. Những nội dung chưa được tự tạo
+While v0 is open, an LLM must not create or treat the following as official without an explicit request and the corresponding Product decision:
 
-Trong trạng thái hiện tại, LLM không được tự tạo hoặc coi là chính thức:
+- API contracts or API handoffs.
+- Release notes, production status, or staging/production runbooks.
+- New access, state machine, quotation, payment, warranty, retention, privacy, or concurrency decisions.
+- A new \`docs/v1/\` directory.
+- A new file in \`plans/\` when the user has not asked for an implementation plan.
 
-- API contract hoặc API handoff.
-- Release note, production status, staging/production runbook.
-- Quyết định mới về access, state machine, quote, payment, warranty, retention,
-  privacy hoặc concurrency khi chưa được Product chốt.
-- Một `docs/v1/` mới khi người dùng chưa yêu cầu mở phase v1.
-- Một file trong `plans/` khi người dùng chưa yêu cầu lập plan.
+If a gap needs Product discussion, add it to \`docs/v0/requirements-closure.md\` as \`OPEN\` or \`PROPOSED\`; do not pretend that a contract or business rule is frozen.
 
-Nếu cần ghi nhận khoảng trống để Product thảo luận, đưa vào
-`docs/v0/requirements-closure.md`, đánh dấu rõ `OPEN`/`PROPOSED`, không giả vờ
-đã freeze contract hoặc business rule.
+## Plan rules
 
-## 7. Khi nào được viết plan
+Write a plan only when the user explicitly asks for one. A plan must be an implementation instruction, not a discussion document, and must include goal, scope, out of scope, input files, output files, allowed files, small tasks, testing, and acceptance criteria.
 
-Chỉ viết plan khi người dùng yêu cầu rõ ràng. Khi được yêu cầu:
+For full-stack work, pair server and UI tasks by cluster. Do not complete the entire server before starting the UI. Plans must link to active \`docs/v0\` sources and must not use archive files as requirements.
 
-- Plan phải là instruction để LLM triển khai, không phải tài liệu thảo luận.
-- Nêu rõ goal, scope, out of scope, input files, output files, files được phép
-  sửa, task nhỏ, testing plan và acceptance criteria.
-- Với full-stack, chia task theo cluster song song giữa Codex/server và
-  Antigravity/UI; không làm toàn bộ server rồi mới làm UI.
-- Plan phải trỏ về tài liệu active trong `docs/v0/`, không trỏ archive làm nguồn.
-- Không thêm API contract, handoff hoặc release deliverable nếu người dùng chưa yêu cầu.
+## Documentation completion checklist
 
-## 8. Checklist trước khi hoàn tất một tài liệu
+- [ ] Correct phase and directory.
+- [ ] No duplicated source of truth.
+- [ ] \`DECIDED\`, \`OPEN\`, \`PROPOSED\`, \`DRAFT\`, and \`ARCHIVED\` are used correctly.
+- [ ] No business rule inferred from mocks, code, or defaults.
+- [ ] Main and alternative/failure flows are present where needed.
+- [ ] Relative links to related documents are valid.
+- [ ] No secrets, real data, API handoff, or unrequested release status.
+- [ ] Product approval is recorded for any changed decision.
 
-- [ ] Đúng phase và đúng thư mục.
-- [ ] Không trùng nguồn sự thật với file khác.
-- [ ] Phân biệt `DECIDED`, `OPEN`, `PROPOSED`, `DRAFT`, `ARCHIVED`.
-- [ ] Không tự chốt nghiệp vụ từ mock, code hoặc default.
-- [ ] Có main flow và alternative/failure flow nếu tài liệu mô tả use case.
-- [ ] Có liên kết tương đối hợp lệ tới tài liệu liên quan.
-- [ ] Không chứa secret, dữ liệu thật, API contract/handoff hoặc release status ngoài phạm vi được yêu cầu.
-- [ ] Nếu thay đổi decision đã chốt, đã có xác nhận Product và ghi rõ tác động.
+## Current phase
 
-## 9. Phase hiện tại
-
-Đọc tiếp [docs/v0/README.md](./v0/README.md). Đây là mục lục và nguồn hướng dẫn
-cho toàn bộ tài liệu active của phase v0.
+Read [docs/v0/README.md](./v0/README.md) next. It is the index and operating guide for all active v0 documentation.

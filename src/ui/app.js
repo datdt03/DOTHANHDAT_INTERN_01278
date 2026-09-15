@@ -112,8 +112,10 @@ if (searchInput) {
       if (q.toUpperCase().startsWith('RF-') || q.includes('001')) {
         window.location.hash = '#/orders/RF-20260911-001';
       } else {
-        showToast(`Tìm kiếm theo từ khóa: "${q}"`, 'info');
+        showToast(`Searching for: "${q}"`, 'info');
       }
     }
   });
 }
+
+

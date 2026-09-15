@@ -18,7 +18,7 @@ export async function initDashboard(container) {
     <div class="p-8 flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-3">
         <span class="w-8 h-8 rounded-full border-2 border-sky-600 border-t-transparent animate-spin"></span>
-        <span class="text-xs font-semibold text-slate-500">Đang tải dữ liệu xưởng...</span>
+        <span class="text-xs font-semibold text-slate-500">Loading workshop data...</span>
       </div>
     </div>
   `;
@@ -47,8 +47,10 @@ export async function initDashboard(container) {
   } catch (err) {
     container.innerHTML = `
       <div class="p-8 text-center text-rose-600 text-sm">
-        Đã xảy ra lỗi khi tải Dashboard: ${err.message}
+        Unable to load the dashboard: ${err.message}
       </div>
     `;
   }
 }
+
+

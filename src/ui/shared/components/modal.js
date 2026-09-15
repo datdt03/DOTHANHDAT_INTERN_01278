@@ -6,7 +6,7 @@ import { escapeHtml } from '../utils/dom.js';
 
 let activeModal = null;
 
-export function showModal({ title, contentHtml, onConfirm, confirmText = 'Xác nhận', cancelText = 'Đóng' }) {
+export function showModal({ title, contentHtml, onConfirm, confirmText = 'Confirm', cancelText = 'Close' }) {
   closeModal();
 
   const modalOverlay = document.createElement('div');
@@ -64,3 +64,4 @@ export function closeModal() {
     activeModal = null;
   }
 }
+

@@ -3,8 +3,8 @@
  */
 
 export function formatVND(amount) {
-  if (typeof amount !== 'number') return '0 đ';
-  return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+  if (typeof amount !== 'number') return '0 VND';
+  return new Intl.NumberFormat('en-US').format(amount) + ' VND';
 }
 
 export function formatDateTime(isoString) {
@@ -25,8 +25,9 @@ export function maskPhone(phone) {
 }
 
 export function formatRelativeTime(minutesAgo) {
-  if (minutesAgo < 1) return 'Vừa xong';
-  if (minutesAgo < 60) return `${minutesAgo} phút trước`;
+  if (minutesAgo < 1) return 'Just now';
+  if (minutesAgo < 60) return `${minutesAgo} minutes ago`;
   const hours = Math.floor(minutesAgo / 60);
-  return `${hours} giờ trước`;
+  return `${hours} hours ago`;
 }
+

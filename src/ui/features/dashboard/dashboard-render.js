@@ -10,23 +10,23 @@ export function renderDashboardHeader() {
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div>
         <div class="flex items-center gap-2.5">
-          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Tổng quan điều hành</h1>
+          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Operations overview</h1>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-600 animate-pulse"></span>
-            Live Xưởng
+            Live workshop
           </span>
         </div>
         <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-2">
           <span class="material-symbols-outlined text-[15px]">calendar_today</span>
-          Thứ Sáu, 11/09/2026 · 182 Lê Duẩn, Quận 1
+          Friday, 11/09/2026 · 182 Lê Duẩn, District 1
         </p>
       </div>
       <div class="flex items-center gap-2.5">
         <button type="button" id="btn-export-report" class="rf-btn rf-btn-outline text-xs">
-          <span class="material-symbols-outlined text-[17px]">download</span> Xuất báo cáo
+          <span class="material-symbols-outlined text-[17px]">download</span> Export report
         </button>
         <button type="button" id="btn-create-order" class="rf-btn rf-btn-primary text-xs">
-          <span class="material-symbols-outlined text-[17px]">add</span> Tạo phiếu sửa chữa
+          <span class="material-symbols-outlined text-[17px]">add</span> Create Repair Order
         </button>
       </div>
     </div>
@@ -36,74 +36,74 @@ export function renderDashboardHeader() {
 export function renderKpis(kpis) {
   return `
     <div class="kpi-grid mb-6">
-      <!-- KPI 1: Đang xử lý -->
+      <!-- KPI 1: In progress -->
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Đang xử lý</span>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Tiến độ tốt</span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">In progress</span>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">On track</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${kpis.processing.count}</span>
-          <span class="text-xs text-slate-500 font-medium">phiếu</span>
+          <span class="text-xs text-slate-500 font-medium">order</span>
           <span class="text-xs font-bold text-emerald-600 ml-auto flex items-center">
-            <span class="material-symbols-outlined text-[14px]">arrow_upward</span> ${kpis.processing.todayDelta} hôm nay
+            <span class="material-symbols-outlined text-[14px]">arrow_upward</span> ${kpis.processing.todayDelta} today
           </span>
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Công suất xưởng</span>
+          <span>Workshop capacity</span>
           <span class="font-bold text-slate-700">${kpis.processing.capacity}</span>
         </div>
       </div>
 
-      <!-- KPI 2: Chờ duyệt giá -->
+      <!-- KPI 2: Waiting for approval -->
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Chờ duyệt giá</span>
-          <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Nhắc hẹn</span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Waiting for approval</span>
+          <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Follow-up</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${String(kpis.waitingApproval.count).padStart(2, '0')}</span>
-          <span class="text-xs text-slate-500 font-medium">phiếu</span>
-          <span class="text-xs font-bold text-amber-600 ml-auto">${kpis.waitingApproval.urgent} phiếu > 4h</span>
+          <span class="text-xs text-slate-500 font-medium">order</span>
+          <span class="text-xs font-bold text-amber-600 ml-auto">${kpis.waitingApproval.urgent} order > 4h</span>
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Tổng báo giá</span>
+          <span>Total Quotation Value</span>
           <span class="font-bold text-slate-700">${formatVND(kpis.waitingApproval.totalValue)}</span>
         </div>
       </div>
 
-      <!-- KPI 3: Sẵn sàng giao -->
+      <!-- KPI 3: Ready for pickup -->
       <div class="rf-card p-4 flex flex-col justify-between">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sẵn sàng giao</span>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Đã QC</span>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ready for pickup</span>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Completed QC</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-slate-900">${String(kpis.readyPickup.count).padStart(2, '0')}</span>
-          <span class="text-xs text-slate-500 font-medium">máy</span>
-          <span class="text-xs font-medium text-slate-500 ml-auto">${kpis.readyPickup.afternoonCount} hẹn chiều</span>
+          <span class="text-xs text-slate-500 font-medium">devices</span>
+          <span class="text-xs font-medium text-slate-500 ml-auto">${kpis.readyPickup.afternoonCount} afternoon pickups</span>
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Thu hộ (COD)</span>
+          <span>Cash on delivery (COD)</span>
           <span class="font-bold text-emerald-600">${formatVND(kpis.readyPickup.codValue)}</span>
         </div>
       </div>
 
-      <!-- KPI 4: Phiếu quá hạn -->
+      <!-- KPI 4: Overdue orders -->
       <div class="rf-card p-4 flex flex-col justify-between border-rose-200 bg-rose-50/30">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Phiếu quá hạn</span>
-          <span class="text-[11px] font-semibold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full">Khẩn cấp</span>
+          <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Overdue orders</span>
+          <span class="text-[11px] font-semibold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full">Urgent</span>
         </div>
         <div class="my-3 flex items-baseline gap-2">
           <span class="text-3xl font-extrabold text-rose-700">${String(kpis.overdue.count).padStart(2, '0')}</span>
-          <span class="text-xs text-rose-600 font-medium">trễ hẹn</span>
+          <span class="text-xs text-rose-600 font-medium">late</span>
           <span class="text-xs font-bold text-rose-700 ml-auto flex items-center gap-1">
-            <span class="material-symbols-outlined text-[15px]">warning</span> Ưu tiên
+            <span class="material-symbols-outlined text-[15px]">warning</span> Prioritize
           </span>
         </div>
         <div class="pt-2 border-t border-rose-100 flex items-center justify-between text-xs text-rose-700">
-          <span class="truncate">Lý do: ${escapeHtml(kpis.overdue.reason)}</span>
+          <span class="truncate">Reason: ${escapeHtml(kpis.overdue.reason)}</span>
         </div>
       </div>
     </div>
@@ -116,15 +116,15 @@ export function renderPipeline(pipeline) {
       <div class="flex items-center justify-between mb-3.5">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-sky-700 text-[20px]">timeline</span>
-          <h2 class="text-sm font-bold text-slate-800">Tiến trình luồng sửa chữa (Pipeline)</h2>
+          <h2 class="text-sm font-bold text-slate-800">Repair workflow pipeline</h2>
         </div>
-        <span class="text-xs text-slate-500 font-medium">29 phiếu trong quy trình</span>
+        <span class="text-xs text-slate-500 font-medium">29 orders in the workflow</span>
       </div>
       <div class="pipeline-track">
         ${pipeline.map(item => `
           <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col hover:border-sky-300 transition-colors">
             <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-              <span>BƯỚC ${item.step}</span>
+              <span>STEP ${item.step}</span>
               <span class="w-1.5 h-1.5 rounded-full ${item.step === 3 ? 'bg-amber-500' : item.step === 6 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
             </div>
             <div class="text-xs font-bold text-slate-800 mt-1 truncate">${escapeHtml(item.title)}</div>
@@ -147,9 +147,9 @@ export function renderDashboardRightCol(technicians, activities, warranty) {
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px] text-sky-700">engineering</span>
-            Kỹ thuật viên trực xưởng
+            Technicians on duty
           </h2>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">3 KTV trực</span>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">3 technicians on duty</span>
         </div>
         <div class="space-y-3">
           ${technicians.map(t => `
@@ -170,9 +170,9 @@ export function renderDashboardRightCol(technicians, activities, warranty) {
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px] text-sky-700">history</span>
-            Hoạt động mới
+            Recent activity
           </h2>
-          <button type="button" class="text-[11px] font-semibold text-sky-700 hover:underline">Xem tất cả</button>
+          <button type="button" class="text-[11px] font-semibold text-sky-700 hover:underline">View all</button>
         </div>
         <div class="space-y-3 text-xs">
           ${activities.map(act => `
@@ -192,8 +192,8 @@ export function renderDashboardRightCol(technicians, activities, warranty) {
             <span class="material-symbols-outlined text-[20px]">verified</span>
           </span>
           <div>
-            <div class="text-xs font-bold text-slate-800">Bảo hành linh kiện ${escapeHtml(warranty.month)}</div>
-            <div class="text-[11px] text-emerald-700 font-semibold">Tỷ lệ đổi trả tái sửa: ${warranty.rate} (${warranty.rating})</div>
+            <div class="text-xs font-bold text-slate-800">Parts warranty ${escapeHtml(warranty.month)}</div>
+            <div class="text-[11px] text-emerald-700 font-semibold">Repeat-repair return rate: ${warranty.rate} (${warranty.rating})</div>
           </div>
         </div>
         <span class="material-symbols-outlined text-slate-400 text-[18px]">chevron_right</span>
@@ -201,3 +201,4 @@ export function renderDashboardRightCol(technicians, activities, warranty) {
     </div>
   `;
 }
+

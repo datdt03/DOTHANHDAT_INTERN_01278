@@ -1,0 +1,46 @@
+@startuml repairflow-c4-component
+!include <C4/C4_Component>
+
+LAYOUT_TOP_DOWN()
+title RepairFlow — C4 Component View (Backend / API)
+
+Container(internalUi, "Internal Web UI", "HTML / CSS / JavaScript", "Dashboard và repair-order workspace")
+Container(customerUi, "Customer Link UI", "HTML / CSS / JavaScript", "Public customer link")
+
+System_Boundary(repairflow, "RepairFlow") {
+    Container_Boundary(api, "Backend / API — FastAPI modular monolith") {
+        Component(identity, "Identity and Management Session", "FastAPI module", "Owner/Manager session, workspace context và permission")
+        Component(order, "Repair Order Lifecycle", "FastAPI module", "Create order, assignment, state transition và validation")
+        Component(evidence, "Evidence and Diagnosis", "FastAPI module", "Intake evidence, diagnosis và technical notes")
+        Component(quote, "Quote and Customer Decision", "FastAPI module", "Quote version, public link, approve/reject và immutable snapshot")
+        Component(execution, "Repair Execution and Quality Check", "FastAPI module", "Work log, repair checklist và QC result")
+        Component(handover, "Handover and Warranty", "FastAPI module", "Handover record, warranty activation và history")
+        Component(audit, "Audit and Timeline", "FastAPI module", "Status history, audit log và timeline projection")
+    }
+    ContainerDb(database, "PostgreSQL", "PostgreSQL 18", "Nguồn dữ liệu nghiệp vụ")
+}
+
+Rel(internalUi, identity, "Management request")
+Rel(internalUi, order, "Repair-order actions")
+Rel(internalUi, evidence, "Evidence / diagnosis")
+Rel(internalUi, quote, "Quote actions")
+Rel(internalUi, execution, "Repair / QC actions")
+Rel(internalUi, handover, "Handover actions")
+Rel(customerUi, quote, "Public decision request")
+
+Rel(identity, order, "Workspace and permission context")
+Rel(order, evidence, "Order context")
+Rel(evidence, quote, "Diagnosis input")
+Rel(quote, execution, "Approved quote gate")
+Rel(execution, handover, "Passed QC gate")
+Rel(order, audit, "State event")
+Rel(evidence, audit, "Evidence event")
+Rel(quote, audit, "Quote / decision event")
+Rel(execution, audit, "Work / QC event")
+Rel(handover, audit, "Handover / warranty event")
+Rel(order, database, "Persist workflow data")
+Rel(quote, database, "Persist quote / decision")
+Rel(audit, database, "Persist history / audit")
+
+SHOW_LEGEND()
+@enduml

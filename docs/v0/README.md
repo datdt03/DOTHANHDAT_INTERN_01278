@@ -1,44 +1,44 @@
-# RepairFlow — Documentation v0
+# RepairFlow — v0 Documentation
 
-## Vai trò
+## Role
 
-`docs/v0/` là nơi lưu toàn bộ thông tin thảo luận, phân tích nghiệp vụ, phạm vi và quyết định đã được chốt cho giai đoạn v0 của RepairFlow.
+\`docs/v0/\` contains the product discussion, business analysis, scope, and decisions for RepairFlow phase v0.
 
-Đây là nguồn tham chiếu để viết plan triển khai khi người dùng yêu cầu. Nội dung trong thư mục này không phải là task triển khai cho LLM và chưa phải API contract hoặc release handoff.
+It is the reference used to create implementation plans when the user requests them. These documents are not LLM task instructions, API contracts, or release handoffs.
 
-Luôn đọc [docs/README.md](../README.md) trước để biết quy tắc phân phase và
-quy trình LLM phải tuân thủ khi đọc/viết tài liệu.
+Always read [docs/README.md](../README.md) first to understand phase boundaries and the documentation workflow.
 
-## Trạng thái v0
+## v0 status
 
-- **Phase status:** `OPEN — Gate D0 chưa đạt`.
-- Sản phẩm đang ở giai đoạn phân tích và chốt yêu cầu; chưa mở business cluster C1–C10.
-- FastAPI, PostgreSQL và SQL migration hiện tại mới là nền tảng kỹ thuật local.
-- C0 đã có health endpoint, PostgreSQL 18-alpine, 6 SQL migrations và test baseline 4 test pass.
-- C0 còn thiếu shared fixture convention, UI adapter boundary và mock/runtime boundary.
-- C1–C10 chưa triển khai business flow; UI vẫn đang ở prototype/mock baseline.
-- Decision backlog hiện có 73 dòng: 44 P0 và 29 P1 chưa được đóng chính thức.
-- Định hướng access cấp cao đã rõ: chỉ Owner/Manager đăng nhập; Customer, Receptionist và Technician không có tài khoản riêng. Các policy chi tiết vẫn cần chốt trong decision backlog.
-- Không được tự tạo API contract, API handoff hoặc release documentation mới khi chưa có yêu cầu và quyết định tương ứng.
+- **Phase status:** \`OPEN — Gate D0 is not achieved\`.
+- Product is still in requirements analysis and closure; business clusters C1–C10 are not open.
+- FastAPI, PostgreSQL, and SQL migrations are currently local technical foundations.
+- C0 has a health endpoint, PostgreSQL 18-alpine, six SQL migrations, and a four-test baseline.
+- C0 still needs a shared fixture convention, UI adapter boundary, and mock/runtime boundary.
+- C1–C10 business flows are not implemented; the UI remains a prototype/mock baseline.
+- The decision backlog has 73 items: 44 P0 and 29 P1 items without formal closure.
+- The high-level access direction is confirmed: only Owner/Manager can log in; Customer, Receptionist, and Technician do not have separate accounts. Detailed policies remain in the decision backlog.
+- Do not create an API contract, API handoff, or release documentation without a specific request and the corresponding decision.
 
-## Tài liệu active
+## Active documents
 
-| File | Nội dung |
+| File | Contents |
 | --- | --- |
-| [requirements-closure.md](./requirements-closure.md) | Danh sách vấn đề còn thiếu, decision backlog và Gate D0. |
-| [usecase.md](./usecase.md) | User story, persona, main flow, alternative flow và acceptance baseline. |
-| [architecture-and-requirements.md](./architecture-and-requirements.md) | Vai trò, access model, business rule, state machine và kiến trúc định hướng. |
-| [database-requirements.md](./database-requirements.md) | Mô hình dữ liệu, ERD, constraint, index và transaction định hướng. |
-| [ui-requirements.md](./ui-requirements.md) | Màn hình, UX flow, UI state và acceptance baseline. |
+| [requirements-closure.md](./requirements-closure.md) | Open issues, decision backlog, and Gate D0. |
+| [usecase.md](./usecase.md) | User stories, personas, main flows, alternative flows, and acceptance baseline. |
+| [architecture-c4-arc42.md](./architecture-c4-arc42.md) | Canonical architecture narrative using arc42 sections and PlantUML C4 views. |
+| [architecture-and-requirements.md](./architecture-and-requirements.md) | Roles, access model, business rules, state machine, and target architecture. |
+| [database-requirements.md](./database-requirements.md) | Data model, ERD, constraints, indexes, and transaction guidance. |
+| [ui-requirements.md](./ui-requirements.md) | Screens, UX flows, UI states, and acceptance baseline. |
 
-## Quy tắc chuyển giai đoạn
+## Phase transitions
 
-- Chỉ tạo `docs/v1/` khi người dùng yêu cầu chốt hoặc mở giai đoạn v1.
-- Mỗi giai đoạn mới phải có thư mục riêng và không ghi đè lịch sử của v0.
-- Chỉ đưa decision đã được người dùng chốt vào tài liệu active của giai đoạn.
-- Nội dung chưa chốt phải nằm trong decision backlog, không được biến thành contract/API requirement bắt buộc.
-- Khi cần triển khai, tạo file trong `plans/` chỉ sau khi người dùng yêu cầu; plan phải chỉ chứa task triển khai để LLM thực hiện.
+- Create \`docs/v1/\` only when the user explicitly opens or approves phase v1.
+- Each new phase gets its own directory and must not overwrite v0 history.
+- Add only Product-approved decisions to active phase documentation.
+- Keep unresolved content in the decision backlog; do not convert it into a mandatory contract or API requirement.
+- Create files in \`plans/\` only when the user asks for implementation instructions.
 
 ## Archive
 
-`archive/` chỉ giữ các bản nháp cũ để tham chiếu và không phải nguồn sự thật. LLM không được dùng các file archive để tự suy ra API, release status hoặc business rule mới.
+\`archive/\` contains old drafts for historical reference only. It is not a source of truth. LLMs must not use archived files to infer new API behavior, release status, or business rules.

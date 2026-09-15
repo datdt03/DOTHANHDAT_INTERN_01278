@@ -11,9 +11,9 @@ export function setupDetailActions(container, order, onOrderUpdated) {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(customerLink).then(() => {
-      showToast('Đã sao chép link khách hàng vào bộ nhớ tạm!', 'success');
+      showToast('Customer link copied to clipboard.', 'success');
     }).catch(() => {
-      showToast('Vui lòng sao chép link trực tiếp trong ô nhập!', 'warning');
+      showToast('Please copy the link directly from the input.', 'warning');
     });
   };
 
@@ -28,9 +28,9 @@ export function setupDetailActions(container, order, onOrderUpdated) {
   const resendBtn = container.querySelector('#btn-resend-zns');
   if (resendBtn) {
     resendBtn.addEventListener('click', () => {
-      showToast('Đang gửi tin Zalo ZNS và SMS tới khách...', 'info');
+      showToast('Sending the link to the customer...', 'info');
       setTimeout(() => {
-        showToast(`Đã gửi lại link duyệt báo giá tới ${order.customer.phone} thành công!`, 'success');
+        showToast(`Approval link resent to ${order.customer.phone} successfully!`, 'success');
       }, 600);
     });
   }
@@ -40,18 +40,18 @@ export function setupDetailActions(container, order, onOrderUpdated) {
   if (phoneApproveBtn) {
     phoneApproveBtn.addEventListener('click', () => {
       showModal({
-        title: 'Xác nhận khách duyệt qua điện thoại',
+        title: 'Confirm customer approval by phone',
         contentHtml: `
-          <p class="text-xs text-slate-600 mb-2">Bạn đang xác nhận thay cho khách hàng <strong>${order.customer.name}</strong> rằng khách đã đồng ý toàn bộ chi phí sửa chữa qua cuộc gọi ghi âm.</p>
+          <p class="text-xs text-slate-600 mb-2">You are confirming on behalf of customer <strong>${order.customer.name}</strong> that the customer approved the full repair cost during a recorded call.</p>
           <div class="p-2.5 rounded bg-amber-50 text-amber-900 border border-amber-200 text-xs font-medium">
-            ⚠️ Trạng thái sẽ chuyển ngay sang <strong>Đã duyệt</strong> và mở khóa công đoạn sửa chữa.
+            ⚠️ The status will immediately change to <strong>Approved</strong> and unlock the repair stage.
           </div>
         `,
-        confirmText: 'Xác nhận duyệt',
-        cancelText: 'Hủy',
+        confirmText: 'Confirm approval',
+        cancelText: 'Cancel',
         onConfirm: async () => {
-          await approveQuote(order.id, 'Nhân viên tư vấn (Qua cuộc gọi điện thoại)');
-          showToast('Đã ghi nhận phê duyệt báo giá từ khách hàng!', 'success');
+          await approveQuote(order.id, 'Consultant (phone approval)');
+          showToast('Customer quotation approval recorded.', 'success');
           onOrderUpdated();
         }
       });
@@ -63,18 +63,18 @@ export function setupDetailActions(container, order, onOrderUpdated) {
   if (rejectBtn) {
     rejectBtn.addEventListener('click', () => {
       showModal({
-        title: 'Xác nhận khách từ chối sửa chữa',
+        title: 'Confirm customer repair rejection',
         contentHtml: `
-          <p class="text-xs text-slate-600 mb-2">Vui lòng xác nhận khách hàng <strong>${order.customer.name}</strong> muốn hủy phiếu sửa chữa này.</p>
-          <textarea id="modal-reject-reason" class="w-full p-2 border border-slate-300 rounded text-xs" placeholder="Nhập lý do từ chối (ví dụ: Chi phí cao, đổi ý mua máy mới...)">Khách không đồng ý chi phí thay linh kiện Zin</textarea>
+          <p class="text-xs text-slate-600 mb-2">Please confirm that customer <strong>${order.customer.name}</strong> wants to cancel this repair order.</p>
+          <textarea id="modal-reject-reason" class="w-full p-2 border border-slate-300 rounded text-xs" placeholder="Enter a rejection reason (for example: cost too high, changed plans...)">Customer did not approve the genuine-part replacement cost</textarea>
         `,
-        confirmText: 'Ghi nhận từ chối',
-        cancelText: 'Đóng',
+        confirmText: 'Record rejection',
+        cancelText: 'Close',
         onConfirm: async () => {
           const reasonInput = document.querySelector('#modal-reject-reason');
-          const reason = reasonInput ? reasonInput.value : 'Khách từ chối sửa chữa';
+          const reason = reasonInput ? reasonInput.value : 'Customer rejected the repair';
           await rejectQuote(order.id, reason);
-          showToast('Đã cập nhật trạng thái phiếu: Khách từ chối sửa chữa.', 'warning');
+          showToast('Order status updated: customer rejected the repair.', 'warning');
           onOrderUpdated();
         }
       });
@@ -84,23 +84,23 @@ export function setupDetailActions(container, order, onOrderUpdated) {
   // Create Quote Version v2.0
   const handleCreateV2 = () => {
     showModal({
-      title: 'Tạo phiên bản báo giá mới',
+      title: 'Create a new quotation version',
       contentHtml: `
         <div class="space-y-3 text-xs text-slate-600">
-          <p>Khi tạo phiên bản báo giá mới, báo giá cũ sẽ được lưu trữ lịch sử để kiểm toán. Khách hàng sẽ nhận thông báo duyệt lại phiên bản mới.</p>
+          <p>When a new quotation version is created, the old version remains in history for audit. The customer must review the new version again.</p>
           <div>
-            <label class="font-bold text-slate-700 block mb-1">Ghi chú thay đổi cho bản mới:</label>
-            <textarea id="modal-quote-v2-notes" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs" rows="3" placeholder="Ví dụ: Giảm 100.000 đ hỗ trợ khách, thay đổi loại màn hình...">Điều chỉnh ưu đãi thêm cho khách hàng thân thiết.</textarea>
+            <label class="font-bold text-slate-700 block mb-1">Change note for the new version:</label>
+            <textarea id="modal-quote-v2-notes" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs" rows="3" placeholder="For example: apply a customer discount or change the screen type...">Additional loyalty-customer discount applied.</textarea>
           </div>
         </div>
       `,
-      confirmText: 'Phát hành bản mới',
-      cancelText: 'Hủy',
+      confirmText: 'Publish new version',
+      cancelText: 'Cancel',
       onConfirm: async () => {
         const notes = document.querySelector('#modal-quote-v2-notes')?.value || '';
         const currentItems = order.quoteVersions[0]?.items || [];
         await createQuoteVersion(order.id, currentItems, notes);
-        showToast('Đã tạo phiên bản báo giá mới thành công!', 'success');
+        showToast('New quotation version created successfully.', 'success');
         onOrderUpdated();
       }
     });
@@ -124,7 +124,8 @@ export function setupDetailActions(container, order, onOrderUpdated) {
       e.currentTarget.classList.remove('border-transparent', 'text-slate-500');
 
       const targetTab = e.currentTarget.dataset.tab;
-      showToast(`Chuyển sang tab: ${e.currentTarget.innerText.trim()}`, 'info', 1200);
+      showToast(`Switched to tab: ${e.currentTarget.innerText.trim()}`, 'info', 1200);
     });
   });
 }
+
