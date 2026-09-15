@@ -86,8 +86,11 @@ Sơ đồ chỉ giữ các actor chính và các mục tiêu nghiệp vụ lớn
 Backend/API, Object Storage hoặc các chi tiết kỹ thuật. Account của Receptionist
 và Technician là tùy chọn, còn staff profile không có account vẫn có thể được
 chọn để attribution khi Owner/Manager thao tác thay. Các đường nối trong
-overview là liên kết đại diện để giữ bố cục dễ đọc; ma trận quyền ở mục 3.2
-mới là nơi quy định đầy đủ phạm vi của từng actor.
+overview biểu diễn những quan hệ actor–use case chính; quyền dùng chung, phạm
+vi assignment và các quyền đọc hỗ trợ được quy định đầy đủ tại ma trận mục
+3.2. `Thực hiện sửa chữa`, `Kiểm tra chất lượng` và `Bàn giao & bảo hành` được
+tách riêng để nhận diện đúng trách nhiệm; điều kiện chuyển bước nằm ở tài liệu
+business/domain.
 
 ![RepairFlow Use Case Overview](./architecture/repairflow-usecase-overview.png)
 

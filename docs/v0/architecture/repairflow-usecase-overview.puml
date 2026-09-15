@@ -1,6 +1,6 @@
 @startuml repairflow-usecase-overview
 
-left to right direction
+top to bottom direction
 skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam linetype ortho
@@ -38,32 +38,30 @@ rectangle "RepairFlow" {
     }
 }
 
-' Liên kết thể hiện actor có thể trực tiếp thực hiện use case.
+' Liên kết thể hiện các nhánh nghiệp vụ chính của từng actor.
 management --> access
 management --> monitor
 management --> history
-management --> intake
 management --> diagnosis
-management --> publish
-management --> repair
 management --> quality
-management --> handover
 
-receptionist --> access
-receptionist --> monitor
-receptionist --> history
 receptionist --> intake
 receptionist --> publish
 receptionist --> handover
 
-technician --> access
-technician --> monitor
-technician --> history
-technician --> intake
 technician --> diagnosis
 technician --> repair
 technician --> quality
 
 customer --> decision
+
+legend bottom
+|= Actor |= Phạm vi chính |
+| Owner / Manager | Điều phối toàn bộ vận hành và xử lý ngoại lệ |
+| Receptionist | Tiếp nhận, phát hành link và bàn giao theo quyền |
+| Technician | Chẩn đoán, sửa chữa và kiểm tra chất lượng theo assignment |
+| Customer | Xem và quyết định báo giá qua public link |
+| | Account staff là tùy chọn; profile chưa có account không có session |
+endlegend
 
 @enduml
