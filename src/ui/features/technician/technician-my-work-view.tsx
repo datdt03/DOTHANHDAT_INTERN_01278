@@ -4,6 +4,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   StatusBadge,
+  IconAlert,
 } from '../../shared/components';
 
 interface TechnicianTask {
@@ -166,7 +167,10 @@ export function TechnicianMyWorkView() {
                   <td>
                     <p className="task-issue">{task.issue}</p>
                     {task.blockedReason && (
-                      <span className="blocked-hint">⚠ {task.blockedReason}</span>
+                      <span className="blocked-hint">
+                        <IconAlert size={12} style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: '4px' }} />
+                        {task.blockedReason}
+                      </span>
                     )}
                   </td>
                   <td>

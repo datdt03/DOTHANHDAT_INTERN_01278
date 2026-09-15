@@ -19,6 +19,11 @@ import {
   SkeletonLoader,
   PrimaryButton,
   SecondaryButton,
+  IconOrders,
+  IconHourglass,
+  IconAlert,
+  IconCheck,
+  IconLookup,
 } from '../../shared/components';
 
 interface SampleRow {
@@ -227,28 +232,28 @@ export function ComponentShowcaseView() {
             label="Tổng tiếp nhận hôm nay"
             value="18 đơn"
             sub="↑ Tăng 12% so với hôm qua"
-            icon="📋"
+            icon={<IconOrders size={20} />}
           />
           <StatCard
             variant="warning"
             label="Chờ khách duyệt giá"
             value="05 đơn"
             sub="Ưu tiên gọi điện chốt"
-            icon="⏳"
+            icon={<IconHourglass size={20} />}
           />
           <StatCard
             variant="danger"
             label="Cảnh báo SLA (< 1h)"
             value="02 đơn"
             sub="Cần bàn giao trước 17:30"
-            icon="⚡"
+            icon={<IconAlert size={20} />}
           />
           <StatCard
             variant="success"
             label="Sẵn sàng trả khách"
             value="09 máy"
             sub="Doanh thu tạm tính: 14.8M"
-            icon="✅"
+            icon={<IconCheck size={20} />}
           />
         </div>
       </section>
@@ -456,7 +461,7 @@ export function ComponentShowcaseView() {
         <CardPanel>
           <CardPanelBody>
             <EmptyState
-              icon="🔍"
+              icon={<IconLookup size={32} />}
               title="Không tìm thấy thiết bị cần tra cứu"
               description="Hãy kiểm tra lại số điện thoại hoặc mã biên nhận (VD: ORD-2026-xxxx) đã nhập."
               action={

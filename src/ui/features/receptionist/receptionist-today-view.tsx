@@ -4,6 +4,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   StatusBadge,
+  IconLookup,
 } from '../../shared/components';
 
 interface LookupResult {
@@ -134,7 +135,8 @@ export function ReceptionistTodayView() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <PrimaryButton type="submit">
-                <span aria-hidden="true">⌕</span> Tra cứu ngay
+                <IconLookup size={14} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: '6px' }} />
+                Tra cứu ngay
               </PrimaryButton>
             </form>
           </section>

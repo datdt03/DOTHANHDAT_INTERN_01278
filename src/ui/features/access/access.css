@@ -13,11 +13,12 @@
 
 .login-container {
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   background-color: var(--rf-surface);
   border: 1px solid var(--rf-border);
   border-radius: var(--rf-radius-lg);
   padding: 36px 32px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
 }
 
 .login-header {
@@ -25,7 +26,21 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+}
+
+.login-workspace-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: var(--rf-bg-subtle);
+  border: 1px solid var(--rf-border);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rf-text-muted);
+  margin-top: 10px;
 }
 
 .login-title {
@@ -45,7 +60,7 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .form-group {
@@ -83,34 +98,86 @@
   color: var(--rf-text-disabled);
 }
 
+/* UI-A02 Alert (Invalid Credential / Generic Error) */
 .login-alert {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
-  background-color: var(--rf-status-rework-bg);
-  border: 1px solid var(--rf-status-rework-border);
+  gap: 10px;
+  padding: 12px 14px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: var(--rf-radius-md);
-  color: var(--rf-status-rework-text);
-  font-size: 12px;
+  color: #991b1b;
+  font-size: 12.5px;
   line-height: 1.4;
 }
 
+.login-alert__icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* UI-A03 Notice (Session Expired / Account Locked) */
+.login-expired-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--rf-radius-md);
+  color: #92400e;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.login-expired-banner__icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.login-expired-banner__content {
+  flex: 1;
+}
+
+.login-expired-banner__close {
+  background: none;
+  border: none;
+  color: #92400e;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.login-expired-banner__close:hover {
+  opacity: 1;
+}
+
+/* Quick Demo Login Grid */
 .quick-login-section {
-  margin-top: 28px;
-  padding-top: 24px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid var(--rf-border);
 }
 
+.quick-login-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .quick-login-label {
-  display: block;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--rf-text-muted);
-  margin-bottom: 12px;
-  text-align: center;
 }
 
 .quick-login-grid {
@@ -124,20 +191,39 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  height: 38px;
+  height: 42px;
   padding: 0 14px !important;
-  font-size: 12px !important;
+  font-size: 12.5px !important;
   font-weight: 500 !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.quick-login-btn:hover {
+  border-color: var(--rf-primary) !important;
+  background-color: var(--rf-bg-subtle) !important;
+}
+
+.quick-login-btn__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .quick-login-btn__role {
-  color: var(--rf-text-muted);
-  font-size: 11px;
-}
-
-.quick-login-btn__name {
   color: var(--rf-text-main);
   font-weight: 600;
+  font-size: 12.5px;
+}
+
+.quick-login-btn__email {
+  color: var(--rf-text-muted);
+  font-size: 11.5px;
+  font-family: var(--rf-font-mono);
+}
+
+.quick-login-btn__arrow {
+  color: var(--rf-primary);
+  font-weight: 700;
 }
 
 .login-footer-note {
@@ -147,7 +233,110 @@
 
 .login-footer-note p {
   margin: 0;
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.5;
-  color: var(--rf-text-subtle);
+  color: var(--rf-text-muted);
+}
+
+.login-nav-links {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.login-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rf-primary);
+  text-decoration: none;
+}
+
+.login-nav-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================================
+   UI-403 Forbidden State Component Styling
+   ========================================================================= */
+
+.rf-forbidden-container {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+}
+
+.rf-forbidden-card {
+  max-width: 480px;
+  width: 100%;
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+}
+
+.rf-forbidden-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 9999px;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--rf-font-mono);
+  margin-bottom: 16px;
+}
+
+.rf-forbidden-icon {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.rf-forbidden-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--rf-text-main);
+  letter-spacing: -0.02em;
+}
+
+.rf-forbidden-desc {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--rf-text-muted);
+}
+
+.rf-forbidden-route {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: var(--rf-bg-subtle);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  font-size: 12px;
+  color: var(--rf-text-body);
+  margin-bottom: 24px;
+}
+
+.rf-forbidden-route code {
+  font-family: var(--rf-font-mono);
+  color: var(--rf-primary);
+  font-weight: 600;
+}
+
+.rf-forbidden-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

@@ -4,6 +4,7 @@ import {
   AppFooter,
   AppHeader,
   AppSidebar,
+  ForbiddenState,
   TextButton,
 } from '../shared/components';
 import { ManagerDashboardView } from '../features/dashboard/manager-dashboard-view';
@@ -26,34 +27,90 @@ function PreviewNotice({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
-  const { currentUser, switchRole, logout } = useSession();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState(() => {
-    if (window.location.hash === '#/showcase' || window.location.hash === '#showcase') {
-      return 'Thư viện UI';
+function resolveNavLabelFromHash(hash: string, role: UserRole): string {
+  const clean = hash.replace(/\/$/, '');
+  if (clean === '#/showcase' || clean === '#showcase') return 'Thư viện UI';
+  if (clean === '#/settings') return 'Quản trị';
+  if (clean === '#/lookup') return 'Tra cứu tiến độ';
+  if (clean === '#/today') return 'Hôm nay';
+  if (clean === '#/my-work') return 'Hàng chờ công việc';
+  if (clean === '#/orders') return 'Phiếu sửa chữa';
+  if (clean === '#/customers') return 'Khách hàng';
+  if (clean === '#/devices') return 'Thiết bị & lịch sử';
+  if (clean === '#/reception-queue') return 'Hàng chờ tiếp nhận';
+  if (clean === '#/assigned-orders') return 'Phiếu được phân công';
+
+  // Default per role
+  if (role === 'receptionist') return 'Hôm nay';
+  if (role === 'technician') return 'Hàng chờ công việc';
+  return 'Tổng quan';
+}
+
+function isRoutePermitted(role: UserRole, hash: string): boolean {
+  const clean = hash.replace(/\/$/, '');
+  if (!clean || clean === '#/login' || clean === '#/showcase' || clean.startsWith('#/customer')) {
+    return true;
+  }
+
+  // Manager has workspace-wide access
+  if (role === 'manager') return true;
+
+  // Receptionist is forbidden from Settings and direct Management dashboard
+  if (role === 'receptionist') {
+    if (clean === '#/settings' || clean === '#/dashboard') return false;
+    return true;
+  }
+
+  // Technician is forbidden from Settings, Management dashboard, Reception today/lookup
+  if (role === 'technician') {
+    if (
+      clean === '#/settings' ||
+      clean === '#/dashboard' ||
+      clean === '#/today' ||
+      clean === '#/lookup' ||
+      clean === '#/reception-queue'
+    ) {
+      return false;
     }
-    return 'Tổng quan';
-  });
+    return true;
+  }
+
+  return true;
+}
+
+export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
+  const { currentUser, switchRole, logout, simulateSessionExpired, capabilities } = useSession();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [currentHash, setCurrentHash] = useState(() => window.location.hash);
 
   const currentRole = currentUser?.role || 'manager';
 
-  // Listen to hash changes for direct URL jumping
+  // Synchronize hash changes
   useEffect(() => {
     const handleHash = () => {
-      if (window.location.hash === '#/showcase' || window.location.hash === '#showcase') {
-        setActiveNav('Thư viện UI');
-      }
+      setCurrentHash(window.location.hash);
     };
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
+  const activeNav = resolveNavLabelFromHash(currentHash, currentRole);
+  const isPermitted = isRoutePermitted(currentRole, currentHash);
+
+  const handleSelectNav = (label: string) => {
+    // Label click triggers hash change handled in AppSidebar
+  };
+
+  const handleGoHome = () => {
+    const homeRoute = capabilities?.defaultRoute || '#/dashboard';
+    window.location.hash = homeRoute;
+  };
+
   return (
     <div className="app-layout">
       <AppSidebar
         activeItem={activeNav}
-        onSelect={setActiveNav}
+        onSelect={handleSelectNav}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
         userName={currentUser?.name}
@@ -61,10 +118,10 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
         userInitials={currentUser?.initials}
         currentRole={currentRole}
         onSwitchRole={(r: UserRole) => {
-          switchRole(r);
-          setActiveNav(r === 'manager' ? 'Tổng quan' : r === 'receptionist' ? 'Hôm nay' : 'Hàng chờ');
+          void switchRole(r);
         }}
         onLogout={logout}
+        onSimulateTimeout={() => simulateSessionExpired()}
       />
 
       <div className="app-main">
@@ -83,14 +140,26 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
         <main className="page-content">
           {previewMode && <PreviewNotice onRetry={onRetry} />}
 
-          {/* Dynamic Landing Screen by Persona / Role or Showcase */}
-          {activeNav === 'Thư viện UI' ? (
-            <ComponentShowcaseView />
+          {/* UI-403: Forbidden State when user accesses an unauthorized route */}
+          {!isPermitted ? (
+            <ForbiddenState
+              roleTitle={currentUser?.roleTitle}
+              attemptedRoute={currentHash}
+              onGoHome={handleGoHome}
+              onLogout={logout}
+            />
           ) : (
             <>
-              {currentRole === 'manager' && <ManagerDashboardView />}
-              {currentRole === 'receptionist' && <ReceptionistTodayView />}
-              {currentRole === 'technician' && <TechnicianMyWorkView />}
+              {/* Dynamic View by Route & Persona */}
+              {activeNav === 'Thư viện UI' ? (
+                <ComponentShowcaseView />
+              ) : (
+                <>
+                  {currentRole === 'manager' && <ManagerDashboardView />}
+                  {currentRole === 'receptionist' && <ReceptionistTodayView />}
+                  {currentRole === 'technician' && <TechnicianMyWorkView />}
+                </>
+              )}
             </>
           )}
         </main>

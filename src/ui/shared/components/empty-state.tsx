@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { IconInbox } from './icons';
 
 export interface EmptyStateProps {
   icon?: ReactNode;
@@ -9,7 +10,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = '📭',
+  icon = <IconInbox size={32} />,
   title,
   description,
   action,

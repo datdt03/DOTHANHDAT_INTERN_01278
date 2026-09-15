@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { IconButton } from './ui-primitives';
+import { IconLookup } from './icons';
 
 export interface BreadcrumbItem {
   label: string;
@@ -57,7 +58,7 @@ export function AppHeader({
       </nav>
 
       <label className="global-search">
-        <span aria-hidden="true">⌕</span>
+        <IconLookup size={15} aria-hidden="true" />
         <input
           placeholder={searchPlaceholder}
           onChange={(e) => onSearchChange?.(e.target.value)}

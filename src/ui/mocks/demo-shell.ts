@@ -6,11 +6,11 @@ export interface DemoNavItem {
 }
 
 export const demoNavItems: DemoNavItem[] = [
-  { label: 'Tổng quan', shortLabel: 'Tổng quan', icon: '⌂', active: true },
-  { label: 'Đơn sửa chữa', shortLabel: 'Đơn', icon: '▣' },
-  { label: 'Hàng chờ công việc', shortLabel: 'Công việc', icon: '✓' },
-  { label: 'Tra cứu nhanh', shortLabel: 'Tra cứu', icon: '⌕' },
-  { label: 'Khách hàng', shortLabel: 'Khách hàng', icon: '♧' },
+  { label: 'Tổng quan', shortLabel: 'Tổng quan', icon: 'overview', active: true },
+  { label: 'Đơn sửa chữa', shortLabel: 'Đơn', icon: 'orders' },
+  { label: 'Hàng chờ công việc', shortLabel: 'Công việc', icon: 'queue' },
+  { label: 'Tra cứu nhanh', shortLabel: 'Tra cứu', icon: 'lookup' },
+  { label: 'Khách hàng', shortLabel: 'Khách hàng', icon: 'customers' },
 ];
 
 export const demoMetrics = [

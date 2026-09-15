@@ -1,54 +1,100 @@
 import { useState, type FormEvent } from 'react';
 import { useSession, DEMO_STAFF_ACCOUNTS, type UserRole } from '../../app/session-context';
-import { BrandMark, PrimaryButton, SecondaryButton } from '../../shared/components';
+import {
+  BrandMark,
+  IconAlert,
+  IconArrowRight,
+  IconDevices,
+  IconHourglass,
+  IconPalette,
+  IconStore,
+  PrimaryButton,
+  SecondaryButton,
+} from '../../shared/components';
 
 export function LoginPage() {
-  const { login, quickLogin } = useSession();
+  const { login, quickLogin, sessionNotice, clearSessionNotice } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!email.trim()) {
-      setError('Vui lòng nhập địa chỉ email.');
+      setError('Vui lòng nhập địa chỉ email tài khoản.');
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('Vui lòng nhập mật khẩu.');
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const success = login(email);
-      if (!success) {
-        setError('Email hoặc mật khẩu không chính xác. Hãy chọn tài khoản mẫu bên dưới.');
-      }
-      setIsSubmitting(false);
-    }, 250);
+    const result = await login(email, password);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.errorMessage || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.');
+    }
+  };
+
+  const simulateError = () => {
+    setError('Email hoặc mật khẩu không chính xác. (Mô phỏng lỗi xác thực UI-A02)');
   };
 
   return (
     <div className="login-layout">
       <div className="login-container">
-        {/* Brand Lockup */}
+        {/* Brand Lockup & Workspace Identification */}
         <div className="login-header">
           <BrandMark />
+          <div className="login-workspace-badge">
+            <IconStore size={13} aria-hidden="true" />
+            <span>Cửa hàng: Minh Tâm Store</span>
+          </div>
           <h1 className="login-title">Đăng nhập RepairFlow</h1>
           <p className="login-subtitle">Hệ thống điều hành xưởng và quản lý sửa chữa</p>
         </div>
 
-        {/* Login Form */}
-        <form className="login-form" onSubmit={handleSubmit}>
+        {/* UI-A03: Session Expired or Account Locked Notice */}
+        {sessionNotice && (
+          <div className="login-expired-banner" role="alert">
+            <span className="login-expired-banner__icon" aria-hidden="true">
+              <IconHourglass size={15} />
+            </span>
+            <div className="login-expired-banner__content">
+              <strong>Thông báo phiên làm việc:</strong> {sessionNotice}
+            </div>
+            <button
+              type="button"
+              className="login-expired-banner__close"
+              onClick={clearSessionNotice}
+              aria-label="Đóng thông báo"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* UI-A01 & UI-A02: Login Form */}
+        <form className="login-form" onSubmit={handleSubmit} noValidate>
           {error && (
             <div className="login-alert" role="alert">
-              <span className="login-alert__icon" aria-hidden="true">⚠</span>
+              <span className="login-alert__icon" aria-hidden="true">
+                <IconAlert size={15} />
+              </span>
               <span>{error}</span>
             </div>
           )}
 
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email tài khoản</label>
+            <label htmlFor="email" className="form-label">
+              Email tài khoản
+            </label>
             <input
               id="email"
               type="email"
@@ -57,11 +103,14 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="username"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password" className="form-label">Mật khẩu</label>
+            <label htmlFor="password" className="form-label">
+              Mật khẩu
+            </label>
             <input
               id="password"
               type="password"
@@ -70,6 +119,7 @@ export function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="current-password"
             />
           </div>
 
@@ -78,9 +128,12 @@ export function LoginPage() {
           </PrimaryButton>
         </form>
 
-        {/* Quick Demo Logins for Testing / Preview Mode */}
+        {/* Quick Demo Logins for rapid testing & persona switching */}
         <div className="quick-login-section">
-          <span className="quick-login-label">Đăng nhập nhanh để kiểm thử giao diện</span>
+          <div className="quick-login-header">
+            <span className="quick-login-label">Đăng nhập nhanh theo vai trò (Demo)</span>
+          </div>
+
           <div className="quick-login-grid">
             {(Object.keys(DEMO_STAFF_ACCOUNTS) as UserRole[]).map((role) => {
               const account = DEMO_STAFF_ACCOUNTS[role];
@@ -89,36 +142,60 @@ export function LoginPage() {
                   key={role}
                   className="quick-login-btn"
                   onClick={() => quickLogin(role)}
+                  title={`Đăng nhập nhanh với vai trò ${account.roleTitle}`}
                 >
-                  <span className="quick-login-btn__role">{account.roleTitle}</span>
-                  <span className="quick-login-btn__name">{account.name}</span>
+                  <div className="quick-login-btn__left">
+                    <span className="avatar avatar--small" aria-hidden="true">
+                      {account.initials}
+                    </span>
+                    <div>
+                      <div className="quick-login-btn__role">{account.roleTitle}</div>
+                      <div className="quick-login-btn__email">{account.email}</div>
+                    </div>
+                  </div>
+                  <span className="quick-login-btn__arrow" aria-hidden="true">
+                    <IconArrowRight size={14} />
+                  </span>
                 </SecondaryButton>
               );
             })}
           </div>
-        </div>
 
-        {/* Customer note & Showcase Link */}
-        <div className="login-footer-note">
-          <p>
-            Khách hàng xem tiến độ qua liên kết riêng nhận qua SMS/Zalo.
-            Không đăng nhập tại cổng nội bộ này.
-          </p>
-          <div style={{ marginTop: '12px' }}>
-            <a
-              href="#/showcase"
+          {/* Test State Triggers */}
+          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={simulateError}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                color: 'var(--rf-primary)',
-                textDecoration: 'none',
+                background: 'none',
+                border: 'none',
+                color: 'var(--rf-text-muted)',
+                fontSize: '11px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
               }}
             >
-              <span>🎨</span>
-              <span>Xem Thư viện Component & Tiêu chuẩn Giao diện (#/showcase)</span>
+              Test lỗi UI-A02
+            </button>
+          </div>
+        </div>
+
+        {/* Public customer note & Showcase links */}
+        <div className="login-footer-note">
+          <p>
+            Khách hàng xem tiến độ sửa chữa qua liên kết bảo mật riêng nhận qua SMS/Zalo.
+            Không đăng nhập tại cổng nội bộ này.
+          </p>
+
+          <div className="login-nav-links">
+            <a href="#/customer/RF-2026-0891" className="login-nav-link">
+              <IconDevices size={13} aria-hidden="true" />
+              <span>Xem link Khách hàng</span>
+            </a>
+            <span style={{ color: 'var(--rf-border)' }}>•</span>
+            <a href="#/showcase" className="login-nav-link">
+              <IconPalette size={13} aria-hidden="true" />
+              <span>Thư viện UI (Showcase)</span>
             </a>
           </div>
         </div>

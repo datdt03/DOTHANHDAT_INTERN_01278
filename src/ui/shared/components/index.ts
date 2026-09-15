@@ -13,3 +13,5 @@ export * from './alert';
 export * from './modal';
 export * from './progress-stepper';
 export * from './empty-state';
+export * from './forbidden-state';
+export * from './icons';

@@ -1,54 +1,29 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  accessApi,
+  getRoleCapabilities,
+  type RoleCapabilities,
+  type UserProfile,
+  type UserRole,
+  DEMO_ACCOUNTS,
+} from '../shared/api/access-api';
 
-export type UserRole = 'manager' | 'receptionist' | 'technician';
+export type { UserRole, UserProfile };
+export type StaffProfile = UserProfile;
 
-export interface StaffProfile {
-  id: string;
-  name: string;
-  role: UserRole;
-  roleTitle: string;
-  email: string;
-  initials: string;
-  storeName: string;
-}
-
-export const DEMO_STAFF_ACCOUNTS: Record<UserRole, StaffProfile> = {
-  manager: {
-    id: 'staff-001',
-    name: 'Minh Tâm',
-    role: 'manager',
-    roleTitle: 'Quản lý vận hành',
-    email: 'minhtam@repairflow.vn',
-    initials: 'MT',
-    storeName: 'Minh Tâm Store',
-  },
-  receptionist: {
-    id: 'staff-002',
-    name: 'Thu Hà',
-    role: 'receptionist',
-    roleTitle: 'Lễ tân tiếp nhận',
-    email: 'thuha@repairflow.vn',
-    initials: 'TH',
-    storeName: 'Minh Tâm Store',
-  },
-  technician: {
-    id: 'staff-003',
-    name: 'Quốc Bảo',
-    role: 'technician',
-    roleTitle: 'Kỹ thuật viên trưởng',
-    email: 'quocbao@repairflow.vn',
-    initials: 'QB',
-    storeName: 'Minh Tâm Store',
-  },
-};
+export const DEMO_STAFF_ACCOUNTS = DEMO_ACCOUNTS;
 
 interface SessionContextValue {
   isAuthenticated: boolean;
-  currentUser: StaffProfile | null;
-  login: (email: string) => boolean;
-  quickLogin: (role: UserRole) => void;
-  logout: () => void;
-  switchRole: (role: UserRole) => void;
+  currentUser: UserProfile | null;
+  capabilities: RoleCapabilities | null;
+  sessionNotice: string | null;
+  clearSessionNotice: () => void;
+  login: (email: string, password?: string) => Promise<{ success: boolean; errorMessage?: string }>;
+  quickLogin: (role: UserRole) => Promise<void>;
+  logout: () => Promise<void>;
+  switchRole: (role: UserRole) => Promise<void>;
+  simulateSessionExpired: (customMessage?: string) => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -56,58 +31,81 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 const STORAGE_KEY = 'repairflow_active_session';
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<StaffProfile | null>(() => {
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+
+  // Initialize from storage or default to unauthenticated (Login Page by default)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
-      const savedRole = localStorage.getItem(STORAGE_KEY) as UserRole | null;
-      if (savedRole && DEMO_STAFF_ACCOUNTS[savedRole]) {
-        return DEMO_STAFF_ACCOUNTS[savedRole];
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.user && parsed.user.role) {
+          // Check expiration
+          if (parsed.expiresAt && new Date(parsed.expiresAt).getTime() < Date.now()) {
+            localStorage.removeItem(STORAGE_KEY);
+            return null;
+          }
+          return parsed.user;
+        }
       }
     } catch {
       // Ignore storage errors in restricted contexts
     }
-    // Default to manager session in preview mode
-    return DEMO_STAFF_ACCOUNTS.manager;
+    // Default to unauthenticated so users start at the Login page
+    return null;
   });
 
   const isAuthenticated = currentUser !== null;
+  const capabilities = currentUser ? getRoleCapabilities(currentUser.role) : null;
 
-  const quickLogin = (role: UserRole) => {
-    const profile = DEMO_STAFF_ACCOUNTS[role] || DEMO_STAFF_ACCOUNTS.manager;
-    setCurrentUser(profile);
-    try {
-      localStorage.setItem(STORAGE_KEY, role);
-    } catch {
-      // Ignore
+  const clearSessionNotice = () => setSessionNotice(null);
+
+  const login = async (
+    email: string,
+    password?: string
+  ): Promise<{ success: boolean; errorMessage?: string }> => {
+    setSessionNotice(null);
+    const result = await accessApi.login(email, password);
+
+    if (result.success && result.session) {
+      setCurrentUser(result.session.user);
+      // Navigate to the role's default entry route
+      window.location.hash = result.session.capabilities.defaultRoute;
+      return { success: true };
     }
+
+    return {
+      success: false,
+      errorMessage: result.errorMessage || 'Email hoặc mật khẩu không chính xác.',
+    };
   };
 
-  const login = (email: string): boolean => {
-    const found = Object.values(DEMO_STAFF_ACCOUNTS).find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase()
-    );
-    if (found) {
-      setCurrentUser(found);
-      try {
-        localStorage.setItem(STORAGE_KEY, found.role);
-      } catch {
-        // Ignore
-      }
-      return true;
-    }
-    return false;
+  const quickLogin = async (role: UserRole): Promise<void> => {
+    setSessionNotice(null);
+    const session = await accessApi.quickLogin(role);
+    setCurrentUser(session.user);
+    // Automatically redirect to the entry screen for this role
+    window.location.hash = session.capabilities.defaultRoute;
   };
 
-  const logout = () => {
+  const logout = async (): Promise<void> => {
+    await accessApi.logout();
     setCurrentUser(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore
-    }
+    setSessionNotice(null);
+    window.location.hash = '#/login';
   };
 
-  const switchRole = (role: UserRole) => {
-    quickLogin(role);
+  const switchRole = async (role: UserRole): Promise<void> => {
+    await quickLogin(role);
+  };
+
+  const simulateSessionExpired = (
+    customMessage = 'Phiên làm việc đã hết hạn sau 30 phút không hoạt động. Vui lòng đăng nhập lại.'
+  ) => {
+    accessApi.simulateTimeout();
+    setCurrentUser(null);
+    setSessionNotice(customMessage);
+    window.location.hash = '#/login';
   };
 
   return (
@@ -115,10 +113,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       value={{
         isAuthenticated,
         currentUser,
+        capabilities,
+        sessionNotice,
+        clearSessionNotice,
         login,
         quickLogin,
         logout,
         switchRole,
+        simulateSessionExpired,
       }}
     >
       {children}

@@ -30,7 +30,7 @@ interface RouteBoundaryProps {
 
 export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): ReactNode {
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
-  const { isAuthenticated } = useSession();
+  const { isAuthenticated, capabilities } = useSession();
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -39,6 +39,17 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Forward authenticated user away from #/login to their default entry route
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      (currentHash === '#/login' || !currentHash || currentHash === '#/' || currentHash === '#')
+    ) {
+      const defaultRoute = capabilities?.defaultRoute || '#/dashboard';
+      window.location.hash = defaultRoute;
+    }
+  }, [isAuthenticated, currentHash, capabilities]);
 
   const route = resolveRoute(currentHash);
 
