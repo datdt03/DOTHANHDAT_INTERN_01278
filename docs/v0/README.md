@@ -46,6 +46,7 @@ Read the active documents in this order:
 | 06 | [UI requirements](./06-ui-requirements.md) | `DECIDED — v0 baseline` | Screens, UX flows, UI states, and acceptance criteria. |
 | 07 | [Authentication and authorization](./07-authentication-and-authorization.md) | `DECIDED — minimum scope` | Account scope, role permissions, data visibility, and auth boundaries. |
 | 08 | [UI design blueprint and Stitch handoff](./08-ui-design-blueprint-and-stitch-handoff.md) | `DECIDED — UI direction and handoff baseline` | Visual screen inventory, Stitch prompt workflow, viewport targets, and Antigravity handoff. |
+| 09 | [UI standards and design system](./09-ui-standards-and-design-system.md) | `DECIDED — UI standards and design system baseline` | Tiêu chuẩn giao diện, bảng màu 85/15, shared layout components, và quy tắc dev UI. |
 
 Document status describes the state of the document. Requirement labels inside the documents must still use `DECIDED`, `OPEN`, `PROPOSED`, `DRAFT`, or `ARCHIVED` correctly.
 

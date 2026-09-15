@@ -1,30 +1,108 @@
 :root {
-  /* Brand & Primary Colors */
-  --rf-primary: #006194;
-  --rf-primary-hover: #004d77;
-  --rf-primary-active: #003a5b;
-  --rf-primary-container: #cce5ff;
-  --rf-on-primary-container: #001d31;
+  /* =========================================================================
+     1. Brand & Accent Colors (Sky / Tech Blue)
+     ========================================================================= */
+  --rf-primary: #0284c7;
+  --rf-primary-hover: #0369a1;
+  --rf-primary-active: #075985;
+  --rf-primary-subtle: #f0f9ff;
+  --rf-primary-border: #bae6fd;
+  --rf-primary-container: #e0f2fe;
+  --rf-on-primary-container: #0369a1;
 
-  /* Surfaces & Backgrounds */
-  --rf-bg: #f8faff;
+  /* Legacy & secondary primary tone */
+  --rf-brand: #0284c7;
+  --rf-brand-dark: #0369a1;
+  --rf-brand-soft: #f0f9ff;
+
+  /* =========================================================================
+     2. Surfaces & Neutral Backgrounds (Slate Palette)
+     ========================================================================= */
+  --rf-bg: #f8fafc;
+  --rf-bg-app: #f8fafc;
   --rf-surface: #ffffff;
-  --rf-surface-subtle: #f1f5f9;
-  --rf-surface-muted: #e2ecf9;
   --rf-surface-card: #ffffff;
-  
-  /* Text / Contrast */
-  --rf-text-main: #0f172a;
-  --rf-text-muted: #475569;
-  --rf-text-secondary: #64748b;
-  --rf-text-disabled: #94a3b8;
-  
-  /* Borders & Dividers */
-  --rf-border-light: #e2e8f0;
-  --rf-border-subtle: #edf2f7;
-  --rf-border-focus: #006194;
+  --rf-surface-subtle: #f1f5f9;
+  --rf-surface-muted: #e2e8f0;
+  --rf-surface-hover: #f8fafc;
 
-  /* Semantic Status Colors */
+  /* =========================================================================
+     3. Typography & Text Contrast
+     ========================================================================= */
+  --rf-font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --rf-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --rf-text-main: #0f172a;
+  --rf-text-body: #334155;
+  --rf-text-muted: #64748b;
+  --rf-text-subtle: #94a3b8;
+  --rf-text-disabled: #cbd5e1;
+  --rf-text-inverse: #ffffff;
+  --rf-ink: #0f172a;
+
+  /* =========================================================================
+     4. Borders & Dividers
+     ========================================================================= */
+  --rf-border: #e2e8f0;
+  --rf-border-light: #f1f5f9;
+  --rf-border-subtle: #edf2f7;
+  --rf-border-focus: #0284c7;
+  --rf-line: #e2e8f0;
+
+  /* =========================================================================
+     5. Semantic Repair Workflow Status Colors
+     ========================================================================= */
+  /* Draft / Nháp / Tiếp nhận mới */
+  --rf-status-draft-text: #475569;
+  --rf-status-draft-bg: #f1f5f9;
+  --rf-status-draft-border: #cbd5e1;
+
+  /* Diagnosing / Đang chẩn đoán */
+  --rf-status-diagnosing-text: #0369a1;
+  --rf-status-diagnosing-bg: #f0f9ff;
+  --rf-status-diagnosing-border: #bae6fd;
+
+  /* Waiting / Chờ khách duyệt báo giá */
+  --rf-status-waiting-text: #b45309;
+  --rf-status-waiting-bg: #fffbeb;
+  --rf-status-waiting-border: #fde68a;
+
+  /* Repairing / Khách đã duyệt & Đang sửa chữa */
+  --rf-status-repairing-text: #1d4ed8;
+  --rf-status-repairing-bg: #eff6ff;
+  --rf-status-repairing-border: #bfdbfe;
+
+  /* QC / Đang kiểm tra chất lượng */
+  --rf-status-qc-text: #6d28d9;
+  --rf-status-qc-bg: #faf5ff;
+  --rf-status-qc-border: #e9d5ff;
+
+  /* Ready / Đạt chuẩn QC & Sẵn sàng bàn giao */
+  --rf-status-ready-text: #047857;
+  --rf-status-ready-bg: #ecfdf5;
+  --rf-status-ready-border: #a7f3d0;
+
+  /* Completed / Đã hoàn tất & Bàn giao xong */
+  --rf-status-completed-text: #0f766e;
+  --rf-status-completed-bg: #f0fdfa;
+  --rf-status-completed-border: #99f6e4;
+
+  /* Rework / QC không đạt - Cần sửa lại */
+  --rf-status-rework-text: #b91c1c;
+  --rf-status-rework-bg: #fef2f2;
+  --rf-status-rework-border: #fecaca;
+
+  /* Cancelled / Hủy sửa - Hoàn trả máy */
+  --rf-status-cancelled-text: #64748b;
+  --rf-status-cancelled-bg: #f8fafc;
+  --rf-status-cancelled-border: #e2e8f0;
+
+  /* Overdue / Cảnh báo trễ SLA / Quá hạn */
+  --rf-status-overdue-text: #b91c1c;
+  --rf-status-overdue-bg: #fff1f2;
+  --rf-status-overdue-border: #fecdd3;
+
+  /* Standard Generic Semantic Alerts */
   --rf-success: #059669;
   --rf-success-bg: #ecfdf5;
   --rf-success-border: #a7f3d0;
@@ -45,20 +123,32 @@
   --rf-info-border: #bae6fd;
   --rf-info-text: #0369a1;
 
-  /* Typography */
-  --rf-font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --rf-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* =========================================================================
+     6. Spacing Scale (4px base)
+     ========================================================================= */
+  --rf-space-1: 4px;
+  --rf-space-2: 8px;
+  --rf-space-3: 12px;
+  --rf-space-4: 16px;
+  --rf-space-5: 20px;
+  --rf-space-6: 24px;
+  --rf-space-8: 32px;
+  --rf-space-10: 40px;
 
-  /* Elevation & Shadows */
+  /* =========================================================================
+     7. Elevation & Shadows (Crisp, Subtle & Flat)
+     ========================================================================= */
   --rf-shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-  --rf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --rf-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-  --rf-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --rf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+  --rf-shadow-md: 0 4px 12px 0 rgba(15, 23, 42, 0.07);
+  --rf-shadow: none;
 
-  /* Radii */
-  --rf-radius-sm: 6px;
-  --rf-radius-md: 10px;
-  --rf-radius-lg: 14px;
-  --rf-radius-xl: 18px;
+  /* =========================================================================
+     8. Radii (Restrained & Intentional - No Over-Rounding)
+     ========================================================================= */
+  --rf-radius-xs: 2px;
+  --rf-radius-sm: 4px;
+  --rf-radius-md: 6px;
+  --rf-radius-lg: 8px;
   --rf-radius-pill: 9999px;
 }

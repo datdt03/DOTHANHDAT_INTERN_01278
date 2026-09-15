@@ -77,48 +77,136 @@
   font-weight: 600;
   border-radius: var(--rf-radius-pill);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .rf-badge-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.rf-badge-blue {
-  background-color: #f0f9ff;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+/* 1. Draft / Nháp / Tiếp nhận */
+.rf-badge--draft {
+  background-color: var(--rf-status-draft-bg);
+  color: var(--rf-status-draft-text);
+  border: 1px solid var(--rf-status-draft-border);
 }
-.rf-badge-blue .rf-badge-dot { background-color: #0284c7; }
+.rf-badge--draft .rf-badge-dot { background-color: var(--rf-status-draft-text); }
 
-.rf-badge-amber {
-  background-color: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+/* 2. Diagnosing / Đang chẩn đoán */
+.rf-badge--diagnosing {
+  background-color: var(--rf-status-diagnosing-bg);
+  color: var(--rf-status-diagnosing-text);
+  border: 1px solid var(--rf-status-diagnosing-border);
 }
+.rf-badge--diagnosing .rf-badge-dot { background-color: var(--rf-primary); }
+
+/* 3. Waiting / Chờ khách duyệt */
+.rf-badge--waiting {
+  background-color: var(--rf-status-waiting-bg);
+  color: var(--rf-status-waiting-text);
+  border: 1px solid var(--rf-status-waiting-border);
+}
+.rf-badge--waiting .rf-badge-dot { background-color: #f59e0b; }
+
+/* 4. Repairing / Đang sửa chữa */
+.rf-badge--repairing {
+  background-color: var(--rf-status-repairing-bg);
+  color: var(--rf-status-repairing-text);
+  border: 1px solid var(--rf-status-repairing-border);
+}
+.rf-badge--repairing .rf-badge-dot { background-color: #2563eb; }
+
+/* 5. QC / Đang kiểm tra chất lượng */
+.rf-badge--qc {
+  background-color: var(--rf-status-qc-bg);
+  color: var(--rf-status-qc-text);
+  border: 1px solid var(--rf-status-qc-border);
+}
+.rf-badge--qc .rf-badge-dot { background-color: #7c3aed; }
+
+/* 6. Ready / Sẵn sàng bàn giao */
+.rf-badge--ready {
+  background-color: var(--rf-status-ready-bg);
+  color: var(--rf-status-ready-text);
+  border: 1px solid var(--rf-status-ready-border);
+}
+.rf-badge--ready .rf-badge-dot { background-color: #10b981; }
+
+/* 7. Completed / Hoàn tất bàn giao */
+.rf-badge--completed {
+  background-color: var(--rf-status-completed-bg);
+  color: var(--rf-status-completed-text);
+  border: 1px solid var(--rf-status-completed-border);
+}
+.rf-badge--completed .rf-badge-dot { background-color: #14b8a6; }
+
+/* 8. Rework / QC không đạt - Sửa lại */
+.rf-badge--rework {
+  background-color: var(--rf-status-rework-bg);
+  color: var(--rf-status-rework-text);
+  border: 1px solid var(--rf-status-rework-border);
+}
+.rf-badge--rework .rf-badge-dot { background-color: #ef4444; }
+
+/* 9. Cancelled / Hủy sửa - Hoàn trả */
+.rf-badge--cancelled {
+  background-color: var(--rf-status-cancelled-bg);
+  color: var(--rf-status-cancelled-text);
+  border: 1px solid var(--rf-status-cancelled-border);
+}
+.rf-badge--cancelled .rf-badge-dot { background-color: #94a3b8; }
+
+/* 10. Overdue / Cảnh báo quá hạn SLA */
+.rf-badge--overdue {
+  background-color: var(--rf-status-overdue-bg);
+  color: var(--rf-status-overdue-text);
+  border: 1px solid var(--rf-status-overdue-border);
+  animation: rfSlaPulse 2s infinite ease-in-out;
+}
+.rf-badge--overdue .rf-badge-dot { background-color: #e11d48; }
+
+@keyframes rfSlaPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.88; transform: scale(1.02); }
+}
+
+/* Generic Color Aliases */
+.rf-badge-blue { background-color: var(--rf-status-diagnosing-bg); color: var(--rf-status-diagnosing-text); border: 1px solid var(--rf-status-diagnosing-border); }
+.rf-badge-blue .rf-badge-dot { background-color: var(--rf-primary); }
+
+.rf-badge-amber { background-color: var(--rf-status-waiting-bg); color: var(--rf-status-waiting-text); border: 1px solid var(--rf-status-waiting-border); }
 .rf-badge-amber .rf-badge-dot { background-color: #f59e0b; }
 
-.rf-badge-emerald {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
+.rf-badge-emerald { background-color: var(--rf-status-ready-bg); color: var(--rf-status-ready-text); border: 1px solid var(--rf-status-ready-border); }
 .rf-badge-emerald .rf-badge-dot { background-color: #10b981; }
 
-.rf-badge-red {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
+.rf-badge-red { background-color: var(--rf-status-rework-bg); color: var(--rf-status-rework-text); border: 1px solid var(--rf-status-rework-border); }
 .rf-badge-red .rf-badge-dot { background-color: #ef4444; }
 
-.rf-badge-purple {
-  background-color: #f5f3ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
-}
+.rf-badge-purple { background-color: var(--rf-status-qc-bg); color: var(--rf-status-qc-text); border: 1px solid var(--rf-status-qc-border); }
 .rf-badge-purple .rf-badge-dot { background-color: #8b5cf6; }
+
+/* Monospace & Data formatting */
+.rf-font-mono, .font-mono-code {
+  font-family: var(--rf-font-mono) !important;
+  letter-spacing: -0.02em;
+}
+
+/* Skeleton Loading State */
+.rf-skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: rfShimmer 1.5s infinite;
+  border-radius: var(--rf-radius-sm);
+}
+
+@keyframes rfShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 /* Toast Notifications Container */
 #rf-toast-container {
@@ -156,3 +244,951 @@
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* =========================================================================
+   Flat & Intentional Component Layouts (No Over-Rounding, No Box-in-Box)
+   ========================================================================= */
+
+/* Metric Strip (Single flat strip with dividers instead of bulky isolated cards) */
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  margin-bottom: 20px;
+}
+
+.metric-strip__item {
+  padding: 16px 20px;
+  border-right: 1px solid var(--rf-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-strip__item:last-child {
+  border-right: none;
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--rf-text-main);
+  letter-spacing: -0.03em;
+}
+
+.metric-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--rf-text-muted);
+}
+
+.metric-hint {
+  font-size: 10.5px;
+  color: var(--rf-text-subtle);
+}
+
+/* Topbar Role Switcher */
+.role-switcher-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--rf-surface-subtle);
+  padding: 3px 8px;
+  border-radius: var(--rf-radius-md);
+  border: 1px solid var(--rf-border);
+}
+
+.role-switcher-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--rf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+}
+
+.role-chip {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--rf-radius-sm);
+  color: var(--rf-text-body);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.role-chip:hover {
+  background-color: #e2e8f0;
+  color: var(--rf-text-main);
+}
+
+.role-chip--active {
+  background-color: var(--rf-primary) !important;
+  color: #ffffff !important;
+}
+
+.logout-link-btn {
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid var(--rf-border);
+  color: var(--rf-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+  cursor: pointer;
+}
+
+.logout-link-btn:hover {
+  color: var(--rf-status-rework-text);
+}
+
+/* Receptionist Tabs & Lookup */
+.receptionist-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--rf-border);
+  padding-bottom: 8px;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--rf-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--rf-text-muted);
+  cursor: pointer;
+}
+
+.tab-btn--active {
+  background-color: var(--rf-surface);
+  border-color: var(--rf-border);
+  color: var(--rf-primary);
+}
+
+.search-lookup-panel {
+  margin-bottom: 20px;
+}
+
+.lookup-search-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.lookup-input {
+  flex: 1;
+}
+
+.lookup-detail-panel {
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  padding: 24px;
+}
+
+.lookup-header-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rf-border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.lookup-order-title {
+  font-size: 18px;
+  margin: 4px 0 0;
+  color: var(--rf-text-main);
+}
+
+.lookup-notice-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--rf-surface-subtle);
+  border: 1px solid var(--rf-border);
+  padding: 4px 10px;
+  border-radius: var(--rf-radius-md);
+  color: var(--rf-text-muted);
+}
+
+.lookup-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.info-block {
+  margin-bottom: 18px;
+}
+
+.info-block--highlight {
+  background-color: var(--rf-surface-subtle);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  padding: 14px;
+}
+
+.info-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--rf-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.info-value {
+  margin: 0;
+  font-size: 14px;
+  color: var(--rf-text-main);
+}
+
+.info-subvalue {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--rf-text-muted);
+}
+
+.stage-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.waiting-pill {
+  font-size: 11px;
+  color: var(--rf-text-body);
+}
+
+.stage-next-step {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--rf-text-body);
+}
+
+.customer-safe-box {
+  background-color: #f8fafc;
+  border-left: 3px solid var(--rf-primary);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--rf-text-body);
+  line-height: 1.5;
+}
+
+.meta-card {
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.meta-amount {
+  display: block;
+  font-size: 20px;
+  color: var(--rf-primary);
+  margin: 4px 0;
+}
+
+.meta-time {
+  display: block;
+  font-size: 16px;
+  color: var(--rf-text-main);
+  margin: 4px 0;
+}
+
+.meta-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--rf-text-muted);
+}
+
+/* Technician Priority List */
+.task-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--rf-radius-md);
+  border: 1px solid var(--rf-border);
+  background-color: var(--rf-surface);
+  color: var(--rf-text-body);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-btn--active {
+  background-color: var(--rf-text-main) !important;
+  color: #ffffff !important;
+  border-color: var(--rf-text-main) !important;
+}
+
+.row-urgent {
+  background-color: #fff1f2 !important;
+}
+
+.urgent-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 9.5px;
+  font-weight: 800;
+  border-radius: 3px;
+  background-color: var(--rf-status-rework-bg);
+  color: var(--rf-status-rework-text);
+  border: 1px solid var(--rf-status-rework-border);
+}
+
+.task-issue {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rf-text-body);
+  max-width: 320px;
+}
+
+.blocked-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--rf-status-rework-text);
+  font-weight: 600;
+}
+
+.sla-deadline {
+  font-size: 12px;
+  color: var(--rf-text-muted);
+  font-weight: 500;
+}
+
+.sla-deadline--urgent {
+  color: var(--rf-status-rework-text);
+  font-weight: 700;
+}
+
+.task-action-btn {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}
+
+.sla-summary-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--rf-text-muted);
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  padding: 6px 12px;
+  border-radius: var(--rf-radius-md);
+}
+
+/* Customer Mobile Styles */
+.customer-status-block {
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.customer-status-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.customer-section {
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.section-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--rf-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.diagnosis-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rf-text-body);
+  line-height: 1.5;
+}
+
+.quote-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.quote-free {
+  color: var(--rf-success) !important;
+}
+
+.quote-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--rf-border);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.quote-total-amount {
+  font-size: 20px;
+  color: var(--rf-primary);
+}
+
+.customer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-reject {
+  width: 100%;
+  justify-content: center;
+}
+
+.decision-alert {
+  padding: 14px 16px;
+  border-radius: var(--rf-radius-md);
+  margin-top: 16px;
+  font-size: 12.5px;
+}
+
+.decision-alert p {
+  margin: 4px 0 0;
+}
+
+.decision-alert--approved {
+  background-color: var(--rf-status-ready-bg);
+  border: 1px solid var(--rf-status-ready-border);
+  color: var(--rf-status-ready-text);
+}
+
+.decision-alert--rejected {
+  background-color: var(--rf-status-waiting-bg);
+  border: 1px solid var(--rf-status-waiting-border);
+  color: var(--rf-status-waiting-text);
+}
+
+.customer-security-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--rf-text-subtle);
+  margin-top: 24px;
+}
+
+@media (max-width: 800px) {
+  .metric-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+  .metric-strip__item:nth-child(2) {
+    border-right: none;
+  }
+  .lookup-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================================
+   SB Admin 2 Inspired Component Library (Modular, Flat, Zoom Resilient)
+   ========================================================================= */
+
+/* 1. Page Header */
+.rf-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.rf-page-header__left {
+  flex: 1;
+  min-width: 240px;
+}
+
+.rf-page-header__eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rf-text-muted);
+  margin-bottom: 4px;
+}
+
+.rf-page-header__title {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 700;
+  color: var(--rf-text-main);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.rf-page-header__subtitle {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: var(--rf-text-muted);
+  line-height: 1.4;
+}
+
+.rf-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 2. Fluid StatCard Grid (Auto-wrapping on 125% - 150% zoom) */
+.rf-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(12px, 1.4vw, 18px);
+  margin-bottom: 22px;
+  width: 100%;
+}
+
+/* StatCard (Border-Left Accent Card - Classic SB Admin Style) */
+.rf-stat-card {
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+
+.rf-stat-card:hover {
+  box-shadow: var(--rf-shadow-sm);
+}
+
+.rf-stat-card--primary { border-left: 4px solid var(--rf-primary); }
+.rf-stat-card--success { border-left: 4px solid var(--rf-success); }
+.rf-stat-card--warning { border-left: 4px solid var(--rf-warning); }
+.rf-stat-card--danger  { border-left: 4px solid var(--rf-error); }
+.rf-stat-card--info    { border-left: 4px solid var(--rf-info); }
+
+.rf-stat-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.rf-stat-card__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rf-stat-card--primary .rf-stat-card__label { color: var(--rf-primary); }
+.rf-stat-card--success .rf-stat-card__label { color: var(--rf-success); }
+.rf-stat-card--warning .rf-stat-card__label { color: var(--rf-warning-text); }
+.rf-stat-card--danger  .rf-stat-card__label { color: var(--rf-error-text); }
+.rf-stat-card--info    .rf-stat-card__label { color: var(--rf-info-text); }
+
+.rf-stat-card__value {
+  display: block;
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 700;
+  color: var(--rf-text-main);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.rf-stat-card__sub {
+  display: block;
+  font-size: 11px;
+  color: var(--rf-text-subtle);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rf-stat-card__icon {
+  font-size: 26px;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+/* 3. Modular Card Panel (SB Admin 2 style Header / Body / Footer) */
+.rf-card-panel {
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.rf-card-panel__header {
+  padding: 14px 20px;
+  background-color: var(--rf-surface-subtle);
+  border-bottom: 1px solid var(--rf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rf-card-panel__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rf-text-main);
+  letter-spacing: -0.01em;
+}
+
+.rf-card-panel__body {
+  padding: 20px;
+}
+
+.rf-card-panel__body--flush {
+  padding: 0;
+}
+
+.rf-card-panel__footer {
+  padding: 12px 20px;
+  background-color: var(--rf-surface-subtle);
+  border-top: 1px solid var(--rf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--rf-text-muted);
+}
+
+/* 4. Responsive Data Table */
+.rf-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rf-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.rf-data-table th {
+  background-color: var(--rf-surface-subtle);
+  color: var(--rf-text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--rf-border);
+  white-space: nowrap;
+}
+
+.rf-data-table td {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--rf-border);
+  color: var(--rf-text-body);
+  vertical-align: middle;
+}
+
+.rf-data-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.rf-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 5. Form Group & Controls */
+.rf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.rf-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rf-text-body);
+}
+
+.rf-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.rf-input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--rf-text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.rf-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  font-size: 13px;
+  color: var(--rf-text-main);
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rf-input--has-icon {
+  padding-left: 36px;
+}
+
+.rf-input:focus {
+  outline: none;
+  border-color: var(--rf-primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.rf-select {
+  height: 38px;
+  padding: 0 12px;
+  background-color: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-md);
+  font-size: 13px;
+  color: var(--rf-text-main);
+  font-family: inherit;
+}
+
+.rf-select:focus {
+  outline: none;
+  border-color: var(--rf-primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* 6. Alert Banners */
+.rf-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--rf-radius-md);
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.rf-alert--info {
+  background-color: var(--rf-status-diagnosing-bg);
+  border: 1px solid var(--rf-status-diagnosing-border);
+  color: var(--rf-status-diagnosing-text);
+}
+
+.rf-alert--success {
+  background-color: var(--rf-status-ready-bg);
+  border: 1px solid var(--rf-status-ready-border);
+  color: var(--rf-status-ready-text);
+}
+
+.rf-alert--warning {
+  background-color: var(--rf-status-waiting-bg);
+  border: 1px solid var(--rf-status-waiting-border);
+  color: var(--rf-status-waiting-text);
+}
+
+.rf-alert--danger {
+  background-color: var(--rf-status-rework-bg);
+  border: 1px solid var(--rf-status-rework-border);
+  color: var(--rf-status-rework-text);
+}
+
+.rf-alert__close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.rf-alert__close:hover {
+  opacity: 1;
+}
+
+/* 7. Modal Dialog */
+.rf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.rf-modal-dialog {
+  width: min(100%, 480px);
+  background: var(--rf-surface);
+  border: 1px solid var(--rf-border);
+  border-radius: var(--rf-radius-lg);
+  box-shadow: var(--rf-shadow-md);
+  overflow: hidden;
+  animation: rfSlideIn 0.2s ease-out;
+}
+
+.rf-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rf-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rf-modal-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rf-text-main);
+}
+
+.rf-modal-body {
+  padding: 20px;
+  font-size: 13px;
+  color: var(--rf-text-body);
+  line-height: 1.5;
+}
+
+.rf-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--rf-border);
+  background-color: var(--rf-surface-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* 8. Stepper */
+.rf-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  margin: 18px 0;
+}
+
+.rf-stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  position: relative;
+  text-align: center;
+  font-size: 11px;
+  color: var(--rf-text-muted);
+}
+
+.rf-stepper-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--rf-border);
+  background: var(--rf-surface);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 11.5px;
+  z-index: 2;
+}
+
+.rf-stepper-step--complete .rf-stepper-marker {
+  background-color: var(--rf-primary);
+  border-color: var(--rf-primary);
+  color: #ffffff;
+}
+
+.rf-stepper-step--active .rf-stepper-marker {
+  border-color: var(--rf-primary);
+  color: var(--rf-primary);
+  font-weight: 800;
+}
+
+/* 9. Empty State */
+.rf-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--rf-text-muted);
+}
+
+.rf-empty-state__icon {
+  font-size: 38px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.rf-empty-state__title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rf-text-main);
+}
+
+.rf-empty-state__description {
+  margin: 0 auto 16px;
+  max-width: 360px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+

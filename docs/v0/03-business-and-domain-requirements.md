@@ -485,6 +485,67 @@ ready_for_pickup
 handed_over
 ```
 
+### 6.0. Canonical state diagram
+
+Sơ đồ dưới đây là biểu diễn trực quan của state machine canonical. Các điều
+kiện chuyển trạng thái, quyền thực hiện và dữ liệu audit vẫn lấy từ phần mô tả
+nghiệp vụ ngay bên dưới; sơ đồ không tạo thêm trạng thái mới.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    [*] --> received: Tạo phiếu
+
+    received --> diagnosing: Intake đủ và khóa baseline
+    received --> cancelled: Hủy trước khi sửa
+
+    diagnosing --> waiting_for_approval: Có diagnosis + quote hợp lệ
+    diagnosing --> cancelled: Hủy trước khi sửa
+
+    waiting_for_approval --> approved: Customer duyệt quote hiện hành
+    waiting_for_approval --> rejected: Customer từ chối quote
+    waiting_for_approval --> cancelled: Hủy trước khi sửa
+
+    approved --> repairing: Bắt đầu sửa với quote đã duyệt
+    approved --> cancelled: Hủy trước khi sửa
+
+    repairing --> quality_check: Gửi kiểm tra chất lượng
+    repairing --> cancellation_requested: Yêu cầu hủy khi đang sửa
+    repairing --> ready_for_return: Không thể sửa hoặc dừng sửa được xác nhận
+
+    cancellation_requested --> repairing: Từ chối yêu cầu hủy
+    cancellation_requested --> ready_for_return: Technician phụ trách/Owner xác nhận
+
+    quality_check --> ready_for_pickup: QC đạt
+    quality_check --> repairing: QC không đạt, cần rework
+
+    rejected --> waiting_for_approval: Tạo quote version mới trước khi hoàn trả
+    rejected --> ready_for_return: Không tiếp tục thương lượng
+
+    ready_for_return --> returned: Customer xác nhận và ký hoàn trả
+    ready_for_pickup --> handed_over: Customer xác nhận và ký bàn giao
+
+    cancelled --> [*]
+    handed_over --> [*]
+    returned --> [*]
+
+    note right of cancelled
+        Trạng thái kết thúc.
+        Không được reopen.
+    end note
+
+    note right of handed_over
+        Trạng thái kết thúc.
+        Handover record bắt buộc.
+    end note
+
+    note right of returned
+        Trạng thái kết thúc.
+        Return record và chữ ký bắt buộc.
+    end note
+```
+
 Một số luật cần áp dụng:
 
 - Không chuyển sang `diagnosing` nếu chưa có thông tin thiết bị và lỗi khách mô tả.

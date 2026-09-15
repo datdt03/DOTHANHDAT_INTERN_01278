@@ -148,7 +148,7 @@ giữ nguyên.
 | Architecture diagrams | `DECIDED — BASELINE CLOSED` | [C4 + Mermaid architecture](docs/v0/04-architecture-c4-arc42.md) | Keep diagrams aligned with implementation changes. | Product / Engineering |
 | Runtime foundation | `RESET — NOT STARTED` | [C0 migration plans](plans/v0/c0-runtime-stack-migration) | Rebuild the backend with ASP.NET Core/.NET and recreate the target test/migration baseline. | Engineering |
 | Business API | `NOT STARTED` | [v0 documentation](docs/v0/README.md) | Start implementation from C1 and continue by cluster. | Engineering |
-| UI integration | `REFERENCE BASELINE` | [UI source](src/ui) | Keep the existing UI as reference while rebuilding the target React/Vite app. | UI |
+| UI integration | `FOUNDATION READY — HANDOFF TO ANTIGRAVITY` | [UI source](src/ui) | Continue feature screens and real API integration from the shared foundation. | Antigravity / UI |
 | English standardization | `IN PROGRESS` | Repository documentation and UI source | Complete the language pass and run the language audit. | Engineering |
 | Deployment and monitoring | `DEFERRED` | v0 scope | Define in a later phase. | Product / Engineering |
 
@@ -157,10 +157,11 @@ giữ nguyên.
 - The previous Python/FastAPI backend, Python tests and prototype migration
   files were intentionally removed to restart implementation on the target stack.
 - PostgreSQL `18-alpine` remains available through Docker Compose.
-- The existing UI is retained as a functional/visual reference backed by mock
-  data; it is not the target React runtime yet.
-- The target ASP.NET Core/.NET + React/Vite stack is documented, but C0 must
-  recreate the runtime, migration boundary, API contract and test baseline.
+- The existing vanilla UI and bundle are retained as functional/visual reference
+  artifacts; the target React/Vite foundation is now active in `src/ui`.
+- The React foundation has a typed API adapter, internal/customer shell
+  boundary, preview mode, and reusable shared primitives. Backend/API remains
+  inactive until C0 backend work is complete.
 
 ### Implementation gaps
 
@@ -215,8 +216,8 @@ The [documentation guide](docs/README.md) defines the authority of each document
 
 Backend/API chưa có runtime active sau khi prototype cũ được xóa. Thực hiện
 [c0-001](plans/v0/c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md)
-trước khi chạy API; thực hiện [c0-002](plans/v0/c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md)
-trước khi chạy UI target.
+trước khi chạy API. UI foundation của [c0-002](plans/v0/c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md)
+đã được tạo và bàn giao tại [src/ui/README.md](src/ui/README.md).
 
 Use [.env.example](.env.example) for local configuration. Never commit `.env`, real passwords, tokens, or customer data.
 
@@ -229,16 +230,22 @@ docker compose ps
 
 The database is ready when the container reports `healthy`.
 
-### Open the UI reference
+### Run the target UI
 
-Open [`src/ui/index.html`](src/ui/index.html) only as a visual/functional
-reference. The React/Vite target is defined in the C0 plans and is not active
-until the migration is implemented.
+```powershell
+cd src/ui
+npm install
+npm run dev
+```
+
+Mở `http://localhost:5173/?preview=1` để xem shell với dữ liệu mẫu khi backend
+chưa chạy. Các file vanilla và `app.bundle.js` trong `src/ui` chỉ còn là
+functional/visual reference.
 
 ### Run target checks
 
-The .NET build/test and React type-check/build commands will be recorded in the
-C0 plan handoff after the target projects are scaffolded.
+UI checks đã có sẵn trong [src/ui/README.md](src/ui/README.md). Backend build/test
+và API integration vẫn chờ C0-001.
 
 ## Project structure
 
@@ -280,7 +287,7 @@ frontend uses Vite; do not treat the legacy bundle as the active UI runtime.
 - [x] Existing UI is retained as a reference.
 - [ ] ASP.NET Core/.NET runtime and `/health` contract are implemented.
 - [ ] Target versioned migration runner is implemented and verified.
-- [ ] React/Vite/TypeScript app and API adapter are implemented.
+- [x] React/Vite/TypeScript app and API adapter foundation are implemented.
 - [ ] Target backend and UI test/build baseline passes.
 - [x] Core workflow, access, OTP, retention, backup, and cancellation decisions are recorded in v0 documentation.
 - [x] Core class and sequence diagrams are embedded as Mermaid blocks in the architecture Markdown.

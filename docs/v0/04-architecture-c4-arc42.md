@@ -306,8 +306,9 @@ Tài liệu này sẽ được dùng để:
 
 ## 14. Mermaid diagrams cho domain và runtime views
 
-Các biểu đồ class và sequence chính của workflow v0 được viết trực tiếp trong
-file Markdown bằng code fence `mermaid`, để GitHub có thể render trực tiếp.
+Các biểu đồ class, state, flowchart và sequence chính của workflow v0 được
+viết trực tiếp trong file Markdown bằng code fence `mermaid`, để GitHub có thể
+render trực tiếp.
 Không tạo hoặc commit PNG. Các sequence diagram tập trung vào actor, API,
 transaction và state transition; không mô tả từng click UI hoặc chi tiết
 deployment.
@@ -763,6 +764,153 @@ sequenceDiagram
         API->>DB: Change status to returned
         API->>DB: Write timeline and audit
     end
+```
+
+### 14.6. Sequence: internal access và authorization
+
+Sequence này mô tả boundary chung cho mọi request nội bộ. UI chỉ hỗ trợ điều
+hướng và hiển thị; Backend/API mới là nơi quyết định session, workspace, role,
+assignment và field projection.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Internal access principal
+    participant UI as React Internal UI
+    participant API as ASP.NET Core Web API (.NET)
+    participant Session as Session Resolver
+    participant Policy as Authorization Policy
+    participant DB as PostgreSQL
+    participant Projection as Safe Field Projection
+
+    User->>UI: Request screen or business action
+    UI->>API: HTTP request + session credential
+    API->>Session: Resolve current session
+    Session->>DB: Find session by token hash
+
+    alt Session missing, revoked or expired
+        Session-->>API: Invalid session
+        API-->>UI: 401 error envelope + request ID
+        UI-->>User: Clear protected context and request login
+    else Session valid
+        Session-->>API: actingAccountId + workspaceId + membership + role
+        API->>Policy: Authorize action and resource scope
+        Policy->>DB: Validate active membership and workspace boundary
+
+        alt Role denied
+            Policy-->>API: Denied
+            API-->>UI: 403/404 safe error envelope + request ID
+        else Role allowed and resource is workspace-wide
+            Policy-->>API: Allowed
+            API->>DB: Load data in current workspace
+            API->>Projection: Remove restricted fields by role
+            Projection-->>API: Safe DTO
+            API->>DB: Write audit with acting account
+            API-->>UI: 200 response envelope + request ID
+        else Resource requires assignment
+            Policy->>DB: Check order assignment and responsibility
+
+            alt Assignment missing or responsibility denied
+                Policy-->>API: Denied
+                API-->>UI: 403/404 safe error envelope + request ID
+            else Assignment allowed
+                Policy-->>API: Allowed
+                API->>DB: Load assigned resource in current workspace
+                API->>Projection: Remove restricted fields by role
+                Projection-->>API: Safe DTO
+                API->>DB: Write audit with acting and attributed staff
+                API-->>UI: 200 response envelope + request ID
+            end
+        end
+    end
+
+    Note over API,DB: actingAccountId lấy từ session và không bị ghi đè.
+    Note over API,DB: attributedStaffId là staff profile được chọn khi thao tác thay người khác.
+```
+
+### 14.7. Flowchart: quote version lifecycle
+
+Mỗi quote version là một snapshot bất biến sau khi được gửi. Khi cần thay đổi
+trước khi repair order kết thúc, quote cũ và decision cũ vẫn được giữ lại,
+link cũ bị thu hồi và version mới phải nhận một quyết định mới.
+
+```mermaid
+flowchart LR
+    Draft["Quote vN<br/>draft<br/>Có thể chỉnh sửa"]
+    Sent["Quote vN<br/>sent<br/>Đã freeze"]
+    Approved["Quote vN<br/>approved"]
+    Rejected["Quote vN<br/>rejected"]
+    Superseded["Quote vN<br/>superseded<br/>Giữ lịch sử"]
+    NewDraft["Quote vN+1<br/>draft"]
+    NewSent["Quote vN+1<br/>sent"]
+    NewDecision["Customer decision mới<br/>cho vN+1"]
+    NewApproved["Quote vN+1<br/>approved"]
+    NewRejected["Quote vN+1<br/>rejected"]
+    OldLink["Customer link vN<br/>revoke"]
+    NewLink["Customer link vN+1<br/>7 ngày"]
+
+    Draft -->|Lưu và tính lại ở backend| Draft
+    Draft -->|Gửi quote| Sent
+    Sent -->|Customer duyệt| Approved
+    Sent -->|Customer từ chối| Rejected
+
+    Sent -->|Cần thay đổi trước decision| Superseded
+    Approved -->|Cần thay đổi khi order chưa returned| Superseded
+    Rejected -->|Thương lượng tiếp khi order chưa returned| Superseded
+
+    Superseded -->|Copy item thành snapshot mới| NewDraft
+    NewDraft -->|Gửi quote mới| NewSent
+    NewSent -->|Tạo link mới| NewLink
+    NewLink -->|Customer quyết định toàn bộ version| NewDecision
+    NewDecision -->|approve| NewApproved
+    NewDecision -->|reject| NewRejected
+
+    Superseded -.-> OldLink
+    OldLink -.->|Không còn quyền quyết định| NewLink
+```
+
+### 14.8. Flowchart: customer link và OTP lifecycle
+
+Link hợp lệ nhưng chưa xác thực OTP không được làm lộ public DTO. OTP là one-time
+use; sau khi xác thực thành công, customer session chỉ có hiệu lực 30 phút.
+
+```mermaid
+flowchart TD
+    Created["Tạo customer link<br/>Chỉ lưu token hash"]
+    Active["Link active<br/>Expiry 7 ngày<br/>Chưa revoke"]
+    Challenge["OTP challenge<br/>6 chữ số<br/>Hết hạn 5 phút"]
+    Verified["OTP verified<br/>Customer session 30 phút"]
+    Public["Limited public projection<br/>Được xem dữ liệu cần thiết"]
+    Action["Approve/reject quote<br/>hoặc xác nhận/ký handover-return"]
+    Invalid["OTP sai<br/>Tăng failed attempts"]
+    Locked["Challenge bị khóa<br/>Tối đa 5 lần sai"]
+    Resend["Resend OTP<br/>Sau 60 giây<br/>Tối đa 3 lần/15 phút"]
+    RateLimited["Rate limit exceeded<br/>Khóa tạm 15 phút"]
+    SessionExpired["Customer session hết hạn<br/>Yêu cầu OTP lại"]
+    Expired["Link expired<br/>Không lộ dữ liệu"]
+    Revoked["Link revoked<br/>Không còn quyền action"]
+
+    Created --> Active
+    Active -->|Mở link| Challenge
+    Challenge -->|OTP đúng và còn hạn| Verified
+    Verified --> Public
+    Public --> Action
+
+    Challenge -->|OTP sai| Invalid
+    Invalid -->|Còn dưới 5 lần sai| Challenge
+    Invalid -->|Đủ 5 lần sai| Locked
+
+    Challenge -->|Yêu cầu gửi lại| Resend
+    Resend -->|Đủ điều kiện| Challenge
+    Resend -->|Vượt giới hạn IP/link/destination| RateLimited
+
+    Verified -->|Sau 30 phút| SessionExpired
+    SessionExpired --> Challenge
+    Active -->|Sau 7 ngày| Expired
+    Active -->|Nhân viên revoke hoặc quote version mới| Revoked
+
+    Note["Token chỉ lưu dạng hash.<br/>OTP chỉ lưu dạng hash và dùng một lần.<br/>Link không được quyết định quote cũ hoặc order đã returned/handed_over/cancelled."]
+    Active -.-> Note
 ```
 
 ## 15. PlantUML sources và cách render

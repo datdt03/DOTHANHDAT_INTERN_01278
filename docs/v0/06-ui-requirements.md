@@ -77,6 +77,192 @@ No account is required in the MVP. The customer accesses information through a s
 - Technician opens the “My Work” task queue after login.
 - Customer opens the public order progress page through a valid link.
 
+### Role-to-screen/capability matrix
+
+Bảng này mô tả phạm vi hiển thị và hành động ở tầng UI. Backend/API vẫn phải
+kiểm tra lại mọi quyền; trạng thái `Forbidden` không được thay thế cho
+authorization phía server.
+
+| Persona/role | Màn hình mặc định | Quyền đọc | Quyền ghi chính | Phạm vi assignment | Forbidden/blocked state |
+| --- | --- | --- | --- | --- | --- |
+| Owner | Tổng quan vận hành | Toàn workspace và dữ liệu quản trị theo policy | Quản trị workspace/access, assignment và toàn bộ workflow | Toàn workspace | Chưa đăng nhập, workspace không hợp lệ, thao tác bị khóa bởi terminal state |
+| Manager | Tổng quan vận hành | Toàn workspace và dữ liệu vận hành | Điều phối, assignment và xử lý workflow trong phạm vi vận hành | Toàn workspace | Quản lý credential của Owner nếu chưa được cấp quyền riêng; request ngoài workspace |
+| Receptionist | Tổng quan hôm nay và operational lookup | Operational projection toàn workspace; không đọc raw technical/audit data | Intake, gửi/cấp lại link hoặc handover khi được giao; ghi nhận hủy trước sửa theo policy | Chỉ order/task được giao cho thao tác ghi; read lookup toàn workspace | Sửa diagnosis/quote, assignment, access settings, audit; order ngoài assignment khi ghi |
+| Technician | Hàng chờ công việc / My Work | Order và dữ liệu trực tiếp được phân công | Diagnosis, quote draft, repair, evidence và QC khi có responsibility phù hợp | Assigned order và đúng responsibility | Order ngoài assignment/workspace, quote đã sent/approved, access settings và audit |
+| Customer | Public order progress | Public subset của đúng order/link sau OTP hợp lệ | Approve/reject quote hiện hành; xác nhận/ký handover hoặc return | Chỉ order được public link tham chiếu | Internal shell, order khác, quote version cũ, hoặc mọi dữ liệu trước khi OTP hợp lệ |
+
+Staff profile chưa có account không có màn hình, credential hoặc session. Profile
+này chỉ được Owner/Manager chọn để assignment hoặc attribution khi thao tác thay
+người khác.
+
+### UI flow theo vai trò
+
+Các flow dưới đây mô tả thứ tự màn hình và điểm vào của bốn nhóm persona trong
+MVP. Screen ID tham chiếu danh mục tại
+[08-ui-design-blueprint-and-stitch-handoff.md](./08-ui-design-blueprint-and-stitch-handoff.md).
+Đây là UI flow, không thay thế state machine, permission matrix hoặc rule thực
+thi ở Backend/API.
+
+#### 3.2.1. Owner/Manager — điều phối vận hành
+
+```mermaid
+flowchart TD
+    M01["UI-A01<br/>Đăng nhập"] --> M02["UI-A06<br/>Tổng quan vận hành"]
+
+    M02 --> M03["UI-B01<br/>Danh sách phiếu + lọc"]
+    M02 --> M04["Tạo phiếu mới<br/>Primary action"]
+    M02 --> M05["UI-D10<br/>Nhân viên + assignment + account"]
+    M02 --> M06["UI-D07/D08<br/>Lịch sử customer/device"]
+    M02 --> M07["Cảnh báo overdue,<br/>chờ duyệt, QC, bàn giao"]
+
+    M03 --> M08["UI-C01<br/>Repair-order detail"]
+    M04 --> M09["UI-B04 → UI-B05<br/>Customer → Device"]
+    M09 --> M10["UI-B06 → UI-B07<br/>Intake + condition + evidence"]
+    M10 --> M11["UI-B08<br/>Review + hoàn tất hoặc lưu nháp"]
+    M11 --> M08
+
+    M08 --> M12{"Trạng thái và next action"}
+    M12 -->|received, intake chưa đủ| M10
+    M12 -->|diagnosing| M13["UI-C02<br/>Diagnosis"]
+    M13 --> M14["UI-C03<br/>Quote draft"]
+    M14 -->|Gửi link| M15["UI-C04<br/>Quote sent, read-only"]
+    M15 --> M08
+
+    M12 -->|approved / repairing| M16["UI-D01/D02<br/>Repair work"]
+    M16 --> M17["UI-D03<br/>QC pass"]
+    M17 --> M18["UI-D05<br/>Handover / return form"]
+    M18 --> M19["UI-D06<br/>Customer confirmation + signature"]
+    M19 --> M20["UI-D09<br/>Timeline + audit history"]
+
+    M17 -->|QC failed| M21["UI-D04<br/>Rework reason"]
+    M21 --> M16
+
+    M12 -->|rejected / cancellation / return| M22["Exception detail<br/>Reason + next action"]
+    M22 -->|Còn thương lượng, tạo version mới| M14
+    M22 -->|Hủy terminal hoặc đã hoàn tất return| M20
+    M22 -->|Chuẩn bị return| M18
+    M07 --> M08
+    M05 --> M08
+
+    M08 -.-> M23["Forbidden / blocked<br/>No session, wrong scope,<br/>terminal state or missing prerequisite"]
+```
+
+Owner/Manager có thể điều phối toàn workspace, nhưng UI vẫn phải hiển thị đúng
+điều kiện của trạng thái hiện tại. Các hành động hủy, tạo quote version, revoke
+link, thay assignment và xử lý ngoại lệ đều phải quay lại order detail để giữ
+timeline/audit nhất quán.
+
+#### 3.2.2. Receptionist — tiếp nhận, tra cứu và bàn giao
+
+```mermaid
+flowchart TD
+    R01["UI-A01<br/>Đăng nhập"] --> R02["UI-A07<br/>Tổng quan hôm nay"]
+
+    R02 --> R03["UI-B02/B03<br/>Operational lookup<br/>Desktop / Mobile"]
+    R03 --> R04["Read-only progress view<br/>Status, next step, waiting party,<br/>customer-safe summary"]
+    R04 -.-> R05["Không có edit,<br/>assignment, technical note,<br/>audit hoặc token"]
+
+    R02 --> R06["Create repair order<br/>Assigned intake task"]
+    R06 --> R07["UI-B04<br/>Tìm/tạo customer"]
+    R07 --> R08["UI-B05<br/>Tìm/tạo device"]
+    R08 --> R09["UI-B06<br/>Issue + accessories + intake"]
+    R09 --> R10["UI-B07<br/>Condition checklist + photo"]
+    R10 --> R11["UI-B08<br/>Review, save draft hoặc complete"]
+    R11 --> R12["UI-C01<br/>Order detail"]
+    R11 -.-> R13["UI-B09<br/>Resume draft"]
+    R13 --> R09
+
+    R12 -->|Quote đã được phát hành| R14["UI-C04<br/>Copy/send/reissue link<br/>trong phạm vi được cấp"]
+    R12 -->|Yêu cầu hủy trước khi sửa| R15["Hủy với lý do bắt buộc"]
+    R15 --> R16["UI-D09<br/>Cancelled + history"]
+
+    R02 -->|Ready for handover/return| R17["UI-D05<br/>Prepare handover/return"]
+    R17 --> R18["UI-D06<br/>Customer OTP + confirm + signature"]
+    R18 --> R19["UI-D09<br/>Hoàn tất hồ sơ + history"]
+
+    R14 --> R02
+    R04 --> R02
+    R19 --> R02
+
+    R12 -.-> R20["Forbidden / blocked<br/>Ghi ngoài assignment,<br/>sửa diagnosis/quote hoặc xem raw technical data"]
+```
+
+Operational lookup cho phép Receptionist đọc projection của mọi order trong
+workspace, nhưng mọi thao tác ghi vẫn đi qua order/task được phân công. Luồng
+mobile ưu tiên `UI-B03`, `UI-B07` và `UI-D06`; màn hình tra cứu không được biến
+thành order detail có quyền chỉnh sửa.
+
+#### 3.2.3. Technician — chẩn đoán, báo giá, sửa chữa và QC
+
+```mermaid
+flowchart TD
+    T01["UI-A01<br/>Đăng nhập"] --> T02["UI-A08<br/>My Work / Hàng chờ công việc"]
+    T02 --> T03["Lọc: cần làm, đang làm,<br/>bị chặn, sắp quá hạn"]
+    T03 --> T04["UI-C01<br/>Order detail được phân công"]
+
+    T04 --> T05["Condition + evidence<br/>Xác nhận baseline"]
+    T05 --> T06["UI-C02<br/>Diagnosis form"]
+    T06 --> T07["UI-C03<br/>Quote draft + backend total"]
+    T07 -->|Gửi quote| T08["UI-C04<br/>Quote sent, read-only"]
+    T08 --> T09["Chờ customer decision<br/>Theo dõi trạng thái"]
+
+    T09 -->|approved đúng version| T10["UI-D01/D02<br/>Repair work + execution checklist"]
+    T10 --> T11["UI-D03/D04<br/>Quality check pass/fail"]
+    T11 -->|Pass| T12["Ready for handover<br/>Technician không tự bàn giao"]
+    T12 --> T02
+    T11 -->|Fail + reason| T13["Rework required"]
+    T13 --> T10
+
+    T09 -->|rejected nhưng còn thương lượng| T14["Create new quote version<br/>Giữ quote/decision cũ"]
+    T14 --> T07
+
+    T10 -->|Không thể sửa| T15["Ghi lý do unrepairable"]
+    T15 --> T16["Ready for return<br/>Customer/Receptionist tiếp tục"]
+    T16 --> T02
+
+    T10 -->|Có yêu cầu hủy khi đang sửa| T17["Cancellation requested"]
+    T17 -->|Xác nhận dừng| T16
+    T17 -->|Từ chối với lý do| T10
+
+    T04 -.-> T18["Forbidden / blocked<br/>Order ngoài assignment,<br/>quote sent/approved hoặc access settings"]
+    T09 -.-> T19["Chưa approved đúng version<br/>Không được bắt đầu repair"]
+```
+
+Technician bắt đầu từ hàng chờ việc và chỉ mở order trong phạm vi assignment.
+Luồng quote bị từ chối có thể quay lại tạo version mới khi order chưa returned;
+luồng QC fail luôn quay lại repair và không được đi thẳng đến handover.
+
+#### 3.2.4. Customer — public link, OTP, quyết định và xác nhận nhận máy
+
+```mermaid
+flowchart TD
+    C01["Mở customer link"] --> C02{"Token còn hạn và<br/>chưa bị revoke?"}
+    C02 -->|Không| C03["UI-C09<br/>Link hết hạn/đã thu hồi"]
+    C02 -->|Có| C04["OTP verification state<br/>Không lộ order data trước OTP"]
+
+    C04 -->|OTP sai, hết hạn hoặc quá số lần| C05["OTP error / locked<br/>Resend theo rate limit"]
+    C05 --> C04
+    C04 -->|OTP đúng| C06["UI-C05<br/>Public progress + intake evidence"]
+    C06 --> C07["UI-C06<br/>Quote detail + decision"]
+
+    C07 -->|Approve| C08["UI-C07<br/>Approve confirmation<br/>Version + name + time"]
+    C07 -->|Reject/discuss| C09["UI-C08<br/>Reject reason / discuss"]
+    C09 --> C10["Chờ cửa hàng xử lý<br/>hoặc nhận link version mới"]
+    C10 --> C06
+
+    C08 --> C11["Theo dõi progress<br/>Cùng public link hiện hành"]
+    C11 -->|Ready for handover/return| C12["UI-D06<br/>OTP lại nếu cần + confirm + sign"]
+    C12 --> C13["Confirmation complete<br/>Order đóng theo luồng"]
+
+    C06 -->|Customer session hết hạn sau 30 phút| C04
+    C07 -.-> C14["Chỉ quyết định quote version<br/>đang được link tham chiếu"]
+    C03 -.-> C15["Không có internal sidebar<br/>Không truy cập order khác"]
+```
+
+Customer chỉ sử dụng public layout, không đi qua internal shell. Cùng customer
+link được dùng cho việc xem tiến độ, quyết định quote và xác nhận/ký handover
+hoặc return; mọi dữ liệu public đều bị giới hạn theo order/link hợp lệ.
+
 ## 4. Overall business flow
 
 ~~~text
