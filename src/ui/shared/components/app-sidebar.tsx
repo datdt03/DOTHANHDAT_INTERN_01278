@@ -1,5 +1,6 @@
-import { getRoleCapabilities } from '../api/access-api';
+import { getRoleCapabilities, type UserRole } from '../api/access-api';
 import {
+  IconClose,
   IconCustomers,
   IconDevices,
   IconHourglass,
@@ -35,8 +36,8 @@ export interface AppSidebarProps {
   userName?: string;
   userRole?: string;
   userInitials?: string;
-  currentRole?: 'manager' | 'receptionist' | 'technician';
-  onSwitchRole?: (role: 'manager' | 'receptionist' | 'technician') => void;
+  currentRole?: UserRole;
+  onSwitchRole?: (role: UserRole) => void;
   onLogout?: () => void;
   onSimulateTimeout?: () => void;
 }
@@ -101,6 +102,16 @@ export function AppSidebar({
               <strong>RepairFlow</strong>
               <span>Trung tâm điều hành</span>
             </div>
+          )}
+          {isOpen && onClose && (
+            <IconButton
+              label="Đóng thanh điều hướng"
+              className="sidebar-close-btn"
+              onClick={onClose}
+              title="Đóng điều hướng"
+            >
+              <IconClose size={18} />
+            </IconButton>
           )}
         </div>
 

@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useSession, type UserRole } from './session-context';
+import { useSession } from './session-context';
+import type { UserRole } from '../shared/api/access-api';
 import {
   AppFooter,
   AppHeader,
   AppSidebar,
-  ForbiddenState,
   TextButton,
 } from '../shared/components';
-import { ManagerDashboardView } from '../features/dashboard/manager-dashboard-view';
-import { ReceptionistTodayView } from '../features/receptionist/receptionist-today-view';
-import { TechnicianMyWorkView } from '../features/technician/technician-my-work-view';
+import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
+import '../shared/styles/app-shell.css';
 
 interface InternalShellProps {
   previewMode: boolean;
@@ -21,7 +20,7 @@ function PreviewNotice({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="preview-notice" role="status">
       <span className="preview-notice__dot" aria-hidden="true" />
-      <span>Đang xem bản preview với dữ liệu mẫu (Chưa có backend API).</span>
+      <span>Đang xem bản preview giao diện với dữ liệu mẫu (Chưa có backend API).</span>
       <TextButton onClick={onRetry}>Thử kết nối lại</TextButton>
     </div>
   );
@@ -42,50 +41,18 @@ function resolveNavLabelFromHash(hash: string, role: UserRole): string {
   if (clean === '#/reception-queue') return 'Hàng chờ tiếp nhận';
   if (clean === '#/assigned-orders') return 'Phiếu được phân công';
 
-  // Default per role
+  // Default entry per role
   if (role === 'receptionist') return 'Hôm nay';
   if (role === 'technician') return 'Hàng chờ công việc';
   return 'Tổng quan';
 }
 
-function isRoutePermitted(role: UserRole, hash: string): boolean {
-  const clean = hash.replace(/\/$/, '');
-  if (!clean || clean === '#/login' || clean === '#/showcase' || clean.startsWith('#/customer')) {
-    return true;
-  }
-
-  // Manager has workspace-wide access
-  if (role === 'manager') return true;
-
-  // Receptionist is forbidden from Settings and direct Management dashboard
-  if (role === 'receptionist') {
-    if (clean === '#/settings' || clean === '#/dashboard') return false;
-    return true;
-  }
-
-  // Technician is forbidden from Settings, Management dashboard, Reception today/lookup
-  if (role === 'technician') {
-    if (
-      clean === '#/settings' ||
-      clean === '#/dashboard' ||
-      clean === '#/today' ||
-      clean === '#/lookup' ||
-      clean === '#/reception-queue'
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  return true;
-}
-
 export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
-  const { currentUser, switchRole, logout, simulateSessionExpired, capabilities } = useSession();
+  const { currentUser, switchRole, logout, simulateSessionExpired, sessionNotice } = useSession();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
 
-  const currentRole = currentUser?.role || 'manager';
+  const currentRole: UserRole = currentUser?.role || 'manager';
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem('repairflow_sidebar_collapsed') === 'true';
@@ -100,7 +67,7 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
       try {
         localStorage.setItem('repairflow_sidebar_collapsed', String(next));
       } catch {
-        // ignore
+        // ignore storage errors
       }
       return next;
     });
@@ -116,25 +83,17 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
   }, []);
 
   const activeNav = resolveNavLabelFromHash(currentHash, currentRole);
-  const isPermitted = isRoutePermitted(currentRole, currentHash);
-
-  const handleSelectNav = (label: string) => {
-    // Label click triggers hash change handled in AppSidebar
-  };
-
-  const handleGoHome = () => {
-    const homeRoute = capabilities?.defaultRoute || '#/dashboard';
-    window.location.hash = homeRoute;
-  };
 
   return (
     <div className="app-layout">
+      {/* Sidebar with workspace context, drawer support, and close button */}
       <AppSidebar
         activeItem={activeNav}
-        onSelect={handleSelectNav}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
         isCollapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
+        storeName={currentUser?.storeName || 'Minh Tâm Store'}
         userName={currentUser?.name}
         userRole={currentUser?.roleTitle}
         userInitials={currentUser?.initials}
@@ -147,40 +106,38 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
       />
 
       <div className="app-main">
+        {/* Header with Title, Workspace badge, Search, Quick action, Notifications, User */}
         <AppHeader
           title={activeNav}
           onOpenMobileMenu={() => setMobileNavOpen(true)}
           isSidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={handleToggleSidebar}
+          storeName="Minh Tâm Store • TT Điều hành"
           userName={currentUser?.name}
           userRole={currentUser?.roleTitle}
           userInitials={currentUser?.initials}
         />
 
-        <main className="page-content">
-          {previewMode && <PreviewNotice onRetry={onRetry} />}
+        {/* Main Content Outlet with Notification/Feedback Slot */}
+        <main className="page-content" id="main-content">
+          <div className="shell-feedback-slot">
+            {previewMode && <PreviewNotice onRetry={onRetry} />}
+            {sessionNotice && (
+              <div className="access-expired-banner" role="alert">
+                <strong>Thông báo phiên:</strong> {sessionNotice}
+              </div>
+            )}
+          </div>
 
-          {/* UI-403: Forbidden State when user accesses an unauthorized route */}
-          {!isPermitted ? (
-            <ForbiddenState
-              roleTitle={currentUser?.roleTitle}
-              attemptedRoute={currentHash}
-              onGoHome={handleGoHome}
-              onLogout={logout}
-            />
+          {/* Dynamic View by Route & Persona */}
+          {activeNav === 'Thư viện UI' ? (
+            <ComponentShowcaseView />
           ) : (
-            <>
-              {/* Dynamic View by Route & Persona */}
-              {activeNav === 'Thư viện UI' ? (
-                <ComponentShowcaseView />
-              ) : (
-                <>
-                  {currentRole === 'manager' && <ManagerDashboardView />}
-                  {currentRole === 'receptionist' && <ReceptionistTodayView />}
-                  {currentRole === 'technician' && <TechnicianMyWorkView />}
-                </>
-              )}
-            </>
+            <DashboardPlaceholder
+              role={currentRole}
+              userName={currentUser?.name}
+              roleTitle={currentUser?.roleTitle}
+            />
           )}
         </main>
 

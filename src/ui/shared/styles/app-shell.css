@@ -1,0 +1,109 @@
+/**
+ * App Shell Styles (Target Architecture)
+ * Standard: 85% Slate / 15% Sky Blue
+ * Viewports: Desktop 1440x1024, Mobile 390x844
+ * Zoom Resilience: 110% baseline, 125% & 150% without body horizontal scroll
+ */
+
+/* App Layout Container */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background-color: var(--rf-bg-app, #f8fafc);
+  color: var(--rf-text-main, #0f172a);
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.page-content {
+  flex: 1;
+  padding: clamp(16px, 2.5vw, 24px);
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Feedback & Notification Slot */
+.shell-feedback-slot {
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.preview-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--rf-radius-md, 8px);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #0369a1;
+  flex-wrap: wrap;
+}
+
+.preview-notice__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--rf-primary, #0284c7);
+  flex-shrink: 0;
+}
+
+/* Mobile drawer controls */
+.sidebar-close-btn {
+  margin-left: auto;
+  color: var(--rf-text-muted, #64748b);
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-close-btn {
+    display: inline-flex;
+  }
+
+  .sidebar-toggle-btn {
+    display: none !important;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex !important;
+  }
+
+  .page-content {
+    padding: 16px 12px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-menu-button {
+    display: none !important;
+  }
+}
+
+/* Zoom Resilience (125% and 150%) */
+@media (min-resolution: 120dpi), (min-resolution: 1.25dppx) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)) !important;
+  }
+
+  .two-column-layout {
+    grid-template-columns: 1fr !important;
+  }
+}

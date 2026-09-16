@@ -2,9 +2,10 @@
  * Access API Adapter and Contracts
  * Follows C1 specification: separation of access principal, safe contracts,
  * role capability projections, and session lifecycle.
+ * Serves as the single boundary for C1-003 and C1-004 to plug real authentication APIs.
  */
 
-export type UserRole = 'manager' | 'receptionist' | 'technician';
+export type UserRole = 'owner' | 'manager' | 'receptionist' | 'technician';
 
 export interface UserProfile {
   id: string;
@@ -15,6 +16,14 @@ export interface UserProfile {
   initials: string;
   storeName: string;
   workspaceId: string;
+}
+
+export interface NavigationItem {
+  label: string;
+  route: string;
+  icon: string;
+  isPrimaryAction?: boolean;
+  badgeCount?: number;
 }
 
 export interface RoleCapabilities {
@@ -29,13 +38,7 @@ export interface RoleCapabilities {
   isReadOnlyLookup: boolean;
   isAssignedOnly: boolean;
   defaultRoute: string;
-  navigationItems: Array<{
-    label: string;
-    route: string;
-    icon: string;
-    isPrimaryAction?: boolean;
-    badgeCount?: number;
-  }>;
+  navigationItems: NavigationItem[];
 }
 
 export interface SessionContext {
@@ -43,6 +46,11 @@ export interface SessionContext {
   user: UserProfile;
   expiresAt: string;
   capabilities: RoleCapabilities;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password?: string;
 }
 
 export interface LoginResult {
@@ -53,6 +61,16 @@ export interface LoginResult {
 }
 
 export const DEMO_ACCOUNTS: Record<UserRole, UserProfile> = {
+  owner: {
+    id: 'staff-000',
+    name: 'Nguyễn Văn Minh',
+    role: 'owner',
+    roleTitle: 'Chủ cửa hàng (Owner)',
+    email: 'minh.owner@repairflow.vn',
+    initials: 'NM',
+    storeName: 'Minh Tâm Store',
+    workspaceId: 'ws-main',
+  },
   manager: {
     id: 'staff-001',
     name: 'Minh Tâm',
@@ -87,6 +105,7 @@ export const DEMO_ACCOUNTS: Record<UserRole, UserProfile> = {
 
 export function getRoleCapabilities(role: UserRole): RoleCapabilities {
   switch (role) {
+    case 'owner':
     case 'manager':
       return {
         canManageSettings: true,
@@ -155,7 +174,7 @@ const STORAGE_KEY = 'repairflow_active_session';
 const SESSION_DURATION_MS = 30 * 60 * 1000; // 30 mins idle timeout
 
 export interface AccessApi {
-  login(email: string, password?: string): Promise<LoginResult>;
+  login(credentials: LoginCredentials): Promise<LoginResult>;
   quickLogin(role: UserRole): Promise<SessionContext>;
   logout(): Promise<void>;
   getCurrentSession(): Promise<SessionContext | null>;
@@ -163,17 +182,17 @@ export interface AccessApi {
 }
 
 class MockAccessAdapter implements AccessApi {
-  async login(email: string, password?: string): Promise<LoginResult> {
-    const trimmed = email.trim().toLowerCase();
-    
-    // Simulate brief network latency
-    await new Promise((r) => setTimeout(r, 200));
+  async login(credentials: LoginCredentials): Promise<LoginResult> {
+    const trimmed = credentials.email.trim().toLowerCase();
+
+    // Brief async delay simulating network response
+    await new Promise((r) => setTimeout(r, 150));
 
     const matched = Object.values(DEMO_ACCOUNTS).find((u) => u.email.toLowerCase() === trimmed);
     if (!matched) {
       return {
         success: false,
-        errorMessage: 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.',
+        errorMessage: 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.',
       };
     }
 
@@ -187,7 +206,7 @@ class MockAccessAdapter implements AccessApi {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     } catch {
-      // Ignore storage errors
+      // Ignore storage errors in restricted/sandboxed mode
     }
 
     return {
@@ -223,6 +242,9 @@ class MockAccessAdapter implements AccessApi {
   }
 
   async getCurrentSession(): Promise<SessionContext | null> {
+    // Brief async call to simulate session resolution
+    await new Promise((r) => setTimeout(r, 50));
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;

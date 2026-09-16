@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useSession } from './session-context';
-import { LoginPage } from '../features/access/login-page';
-import { CustomerProgressView } from '../features/customer-link/customer-progress-view';
+import { AccessShell } from '../features/access/access-shell';
+import { CustomerLinkRoute } from '../features/customer-link/customer-link-route';
 import { InternalShell } from './internal-shell';
+import { GenericErrorScreen, SessionCheckingScreen } from './status-screens';
 
 export type AppRoute =
   | { kind: 'customer-link'; orderId: string }
@@ -30,7 +31,8 @@ interface RouteBoundaryProps {
 
 export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): ReactNode {
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
-  const { isAuthenticated, capabilities } = useSession();
+  const { sessionStatus, isAuthenticated, capabilities, errorMessage, retrySessionCheck } =
+    useSession();
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -40,7 +42,7 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Forward authenticated user away from #/login to their default entry route
+  // Forward authenticated user away from #/login to their default role entry route
   useEffect(() => {
     if (
       isAuthenticated &&
@@ -53,21 +55,38 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
 
   const route = resolveRoute(currentHash);
 
-  // 1. Customer Public Route (Independent boundary, no login required)
+  // 1. Customer Public Route (Independent boundary, no auth required, no internal shell)
   if (route.kind === 'customer-link') {
-    return <CustomerProgressView orderId={route.orderId} />;
+    return <CustomerLinkRoute orderId={route.orderId} />;
   }
 
-  // 2. Component Showcase (Publicly accessible for review / testing)
+  // 2. Component Showcase (Publicly accessible for review / design system verification)
   if (route.kind === 'showcase') {
     return <InternalShell previewMode={previewMode} onRetry={onRetry} />;
   }
 
-  // 3. Unauthenticated Internal State -> Render Login Page
-  if (!isAuthenticated) {
-    return <LoginPage />;
+  // 3. Internal Protected Route Handling by Session Status Lifecycle:
+  // 3a. Session Checking State
+  if (sessionStatus === 'session-checking') {
+    return <SessionCheckingScreen />;
   }
 
-  // 4. Authenticated Internal State -> Render Internal Shell
+  // 3b. Session Error State (Generic error with retry)
+  if (sessionStatus === 'error') {
+    return (
+      <GenericErrorScreen
+        title="Lỗi kiểm tra phiên làm việc"
+        message={errorMessage || 'Không thể xác thực phiên làm việc. Vui lòng thử lại.'}
+        onRetry={retrySessionCheck}
+      />
+    );
+  }
+
+  // 3c. Unauthenticated State -> Render Access Shell (Login boundary for C1-004)
+  if (!isAuthenticated || sessionStatus === 'unauthenticated') {
+    return <AccessShell />;
+  }
+
+  // 3d. Authenticated State -> Render Internal Application Shell
   return <InternalShell previewMode={previewMode} onRetry={onRetry} />;
 }

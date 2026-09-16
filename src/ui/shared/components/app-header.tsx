@@ -49,7 +49,17 @@ export function AppHeader({
 
   return (
     <header className="topbar">
-      {onToggleSidebar ? (
+      {onOpenMobileMenu && (
+        <IconButton
+          label="Mở điều hướng"
+          className="mobile-menu-button"
+          onClick={onOpenMobileMenu}
+        >
+          <IconMenu size={18} />
+        </IconButton>
+      )}
+
+      {onToggleSidebar && (
         <button
           type="button"
           className="sidebar-toggle-btn"
@@ -59,15 +69,7 @@ export function AppHeader({
         >
           <IconMenu size={18} />
         </button>
-      ) : onOpenMobileMenu ? (
-        <IconButton
-          label="Mở điều hướng"
-          className="mobile-menu-button"
-          onClick={onOpenMobileMenu}
-        >
-          <IconMenu size={18} />
-        </IconButton>
-      ) : null}
+      )}
 
       <div className="topbar-left">
         <h1 className="topbar-page-title">{displayTitle}</h1>

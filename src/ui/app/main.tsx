@@ -7,6 +7,7 @@ import { RouteBoundary } from './routes';
 import { SessionProvider } from './session-context';
 import '../features/access/access.css';
 import '../shared/styles/target.css';
+import '../shared/styles/app-shell.css';
 
 type BootstrapStatus = 'booting' | 'unavailable' | 'ready';
 
