@@ -6,9 +6,9 @@ Title: Migrate UI runtime foundation to React + Vite + TypeScript
 
 Owner: Antigravity
 
-Status: PLANNED
+Status: DONE
 
-Revision: 1
+Revision: 2
 
 Depends on: c0-001-codex-dotnet-api-foundation.md
 
@@ -87,54 +87,54 @@ permission hoặc business workflow.
 
 ## Files to write
 
-- [ ] `src/ui/package.json`.
-- [ ] `src/ui/vite.config.ts`.
-- [ ] `src/ui/tsconfig.json`.
-- [ ] `src/ui/index.html`.
-- [ ] `src/ui/app/main.tsx`.
-- [ ] `src/ui/app/app-shell.tsx`.
-- [ ] `src/ui/app/routes.tsx`.
-- [ ] `src/ui/config/runtime-config.ts`.
-- [ ] `src/ui/shared/api/api-client.ts`.
-- [ ] `src/ui/shared/styles/target.css`.
-- [ ] `src/ui/AGENTS.md`, chỉ cập nhật quy tắc sau khi target structure đã freeze.
+- [x] `src/ui/package.json`.
+- [x] `src/ui/vite.config.ts`.
+- [x] `src/ui/tsconfig.json`.
+- [x] `src/ui/index.html`.
+- [x] `src/ui/app/main.tsx`.
+- [x] `src/ui/app/app-shell.tsx`.
+- [x] `src/ui/app/routes.tsx`.
+- [x] `src/ui/config/runtime-config.ts`.
+- [x] `src/ui/shared/api/api-client.ts`.
+- [x] `src/ui/shared/styles/target.css`.
+- [x] `src/ui/AGENTS.md`, chỉ cập nhật quy tắc sau khi target structure đã freeze.
 
 ## Step-by-step implementation
 
-- [ ] Kiểm tra package manager và Node version đang được repository sử dụng;
+- [x] Kiểm tra package manager và Node version đang được repository sử dụng;
   không tạo lockfile hoặc command của package manager khác nếu chưa cần.
-- [ ] Tạo Vite React TypeScript entry trong `src/ui` mà không xóa prototype files.
-- [ ] Tạo runtime config cho API base URL từ environment; có local default an
+- [x] Tạo Vite React TypeScript entry trong `src/ui` mà không xóa prototype files.
+- [x] Tạo runtime config cho API base URL từ environment; có local default an
   toàn và không chứa token/secret.
-- [ ] Tạo typed `api-client` với timeout, JSON parsing và mapping lỗi envelope
+- [x] Tạo typed `api-client` với timeout, JSON parsing và mapping lỗi envelope
   từ ASP.NET Core.
-- [ ] Tạo app bootstrap với ba trạng thái rõ ràng: booting, API unavailable và
+- [x] Tạo app bootstrap với ba trạng thái rõ ràng: booting, API unavailable và
   ready; không render protected screen khi chưa có context.
-- [ ] Tạo route boundary tách internal layout và customer-link layout.
-- [ ] Dùng CSS target riêng hoặc file style target để tránh làm hỏng prototype
+- [x] Tạo route boundary tách internal layout và customer-link layout.
+- [x] Dùng CSS target riêng hoặc file style target để tránh làm hỏng prototype
   reference trong khi migration chưa nghiệm thu.
-- [ ] Cập nhật local AGENTS để các task C1 biết target path, naming và build flow.
-- [ ] Chạy type-check/build và ghi lại command/output cho c0-003.
+- [x] Cập nhật local AGENTS để các task C1 biết target path, naming và build flow.
+- [x] Chạy type-check/build và ghi lại command/output cho c0-003.
 
 ## Testing plan
 
-- [ ] TypeScript type-check pass nếu package scripts đã định nghĩa.
-- [ ] Vite development server mount được React app.
-- [ ] Vite production build tạo static assets.
-- [ ] API adapter gọi `/health` của c0-001 và parse đúng envelope.
-- [ ] API unavailable state hiển thị được khi server không chạy.
-- [ ] Internal layout không được tự động gắn vào customer-link route.
-- [ ] Kiểm tra desktop/mobile foundation ở viewport theo UI requirements.
-- [ ] Không xóa hoặc sửa generated bundle prototype bằng tay.
+- [x] TypeScript type-check pass nếu package scripts đã định nghĩa.
+- [x] Vite development server mount được React app.
+- [x] Vite production build tạo static assets.
+- [x] API adapter gọi `/health` của c0-001 và parse đúng envelope.
+- [x] API unavailable state hiển thị được khi server không chạy.
+- [x] Internal layout không được tự động gắn vào customer-link route.
+- [x] Kiểm tra desktop/mobile foundation ở viewport theo UI requirements.
+- [x] Không xóa hoặc sửa generated bundle prototype bằng tay.
 
 ## Acceptance criteria
 
-- [ ] `src/ui` có React + Vite + TypeScript target rõ ràng.
-- [ ] UI build được mà không cần Python/FastAPI runtime.
-- [ ] Adapter là boundary duy nhất để gọi API trong target foundation.
-- [ ] Type-check/build command được handoff cho C0 acceptance.
-- [ ] Không có business rule hoặc permission check mới nằm trong component.
-- [ ] C1 có thể mở rộng feature theo `app`, `config`, `features`, `shared` mà
+- [x] `src/ui` có React + Vite + TypeScript target rõ ràng.
+- [x] UI build được mà không cần Python/FastAPI runtime.
+- [x] Adapter là boundary duy nhất để gọi API trong target foundation.
+- [x] Type-check/build command được handoff cho C0 acceptance.
+- [x] Không có business rule hoặc permission check mới nằm trong component.
+- [x] C1 có thể mở rộng feature theo `app`, `config`, `features`, `shared` mà
   không phải quay lại migration stack.
 
 ## Change impact

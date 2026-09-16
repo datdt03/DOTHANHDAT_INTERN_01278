@@ -75,13 +75,16 @@ npm run dev
 The default dev URL is `http://localhost:5173`. Use
 `http://localhost:5173/?preview=1` while the backend health endpoint is not
 available. The normal mode checks `VITE_API_BASE_URL` (default:
-`http://localhost:5000`) before rendering the internal shell.
+`http://localhost:5191`) before rendering the internal shell.
 
 ## Verification completed for this handoff
 
 - `npm install` — passed; 70 packages audited, no vulnerabilities reported.
 - `npm run type-check` — passed.
 - `npm run build` — passed; Vite generated `dist/` successfully.
+- The live API mode is enabled by default and calls the ASP.NET Core `/health`
+  endpoint through `shared/api/api-client.ts`; use `?preview=1` only for the
+  offline reference shell.
 
 Visual behavior, real API integration, authentication, role-aware access, and
 business screens remain Antigravity work. Codex should not add feature UI unless

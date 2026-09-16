@@ -124,7 +124,8 @@ especially the [business requirements](docs/v0/03-business-and-domain-requiremen
   UI. Vite chỉ là công cụ dev/build; frontend production là static assets,
   không phải business API của RepairFlow.
 - **Database**: PostgreSQL; data access target là EF Core + Npgsql và schema
-  migration vẫn phải có version.
+  migration dùng SQL-first, có version. Convention filename và branch baseline
+  nằm trong [database requirements](docs/v0/05-database-requirements.md#120-quyết-định-và-quy-ước-file-migration).
 - **Frontend/API boundary**: UI gọi ASP.NET Core API qua adapter; React chỉ
   render giao diện và không chứa business rule.
 
@@ -135,10 +136,10 @@ giữ nguyên.
 
 ## Current project status
 
-**Last reviewed:** 2026-09-16<br>
+**Last reviewed:** 2026-09-17<br>
 **Current phase:** `v0 — Implementation`<br>
 **Overall status:** `READY — Gate D0 is closed`<br>
-**Current implementation gate:** `C0 — Rebuild target runtime and UI foundation`
+**Current implementation gate:** `C0 — ACCEPTED; C1 awaits explicit approval`
 
 ### Delivery status
 
@@ -146,9 +147,9 @@ giữ nguyên.
 | --- | --- | --- | --- | --- |
 | Requirements baseline | `READY — D0 CLOSED` | [v0 requirements](docs/v0/README.md) | Use the closed baseline to implement by cluster. | Product / Engineering |
 | Architecture diagrams | `DECIDED — BASELINE CLOSED` | [C4 + Mermaid architecture](docs/v0/04-architecture-c4-arc42.md) | Keep diagrams aligned with implementation changes. | Product / Engineering |
-| Runtime foundation | `RESET — NOT STARTED` | [C0 migration plans](plans/v0/c0-runtime-stack-migration) | Rebuild the backend with ASP.NET Core/.NET and recreate the target test/migration baseline. | Engineering |
+| Runtime foundation | `DONE — C0 ACCEPTED` | [C0 acceptance evidence](plans/v0/c0-runtime-stack-migration/c0-003-acceptance-evidence.md) | Keep the clean target runtime stable for the approved C1 slice. | Engineering |
 | Business API | `NOT STARTED` | [v0 documentation](docs/v0/README.md) | Start implementation from C1 and continue by cluster. | Engineering |
-| UI integration | `FOUNDATION READY — HANDOFF TO ANTIGRAVITY` | [UI source](src/ui) | Continue feature screens and real API integration from the shared foundation. | Antigravity / UI |
+| UI integration | `FOUNDATION VERIFIED — LIVE HEALTH ADAPTER` | [UI source](src/ui) | Continue feature screens only after C1 approval. | Antigravity / UI |
 | English standardization | `IN PROGRESS` | Repository documentation and UI source | Complete the language pass and run the language audit. | Engineering |
 | Deployment and monitoring | `DEFERRED` | v0 scope | Define in a later phase. | Product / Engineering |
 
@@ -160,14 +161,15 @@ giữ nguyên.
 - The existing vanilla UI and bundle are retained as functional/visual reference
   artifacts; the target React/Vite foundation is now active in `src/ui`.
 - The React foundation has a typed API adapter, internal/customer shell
-  boundary, preview mode, and reusable shared primitives. Backend/API remains
-  inactive until C0 backend work is complete.
+  boundary, explicit preview mode, and reusable shared primitives. The adapter
+  has been smoke-tested against the target ASP.NET Core `/health` endpoint.
 
-### Implementation gaps
+### Remaining implementation gaps after C0
 
-1. C0 target runtime, versioned migration runner and backend test harness still need to be created.
-2. The dashboard, order detail, and customer link still depend on mock data until the UI adapter is connected to the business API.
-3. Business endpoints and management/staff authentication still need to be implemented after C0.
+1. Each future business migration still requires its own apply/re-run
+   verification in the capability plan.
+2. The dashboard, order detail, and customer link still depend on mock data until the business API is implemented.
+3. Business endpoints and management/staff authentication still need to be implemented after C1 approval.
 
 These are implementation tasks after D0 closure, not requirements-gate blockers. The closure record is maintained in [01-requirements-closure.md](docs/v0/01-requirements-closure.md).
 
@@ -175,8 +177,8 @@ These are implementation tasks after D0 closure, not requirements-gate blockers.
 
 | Cluster | Business capability | Status |
 | --- | --- | --- |
-| C0 | Target runtime, migration runner, adapter boundary, and test harness | `MIGRATION REQUIRED` |
-| C1 | Owner/Manager access and application shell | `BLOCKED BY C0` |
+| C0 | Target runtime, migration runner, adapter boundary, and test harness | `DONE — ACCEPTED` |
+| C1 | Owner/Manager access and application shell | `READY — AWAITING APPROVAL` |
 | C2 | Customer, device, and order creation | `OPEN FOR IMPLEMENTATION` |
 | C3 | Intake checklist and evidence | `OPEN FOR IMPLEMENTATION` |
 | C4 | Diagnosis and quotation draft | `OPEN FOR IMPLEMENTATION` |
@@ -214,10 +216,9 @@ The [documentation guide](docs/README.md) defines the authority of each document
 
 ### Current implementation state
 
-Backend/API chưa có runtime active sau khi prototype cũ được xóa. Thực hiện
-[c0-001](plans/v0/c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md)
-trước khi chạy API. UI foundation của [c0-002](plans/v0/c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md)
-đã được tạo và bàn giao tại [src/ui/README.md](src/ui/README.md).
+Backend target đã sẵn sàng tại `src/server` sau khi C0 acceptance pass. UI
+foundation của [c0-002](plans/v0/c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md)
+đã được kiểm chứng cùng API thật tại [src/ui/README.md](src/ui/README.md).
 
 Use [.env.example](.env.example) for local configuration. Never commit `.env`, real passwords, tokens, or customer data.
 
@@ -230,6 +231,21 @@ docker compose ps
 
 The database is ready when the container reports `healthy`.
 
+### Run the target API
+
+```powershell
+dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj --urls http://localhost:5191
+```
+
+### Apply target database migrations
+
+```powershell
+dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --migrate
+```
+
+Migrations are SQL-first and must follow the naming and baseline rules in
+[the database requirements](docs/v0/05-database-requirements.md#120-quyết-định-và-quy-ước-file-migration).
+
 ### Run the target UI
 
 ```powershell
@@ -238,14 +254,15 @@ npm install
 npm run dev
 ```
 
-Mở `http://localhost:5173/?preview=1` để xem shell với dữ liệu mẫu khi backend
+Mở `http://localhost:5173/` để chạy live mode. Dùng
+`http://localhost:5173/?preview=1` để xem shell với dữ liệu mẫu khi backend
 chưa chạy. Các file vanilla và `app.bundle.js` trong `src/ui` chỉ còn là
 functional/visual reference.
 
 ### Run target checks
 
 UI checks đã có sẵn trong [src/ui/README.md](src/ui/README.md). Backend build/test
-và API integration vẫn chờ C0-001.
+và API integration evidence nằm trong [C0 acceptance record](plans/v0/c0-runtime-stack-migration/c0-003-acceptance-evidence.md).
 
 ## Project structure
 
@@ -285,13 +302,13 @@ frontend uses Vite; do not treat the legacy bundle as the active UI runtime.
 - [x] Target ASP.NET Core/.NET + React/Vite technology baseline is documented.
 - [x] Legacy backend/test prototype is removed for a clean implementation reset.
 - [x] Existing UI is retained as a reference.
-- [ ] ASP.NET Core/.NET runtime and `/health` contract are implemented.
-- [ ] Target versioned migration runner is implemented and verified.
+- [x] ASP.NET Core/.NET runtime and `/health` contract are implemented.
+- [x] Target versioned migration runner is implemented and verified.
 - [x] React/Vite/TypeScript app and API adapter foundation are implemented.
-- [ ] Target backend and UI test/build baseline passes.
+- [x] Target backend and UI test/build baseline passes.
 - [x] Core workflow, access, OTP, retention, backup, and cancellation decisions are recorded in v0 documentation.
 - [x] Core class and sequence diagrams are embedded as Mermaid blocks in the architecture Markdown.
 - [ ] Business API and Owner/Manager authentication are complete.
-- [ ] UI is connected to the real API.
+- [x] UI is connected to the real API health boundary.
 - [ ] English standardization audit is complete.
 - [ ] Deployment and monitoring are defined for a later phase.

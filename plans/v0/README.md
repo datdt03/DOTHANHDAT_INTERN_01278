@@ -1,13 +1,12 @@
 # RepairFlow v0 — implementation index
 
-> Status: ACTIVE — C0 target-stack migration required before C1
+> Status: ACTIVE — C0 accepted; C1 awaits explicit approval
 >
 > Requirements baseline: Gate D0 closed on 2026-09-16.
 
-Đây là mục lục điều phối triển khai v0. D0 đã cho phép bắt đầu engineering,
-nhưng runtime Python/FastAPI đã được xóa để reset implementation; UI hiện tại
-vẫn là vanilla JavaScript reference. Vì vậy C0 chưa được coi là hoàn tất theo
-target stack trong docs/v0.
+Đây là mục lục điều phối triển khai v0. D0 đã cho phép bắt đầu engineering;
+runtime Python/FastAPI và database prototype cũ đã được loại khỏi target.
+Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và database sạch.
 
 ## Cách đọc và cách chạy plan
 
@@ -22,8 +21,8 @@ target stack trong docs/v0.
 
 | Cluster | Nội dung | Trạng thái | Plan hiện tại |
 | --- | --- | --- | --- |
-| C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | MIGRATION REQUIRED | [c0-001-codex-dotnet-api-foundation.md](./c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md) |
-| C1 | Access, authentication, authorization và application shell | BLOCKED BY C0 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) |
+| C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE — ACCEPTED 2026-09-17 | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
+| C1 | Access, authentication, authorization và application shell | READY — AWAITING APPROVAL | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) |
 | C2 | Customer, device và repair order | PLANNED | Chưa tạo task chi tiết |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
@@ -38,9 +37,9 @@ target stack trong docs/v0.
 
 | Order | Plan | Owner | Depends on | Status |
 | ---: | --- | --- | --- | --- |
-| 1 | [c0-001-codex-dotnet-api-foundation.md](./c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md) | Codex | D0 + compatibility baseline | READY |
-| 2 | [c0-002-antigravity-react-vite-foundation.md](./c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md) | Antigravity | c0-001 | PLANNED |
-| 3 | [c0-003-shared-stack-migration-acceptance.md](./c0-runtime-stack-migration/c0-003-shared-stack-migration-acceptance.md) | Shared | c0-002 | PLANNED |
+| 1 | [c0-001-codex-dotnet-api-foundation.md](./c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md) | Codex | D0 + compatibility baseline | DONE |
+| 2 | [c0-002-antigravity-react-vite-foundation.md](./c0-runtime-stack-migration/c0-002-antigravity-react-vite-foundation.md) | Antigravity | c0-001 | DONE |
+| 3 | [c0-003-shared-stack-migration-acceptance.md](./c0-runtime-stack-migration/c0-003-shared-stack-migration-acceptance.md) | Shared | c0-002 | DONE |
 
 C0 chỉ hoàn tất khi health contract, OpenAPI 3.0, .NET API runtime, PostgreSQL
 boundary, React/Vite build và API adapter boundary cùng được kiểm chứng. Không
@@ -50,7 +49,7 @@ khôi phục các file database/migration prototype cũ trong các plan này.
 
 | Order | Plan | Owner | Depends on | Status |
 | ---: | --- | --- | --- | --- |
-| 1 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) | Codex | c0-003 | BLOCKED |
+| 1 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) | Codex | c0-003 | READY — AWAITING APPROVAL |
 | 2 | [c1-002-antigravity-ui-shell.md](./c1-access-and-application-shell/c1-002-antigravity-ui-shell.md) | Antigravity | c1-001 | PLANNED |
 | 3 | [c1-003-codex-auth-session.md](./c1-access-and-application-shell/c1-003-codex-auth-session.md) | Codex | c1-002 | PLANNED |
 | 4 | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) | Antigravity | c1-003 | PLANNED |

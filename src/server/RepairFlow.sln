@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepairFlow.Api", "RepairFlow.Api\RepairFlow.Api.csproj", "{ED7759EF-6962-40B6-95EC-2548398E4DE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepairFlow.Api.Tests", "..\..\tests\server\RepairFlow.Api.Tests\RepairFlow.Api.Tests.csproj", "{E92BE372-8D48-432A-90CC-C29F415A51A2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED7759EF-6962-40B6-95EC-2548398E4DE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED7759EF-6962-40B6-95EC-2548398E4DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED7759EF-6962-40B6-95EC-2548398E4DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED7759EF-6962-40B6-95EC-2548398E4DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E92BE372-8D48-432A-90CC-C29F415A51A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E92BE372-8D48-432A-90CC-C29F415A51A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E92BE372-8D48-432A-90CC-C29F415A51A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E92BE372-8D48-432A-90CC-C29F415A51A2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

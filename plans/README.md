@@ -60,6 +60,29 @@ Target đã chốt trong `docs/v0/`:
 - Boundary: React gọi ASP.NET Core API qua adapter; business rule, permission,
   transaction và response contract nằm ở backend.
 
+## Database migration file standard
+
+Database source of truth và convention đầy đủ nằm tại
+[`docs/v0/05-database-requirements.md`](../docs/v0/05-database-requirements.md).
+Mọi agent triển khai database phải đọc mục `12.0. Quyết định và quy ước file
+migration` trước khi tạo hoặc sửa SQL.
+
+Các rule bắt buộc khi tạo migration:
+
+- Dùng SQL-first file trong
+  `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/`.
+- Tên file dùng format
+  `YYYYMMDD_GLOBAL_SEQUENCE__spec-vX__description.sql`, ví dụ
+  `20260917_0001__spec-v0__create-workspaces.sql`.
+- `GLOBAL_SEQUENCE` là số thứ tự toàn cục và không reset khi tài liệu chuyển từ
+  `v0` sang `v1`; `spec-vX` chỉ để truy vết baseline tài liệu.
+- Không sửa/rename/xóa migration đã merge hoặc đã chạy. Sửa schema bằng file
+  mới và cập nhật docs source of truth trước nếu contract thay đổi.
+- Mỗi migration phải ghi `migration_id`, `spec`, `section`, `purpose` và
+  `depends_on` trong SQL header; runner chịu trách nhiệm transaction, ledger,
+  checksum, thứ tự và concurrency lock.
+- Không dùng EF Core generated migration hoặc khôi phục migration prototype cũ.
+
 `src/app/` và `src/db/` là compatibility prototype Python/FastAPI đã được xóa.
 `src/ui/` vẫn là vanilla JavaScript prototype dùng làm functional/visual
 reference. Không phần nào trong số đó là nền tảng target để viết C1. Việc dựng

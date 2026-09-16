@@ -1,7 +1,11 @@
 export interface HealthResponse {
-  status?: string;
   data?: {
     status?: string;
+    service?: string;
+    apiVersion?: string;
+  };
+  meta?: {
+    requestId?: string;
   };
 }
 
@@ -34,6 +38,13 @@ function getErrorMessage(status: number, payload: unknown): string {
     const message = (payload as { message?: unknown }).message;
     if (typeof message === 'string' && message.trim()) {
       return message;
+    }
+  }
+
+  if (typeof payload === 'object' && payload !== null && 'error' in payload) {
+    const error = (payload as { error?: { message?: unknown } }).error;
+    if (error && typeof error.message === 'string' && error.message.trim()) {
+      return error.message;
     }
   }
 

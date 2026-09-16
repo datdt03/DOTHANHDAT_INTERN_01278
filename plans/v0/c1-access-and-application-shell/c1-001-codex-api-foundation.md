@@ -6,7 +6,7 @@ Title: Dựng access feature boundary trên ASP.NET Core
 
 Owner: Codex
 
-Status: BLOCKED
+Status: READY
 
 Revision: 2
 

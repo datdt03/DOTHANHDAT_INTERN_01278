@@ -159,8 +159,8 @@ thể chỉ được freeze sau Gate D0 và API contract riêng.
 Code-level view chỉ mô tả khi có câu hỏi cần trả lời ở mức module/class. Trong
 giai đoạn chuyển đổi, cần phân biệt target layout với C0 compatibility code:
 
-- **Target backend**: solution/project ASP.NET Core Web API trên .NET; layout
-  feature và project boundary sẽ được tạo trong migration task.
+- **Target backend**: solution/project ASP.NET Core Web API trên .NET tại
+  `src/server`; layout feature và project boundary đã được tạo trong C0.
 - **C0 trước migration**: `src/app/` và `src/db/` là FastAPI/database
   prototype; các file này đã được loại bỏ. `src/ui/` vẫn là UI prototype làm
   functional/visual reference.
@@ -197,8 +197,8 @@ Browser
                               └─ Object Storage (PROPOSED)
 ```
 
-PostgreSQL local vẫn chạy bằng Docker Compose. Target topology trên sẽ được
-dựng lại từ đầu; hiện chưa có backend runtime active. Deployment ngoài local, monitoring,
+PostgreSQL local vẫn chạy bằng Docker Compose. Target topology trên đã được
+dựng lại ở mức C0; backend runtime active tại `src/server`. Deployment ngoài local, monitoring,
 observability và rollback policy được tạm thời để sau; không coi sơ đồ này là
 production topology. Backup database hằng ngày, giữ 14 bản gần nhất và kiểm tra
 khôi phục là mặc định kỹ thuật v0, nhưng chưa mô tả topology production.

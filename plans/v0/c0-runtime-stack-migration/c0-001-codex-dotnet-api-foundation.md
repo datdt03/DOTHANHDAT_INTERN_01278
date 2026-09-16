@@ -6,9 +6,9 @@ Title: Migrate API runtime foundation to ASP.NET Core Web API
 
 Owner: Codex
 
-Status: READY
+Status: DONE
 
-Revision: 1
+Revision: 2
 
 Depends on: Gate D0 closed; historical C0 contract recorded in README and docs/v0
 
@@ -89,65 +89,65 @@ triển khai login hay business workflow.
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.sln`.
-- [ ] `src/server/RepairFlow.Api/RepairFlow.Api.csproj`.
-- [ ] `src/server/RepairFlow.Api/Program.cs`.
-- [ ] `src/server/RepairFlow.Api/Api/Middleware/RequestIdMiddleware.cs`.
-- [ ] `src/server/RepairFlow.Api/Api/Middleware/ExceptionHandlingMiddleware.cs`.
-- [ ] `src/server/RepairFlow.Api/Api/Responses/ApiResponse.cs`.
-- [ ] `src/server/RepairFlow.Api/Api/Responses/ApiError.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Health/HealthEndpoints.cs`.
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/RepairFlowDbContext.cs`.
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/VersionedMigrationRunner.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/RepairFlow.Api.Tests.csproj`.
-- [ ] `tests/server/RepairFlow.Api.Tests/HealthContractTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/ErrorContractTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/OpenApiContractTests.cs`.
+- [x] `src/server/RepairFlow.sln`.
+- [x] `src/server/RepairFlow.Api/RepairFlow.Api.csproj`.
+- [x] `src/server/RepairFlow.Api/Program.cs`.
+- [x] `src/server/RepairFlow.Api/Api/Middleware/RequestIdMiddleware.cs`.
+- [x] `src/server/RepairFlow.Api/Api/Middleware/ExceptionHandlingMiddleware.cs`.
+- [x] `src/server/RepairFlow.Api/Api/Responses/ApiResponse.cs`.
+- [x] `src/server/RepairFlow.Api/Api/Responses/ApiError.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Health/HealthEndpoints.cs`.
+- [x] `src/server/RepairFlow.Api/Infrastructure/Database/RepairFlowDbContext.cs`.
+- [x] `src/server/RepairFlow.Api/Infrastructure/Database/VersionedMigrationRunner.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/RepairFlow.Api.Tests.csproj`.
+- [x] `tests/server/RepairFlow.Api.Tests/HealthContractTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/ErrorContractTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/OpenApiContractTests.cs`.
 
 Không ghi file vào `src/db` trong task này. Nếu scaffold thực tế cần tên file
 khác, cập nhật Revision trước khi implement để các plan sau dùng cùng path.
 
 ## Step-by-step implementation
 
-- [ ] Kiểm tra .NET SDK version có sẵn và chốt target framework trong file
+- [x] Kiểm tra .NET SDK version có sẵn và chốt target framework trong file
   project; không tự thêm version khác với môi trường/repository.
-- [ ] Tạo solution/project dưới `src/server/` và test project dưới `tests/server`.
-- [ ] Đăng ký ASP.NET Core routing, JSON options, configuration/options và
+- [x] Tạo solution/project dưới `src/server/` và test project dưới `tests/server`.
+- [x] Đăng ký ASP.NET Core routing, JSON options, configuration/options và
   OpenAPI 3.0 document.
-- [ ] Implement request-ID middleware: nhận ID hợp lệ nếu policy cho phép hoặc
+- [x] Implement request-ID middleware: nhận ID hợp lệ nếu policy cho phép hoặc
   tạo ID mới, gắn vào response header và request scope.
-- [ ] Implement success envelope theo shape `data` + `meta.requestId`.
-- [ ] Implement error envelope theo shape `error.code`, `message`, `details`
+- [x] Implement success envelope theo shape `data` + `meta.requestId`.
+- [x] Implement error envelope theo shape `error.code`, `message`, `details`
   và `requestId`; map 404, validation và unexpected error.
-- [ ] Implement `/health` với đúng các field C0 đã kiểm chứng.
-- [ ] Đăng ký `RepairFlowDbContext` với PostgreSQL/Npgsql qua configuration,
+- [x] Implement `/health` với đúng các field C0 đã kiểm chứng.
+- [x] Đăng ký `RepairFlowDbContext` với PostgreSQL/Npgsql qua configuration,
   nhưng không chạy thay đổi schema trong task foundation.
-- [ ] Tạo migration-runner abstraction có version, transaction và idempotency
+- [x] Tạo migration-runner abstraction có version, transaction và idempotency
   seam; để task database cụ thể bổ sung SQL target sau khi schema được đối chiếu.
-- [ ] Viết test contract cho health, 404, request ID và OpenAPI.
-- [ ] Ghi command `dotnet build` và `dotnet test` vào output handoff cho C0-002.
+- [x] Viết test contract cho health, 404, request ID và OpenAPI.
+- [x] Ghi command `dotnet build` và `dotnet test` vào output handoff cho C0-002.
 
 ## Testing plan
 
-- [ ] `dotnet build src/server/RepairFlow.sln` pass.
-- [ ] `dotnet test` cho test project .NET pass.
-- [ ] GET `/health` trả status 200 và đúng response/header contract.
-- [ ] GET endpoint không tồn tại trả status 404 và error envelope JSON.
-- [ ] Request ID xuất hiện giống nhau trong header và body.
-- [ ] OpenAPI document là version 3.0 và không lộ connection string/secret.
-- [ ] API khởi động được khi PostgreSQL config hợp lệ; lỗi database không làm
+- [x] `dotnet build src/server/RepairFlow.sln` pass.
+- [x] `dotnet test` cho test project .NET pass.
+- [x] GET `/health` trả status 200 và đúng response/header contract.
+- [x] GET endpoint không tồn tại trả status 404 và error envelope JSON.
+- [x] Request ID xuất hiện giống nhau trong header và body.
+- [x] OpenAPI document là version 3.0 và không lộ connection string/secret.
+- [x] API khởi động được khi PostgreSQL config hợp lệ; lỗi database không làm
   lộ credential.
-- [ ] Không yêu cầu khôi phục hoặc chạy các migration file prototype cũ.
+- [x] Không yêu cầu khôi phục hoặc chạy các migration file prototype cũ.
 
 ## Acceptance criteria
 
-- [ ] C0 health behavior chạy được trên ASP.NET Core/.NET.
-- [ ] API không còn phụ thuộc FastAPI để cung cấp target runtime.
-- [ ] Error/response/request-ID contract có test tự động.
-- [ ] OpenAPI 3.0 có thể được C1 dùng làm contract đầu vào.
-- [ ] EF Core + Npgsql đã được đăng ký qua infrastructure boundary.
-- [ ] Migration runner target có boundary rõ ràng nhưng không tự ý đổi schema.
-- [ ] c0-002 có thể chạy UI adapter tới URL API đã cấu hình.
+- [x] C0 health behavior chạy được trên ASP.NET Core/.NET.
+- [x] API không còn phụ thuộc FastAPI để cung cấp target runtime.
+- [x] Error/response/request-ID contract có test tự động.
+- [x] OpenAPI 3.0 có thể được C1 dùng làm contract đầu vào.
+- [x] EF Core + Npgsql đã được đăng ký qua infrastructure boundary.
+- [x] Migration runner target có boundary rõ ràng nhưng không tự ý đổi schema.
+- [x] c0-002 có thể chạy UI adapter tới URL API đã cấu hình.
 
 ## Change impact
 

@@ -6,7 +6,7 @@
 >
 > Revision: 2
 >
-> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration is still open.
+> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration accepted on 2026-09-17. C1 awaits explicit approval.
 
 ## Goal
 
@@ -152,20 +152,22 @@ Hai bên chỉ đánh dấu lát hoàn thành khi UI gọi được behavior ser
 adapter mock có cùng shape khi server chưa chạy), backend test và UI check cùng
 pass acceptance scenario, và không có business rule chỉ tồn tại ở client.
 
-## C0 migration gate
+## C0 migration gate — accepted 2026-09-17
 
 ```text
 c0-001 Codex: ASP.NET Core/.NET API foundation
     ↓
 c0-002 Antigravity: React + Vite + TypeScript foundation
     ↓
-c0-003 Shared: stack migration acceptance
+c0-003 Shared: stack migration acceptance — DONE
     ↓
-c1-001 Codex: access API foundation
+c1-001 Codex: access API foundation — READY, approval required before implementation
 ```
 
-C0 phải xác nhận health contract `/health`, request ID, error/response envelope,
-OpenAPI 3.0, PostgreSQL boundary và UI adapter trước khi C1 được mở.
+C0 đã xác nhận health contract `/health`, request ID, error/response envelope,
+OpenAPI 3.0, PostgreSQL provider boundary, migration convention/runner và UI
+adapter trên database sạch. C1 chưa được triển khai; việc bắt đầu C1 vẫn cần
+Product/Engineering approval riêng.
 
 ## C1 execution map
 

@@ -62,9 +62,9 @@ Public Customer Link ───┘                   │
 - **Local database**: PostgreSQL 18 Alpine chạy bằng Docker Compose; cấu hình qua biến môi trường, không commit secret.
 
 **Implementation note:** Python/FastAPI tại `src/app/`, `src/db/` và test
-prototype đã được loại bỏ để reset implementation. C0 target phải dựng lại
-health endpoint, migration runner và test baseline bằng ASP.NET Core/.NET; đây
-không phải thay đổi requirements hay business scope.
+prototype đã được loại bỏ để reset implementation. C0 target đã dựng lại
+health endpoint, migration runner và test baseline bằng ASP.NET Core/.NET tại
+`src/server`; đây không phải thay đổi requirements hay business scope.
 
 ## 3. Vai trò và phân quyền
 

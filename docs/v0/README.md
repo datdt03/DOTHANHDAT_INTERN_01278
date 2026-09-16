@@ -11,16 +11,17 @@ Read [the documentation guide](../README.md) first. It defines the documentation
 ## Phase status
 
 - **Phase status:** `DECIDED — Gate D0 is closed`.
-- The v0 product baseline is closed for implementation; business clusters C1–C10 are open.
+- The v0 product baseline is closed for implementation; business clusters C1–C10 remain gated by their dependencies.
 - ASP.NET Core Web API trên .NET, PostgreSQL và versioned SQL migrations là
   nền tảng kỹ thuật target; .NET là backend/API bắt buộc.
 - The previous C0 Python/FastAPI runtime, Python tests and prototype migration
   files were intentionally removed for a clean target-stack implementation reset.
 - PostgreSQL 18-alpine remains the local database target; the .NET migration
-  runner, health endpoint, response envelope, request ID and test baseline must
-  be recreated by the C0 implementation plans.
-- C0 target runtime is not active until the ASP.NET Core/.NET and React/Vite
-  migration acceptance passes.
+  runner, health endpoint, response envelope, request ID, migration convention
+  and test baseline were recreated and accepted by C0 on 2026-09-17. The local
+  database was reset to a clean target volume during final acceptance.
+- C0 target runtime is active under `src/server` and the React/Vite adapter has
+  been smoke-tested against the real `/health` endpoint. C1 remains approval-gated.
 - Business implementation continues by cluster; the UI prototype is still backed by mock data until its adapter is connected.
 - The target web UI is React + Vite + TypeScript; React is not the authoritative
   business API layer.

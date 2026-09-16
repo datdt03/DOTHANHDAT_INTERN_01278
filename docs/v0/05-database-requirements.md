@@ -46,7 +46,7 @@ Không bao gồm trong MVP:
 | JSON | Chỉ dùng cho checklist, phụ kiện và metadata audit; dữ liệu cần lọc/báo cáo phải là cột riêng |
 | Xóa dữ liệu | Không xóa cứng bằng chứng, quyết định, lịch sử trạng thái và audit log |
 | File | Object Storage private; database lưu metadata và `object_key` |
-| Migration | Migration có version, chạy tuần tự và có thể rollback theo chính sách triển khai |
+| Migration | SQL migration có version, chạy tuần tự; migration đã chạy là immutable và rollback theo chính sách corrective migration/restore |
 | Tiền tố bảng | Không bắt buộc; dùng tên số nhiều dạng `snake_case` |
 
 ### 2.1. Quy ước cột dùng chung
@@ -1092,6 +1092,90 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 
 ## 12. Migration và seed data
 
+### 12.0. Quyết định và quy ước file migration
+
+**DECIDED — 2026-09-17**
+
+RepairFlow dùng SQL-first migration. Các file SQL là artifact migration được
+review và commit trong repository; migration runner thuộc backend
+ASP.NET Core/.NET đọc, kiểm tra và chạy chúng trên PostgreSQL. EF Core + Npgsql
+chỉ là data-access boundary của ứng dụng, không dùng `dotnet ef migrations add`
+để sinh hoặc sửa lịch sử schema của RepairFlow.
+
+Thư mục chuẩn:
+
+```text
+src/server/RepairFlow.Api/Infrastructure/Database/Migrations/
+```
+
+Tên file chuẩn:
+
+```text
+YYYYMMDD_GLOBAL_SEQUENCE__spec-vX__description.sql
+```
+
+Ví dụ:
+
+```text
+20260917_0001__spec-v0__create-workspaces.sql
+20260917_0002__spec-v0__create-users.sql
+20261005_0003__spec-v1__add-workspace-settings.sql
+```
+
+Quy ước từng phần:
+
+- `YYYYMMDD` dùng ngày tạo file, luôn đủ 8 chữ số để sort ổn định.
+- `GLOBAL_SEQUENCE` là số thứ tự migration toàn cục, zero-padded (`0001`,
+  `0002`, ...), không reset khi chuyển từ `spec-v0` sang `spec-v1`.
+- `spec-vX` là version của baseline tài liệu/đặc tả dùng để thiết kế migration,
+  không phải database execution version.
+- `description` dùng tiếng Anh, `kebab-case`, không dấu, không khoảng trắng.
+- Migration identity là `YYYYMMDD_GLOBAL_SEQUENCE`; filename và checksum cũng
+  phải được lưu trong migration ledger để truy vết.
+
+Mỗi file phải có header mô tả nguồn và dependency:
+
+```sql
+-- migration_id: 20260917_0001
+-- spec: docs/v0/05-database-requirements.md
+-- section: 2.1
+-- purpose: Create workspace table
+-- depends_on: none
+```
+
+Quy tắc baseline và branch:
+
+- Mỗi plan/branch phải khai báo một specification baseline, ví dụ
+  `docs/v0`.
+- Các migration trong branch phải tham chiếu đúng baseline đã khai báo; không
+  trộn `spec-v0` và `spec-v1` nếu plan chưa ghi rõ amendment được chấp thuận.
+- Chỉ tạo `docs/v1`/`spec-v1` khi Product/Engineering chấp thuận một baseline
+  yêu cầu hoặc schema mới. Sửa typo, làm rõ câu chữ hoặc bổ sung không phá vỡ
+  contract vẫn thuộc `v0`.
+- Đổi specification version không được đổi tên, sửa hoặc xóa migration cũ.
+- Không dùng tên branch làm migration ID; migration phải có thể merge,
+  cherry-pick và triển khai độc lập với branch.
+
+Quy tắc thực thi và an toàn:
+
+- Runner validate filename, duplicate ID, thứ tự và checksum trước khi chạy.
+- Ledger tối thiểu lưu `migration_id`, `filename`, `spec_version`, `checksum`
+  và `applied_at`.
+- Runner lấy PostgreSQL advisory lock trước khi apply để chỉ có một migrator
+  chạy tại một thời điểm.
+- Mỗi file là một thay đổi schema logic và được runner chạy trong transaction;
+  file không tự chứa `BEGIN`/`COMMIT`.
+- Migration đã merge hoặc đã chạy là append-only và immutable. Nếu cần sửa,
+  tạo migration mới; không sửa âm thầm migration lịch sử.
+- Không dùng `down.sql` để tự động rollback. Với thay đổi phá hủy dữ liệu,
+  dùng expand-and-contract, corrective migration hoặc restore backup theo
+  chính sách triển khai.
+- Migration được chạy bằng bước deploy/migrator riêng trước khi API dùng schema
+  mới; không bật migration runtime tự động làm mặc định cho production.
+
+Nếu một tài liệu khác mô tả filename, sequence hoặc baseline khác với mục này,
+mục này là database source of truth và phải được cập nhật trước khi tạo SQL mới.
+
 ### Thứ tự migration đề xuất
 
 1. `workspaces`, `users`.
@@ -1111,9 +1195,12 @@ Khi hiển thị, API phải chuẩn hóa thành một DTO sự kiện chung g�
 Phạm vi dưới đây là schema target của MVP. Một số migration/prototype hiện tại
 có thể còn tham chiếu warranty legacy; các tham chiếu đó phải được loại khỏi
 runtime/schema trước khi mở cluster nghiệp vụ. MVP dùng SQL versioned migrations
-với migration runner thuộc backend ASP.NET Core/.NET:
+với migration runner thuộc backend ASP.NET Core/.NET. Các nhãn
+`0001_identity`, `0002_customers_devices_orders`, ... bên dưới chỉ là nhóm phạm
+vi logic để lập kế hoạch, không phải tên file hoặc `migration_id` bắt buộc; file
+thực tế phải tuân theo quy ước tại mục 12.0:
 
-| Version | Phạm vi |
+| Nhóm logic | Phạm vi |
 | --- | --- |
 | `0001_identity` | Workspace, user và membership |
 | `0002_customers_devices_orders` | Customer, device, repair order và staff assignment |
@@ -1125,10 +1212,14 @@ với migration runner thuộc backend ASP.NET Core/.NET:
 Migration access module phải ghi rõ mapping credential/session với staff profile,
 trạng thái account và chính sách revoke. Không lưu credential trong bảng `users`.
 
-Entrypoint và command nâng schema local của target .NET sẽ được chốt trong
-`plans/v0/c0-runtime-stack-migration/c0-001-codex-dotnet-api-foundation.md`.
-Runner mới phải giữ nguyên thứ tự, constraint và semantics của các version
-migration đã chốt; không dùng lại runtime Python đã bị loại bỏ.
+Entrypoint nâng schema local của target .NET dùng lệnh:
+
+```powershell
+dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --migrate
+```
+
+Runner phải giữ nguyên thứ tự, constraint và semantics của các migration đã
+chốt; không dùng lại runtime Python đã bị loại bỏ.
 
 ### Seed tối thiểu cho môi trường demo
 

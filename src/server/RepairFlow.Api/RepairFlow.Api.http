@@ -1,6 +1,6 @@
 @RepairFlow.Api_HostAddress = http://localhost:5191
 
-GET {{RepairFlow.Api_HostAddress}}/weatherforecast/
+GET {{RepairFlow.Api_HostAddress}}/health
 Accept: application/json
 
 ###

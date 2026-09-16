@@ -6,9 +6,9 @@ Title: Nghiệm thu runtime .NET và React/Vite trước khi mở C1
 
 Owner: Shared — Codex and Antigravity
 
-Status: PLANNED
+Status: DONE
 
-Revision: 1
+Revision: 4
 
 Depends on: c0-001-codex-dotnet-api-foundation.md và c0-002-antigravity-react-vite-foundation.md
 
@@ -17,6 +17,12 @@ Produces: C0 migration evidence, verified target commands and C1 go/no-go decisi
 Consumed by: c1-001-codex-api-foundation.md
 
 ## Goal
+
+## Final acceptance note
+
+The legacy local PostgreSQL volume was removed only after explicit user
+instruction. A fresh PostgreSQL database and volume were created from Docker
+Compose; C0 live migration smoke then passed without creating business tables.
 
 Xác nhận prototype cũ đã được thay thế đúng vai trò bởi target runtime: ASP.NET
 Core Web API/.NET cung cấp health/error/OpenAPI và React/Vite/TypeScript mount
@@ -83,51 +89,51 @@ mở lại vì đây là engineering migration.
 
 ## Files to write
 
-- [ ] Evidence/log hoặc checklist nghiệm thu theo convention hiện có của repo.
-- [ ] `plans/v0/README.md`, chỉ cập nhật status C0/C1 và current pointer.
-- [ ] `plans/v0/00-master-plan.md`, chỉ cập nhật migration gate/status.
-- [ ] `README.md`, cập nhật quickstart, structure và runtime status sau khi target
+- [x] Evidence/log hoặc checklist nghiệm thu theo convention hiện có của repo.
+- [x] `plans/v0/README.md`, chỉ cập nhật status C0/C1 và current pointer.
+- [x] `plans/v0/00-master-plan.md`, chỉ cập nhật migration gate/status.
+- [x] `README.md`, cập nhật quickstart, structure và runtime status sau khi target
   stack được nghiệm thu.
-- [ ] `docs/v0/README.md`, cập nhật compatibility note/status sau migration.
-- [ ] `docs/v0/03-business-and-domain-requirements.md` và
+- [x] `docs/v0/README.md`, cập nhật compatibility note/status sau migration.
+- [x] `docs/v0/03-business-and-domain-requirements.md` và
   `docs/v0/04-architecture-c4-arc42.md`, chỉ cập nhật phần implementation status
   nếu còn mô tả C0 là prototype.
 - [ ] Plan amendment mới nếu acceptance phát hiện gap cần triển khai.
 
 ## Step-by-step implementation
 
-- [ ] Codex chạy clean `dotnet build` và `dotnet test` cho solution/test project.
-- [ ] Codex khởi động ASP.NET Core API với config local không chứa secret.
-- [ ] Shared gọi `/health`, endpoint không tồn tại và OpenAPI document; đối chiếu
+- [x] Codex chạy clean `dotnet build` và `dotnet test` cho solution/test project.
+- [x] Codex khởi động ASP.NET Core API với config local không chứa secret.
+- [x] Shared gọi `/health`, endpoint không tồn tại và OpenAPI document; đối chiếu
   status code, JSON shape, request ID và OpenAPI version.
-- [ ] Antigravity chạy type-check/build Vite và mount target React app.
-- [ ] Shared cấu hình API base URL của UI trỏ vào ASP.NET Core rồi gọi health
+- [x] Antigravity chạy type-check/build Vite và mount target React app.
+- [x] Shared cấu hình API base URL của UI trỏ vào ASP.NET Core rồi gọi health
   qua adapter; xác nhận không có fetch trực tiếp trong screen/component.
-- [ ] Kiểm tra internal/customer-link route boundary và API unavailable state.
-- [ ] Xác nhận không có task nào sửa hoặc khôi phục `src/db` prototype files.
-- [ ] Ghi từng failure thành gap có owner; không đánh dấu C0 DONE khi còn gap
+- [x] Kiểm tra internal/customer-link route boundary và API unavailable state.
+- [x] Xác nhận không có task nào sửa hoặc khôi phục `src/db` prototype files.
+- [x] Ghi từng failure thành gap có owner; không đánh dấu C0 DONE khi còn gap
   làm C1 tiếp tục phụ thuộc Python/vanilla.
-- [ ] Nếu pass, chuyển C0 `DONE`, mở c1-001 `READY` và cập nhật current pointer.
+- [x] Nếu pass, chuyển C0 `DONE`, mở c1-001 `READY` và cập nhật current pointer.
 
 ## Testing plan
 
-- [ ] Backend build/test pass.
-- [ ] Frontend type-check/build pass.
-- [ ] Health contract pass từ cả direct HTTP client và React adapter.
-- [ ] 404/error envelope và request-ID correlation pass.
-- [ ] OpenAPI 3.0 document được load/validate.
-- [ ] UI không render protected access screen khi chưa có session context.
-- [ ] Manual desktop/mobile smoke check pass cho foundation.
-- [ ] Working tree không phát sinh việc khôi phục DB prototype ngoài scope.
+- [x] Backend build/test pass.
+- [x] Frontend type-check/build pass.
+- [x] Health contract pass từ cả direct HTTP client và React adapter.
+- [x] 404/error envelope và request-ID correlation pass.
+- [x] OpenAPI 3.0 document được load/validate.
+- [x] UI không render protected access screen khi chưa có session context.
+- [x] Manual desktop/mobile smoke check pass cho foundation.
+- [x] Working tree không phát sinh việc khôi phục DB prototype ngoài scope.
 
 ## Acceptance criteria
 
-- [ ] C0 target runtime được xác nhận là ASP.NET Core/.NET + React/Vite/TypeScript.
-- [ ] C1 không còn dependency runtime vào FastAPI hoặc vanilla bundle.
-- [ ] API adapter boundary hoạt động với API thật.
-- [ ] Contract health/error/request ID/OpenAPI có bằng chứng kiểm tra.
-- [ ] C0 README/master pointer và owner/dependency được cập nhật đúng.
-- [ ] Mọi gap còn lại có plan hoặc owner cụ thể; không che bằng cách đổi status.
+- [x] C0 target runtime được xác nhận là ASP.NET Core/.NET + React/Vite/TypeScript.
+- [x] C1 không còn dependency runtime vào FastAPI hoặc vanilla bundle.
+- [x] API adapter boundary hoạt động với API thật.
+- [x] Contract health/error/request ID/OpenAPI có bằng chứng kiểm tra.
+- [x] C0 README/master pointer và owner/dependency được cập nhật đúng.
+- [x] Mọi gap còn lại có plan hoặc owner cụ thể; không che bằng cách đổi status.
 
 ## Change impact
 
