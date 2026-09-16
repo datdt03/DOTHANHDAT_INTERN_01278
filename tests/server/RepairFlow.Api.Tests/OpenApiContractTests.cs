@@ -24,5 +24,11 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
         Assert.StartsWith("3.0", openApiVersion, StringComparison.Ordinal);
         Assert.DoesNotContain("change-me-local-only", json, StringComparison.Ordinal);
         Assert.DoesNotContain("ConnectionStrings:Postgres", json, StringComparison.Ordinal);
+        Assert.True(document.RootElement.GetProperty("paths").TryGetProperty(
+            "/api/access/context",
+            out _));
+        Assert.DoesNotContain("password", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("token", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("token hash", json, StringComparison.OrdinalIgnoreCase);
     }
 }

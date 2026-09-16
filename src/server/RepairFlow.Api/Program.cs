@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
+using RepairFlow.Api.Features.Access.Api;
+using RepairFlow.Api.Features.Access.Infrastructure;
 using RepairFlow.Api.Features.Health;
 using RepairFlow.Api.Infrastructure.Database;
 
@@ -23,6 +25,7 @@ var postgresConnection = builder.Configuration.GetConnectionString("Postgres")
 
 builder.Services.AddDbContext<RepairFlowDbContext>(options =>
     options.UseNpgsql(postgresConnection));
+builder.Services.AddAccessFoundation();
 
 builder.Services.AddSingleton<IMigrationStore>(_ => new NpgsqlMigrationStore(postgresConnection));
 builder.Services.AddSingleton<IVersionedMigrationRunner>(serviceProvider =>
@@ -70,6 +73,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthEndpoints();
+app.MapAccessEndpoints();
 
 if (app.Environment.IsEnvironment("Testing"))
 {

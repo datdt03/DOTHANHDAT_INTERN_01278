@@ -6,7 +6,7 @@ Title: Dựng application shell và route boundary bằng React
 
 Owner: Antigravity
 
-Status: PLANNED
+Status: READY
 
 Revision: 2
 

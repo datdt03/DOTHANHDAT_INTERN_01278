@@ -6,9 +6,9 @@ Title: Dựng access feature boundary trên ASP.NET Core
 
 Owner: Codex
 
-Status: READY
+Status: DONE
 
-Revision: 2
+Revision: 3
 
 Depends on: c0-003-shared-stack-migration-acceptance.md
 
@@ -83,53 +83,58 @@ business endpoint.
 - Safe API contracts xuất hiện trong OpenAPI 3.0.
 - Không expose business data hoặc credential.
 
+Implementation note: c1-001 chỉ tạo repository port và context boundary; concrete
+database persistence cho credential/session được triển khai ở c1-003 cùng schema
+delta tương ứng.
+
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AccessEndpoints.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AccessService.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AccessContext.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Domain/AccessModels.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessRepository.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessDependencies.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AccessFixtures.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AccessFoundationTests.cs`.
-- [ ] `src/server/RepairFlow.Api/Program.cs`, chỉ để register access boundary.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AccessEndpoints.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AccessService.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AccessContext.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Domain/AccessModels.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessRepository.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessDependencies.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AccessFixtures.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AccessFoundationTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AccessApiTests.cs`.
+- [x] `src/server/RepairFlow.Api/Program.cs`, chỉ để register access boundary.
 
 ## Step-by-step implementation
 
-- [ ] Đối chiếu C0 target layout và freeze namespace/project path trước khi code.
-- [ ] Tạo access feature theo ba tầng; giữ endpoint orchestration mỏng.
-- [ ] Định nghĩa role/status enum đúng docs/v0, không thêm role thuận tiện.
-- [ ] Định nghĩa context typed cho account đang thực hiện, membership workspace
+- [x] Đối chiếu C0 target layout và freeze namespace/project path trước khi code.
+- [x] Tạo access feature theo ba tầng; giữ endpoint orchestration mỏng.
+- [x] Định nghĩa role/status enum đúng docs/v0, không thêm role thuận tiện.
+- [x] Định nghĩa context typed cho account đang thực hiện, membership workspace
   và staff được attribution.
-- [ ] Để repository chịu trách nhiệm data access; service/policy chịu trách
+- [x] Để repository port chịu trách nhiệm data access; service/policy chịu trách
   nhiệm use case; endpoint chỉ bind request/response.
-- [ ] Tạo dependency cho current access context; c1-003 sẽ nối authentication
+- [x] Tạo dependency cho current access context; c1-003 sẽ nối authentication
   thật vào dependency này.
-- [ ] Reuse envelope/error/request ID của C0 và loại credential khỏi response.
-- [ ] Tạo fixture cho active/inactive account, membership active/suspended,
+- [x] Reuse envelope/error/request ID của C0 và loại credential khỏi response.
+- [x] Tạo fixture cho active/inactive account, membership active/suspended,
   nhiều workspace và staff không có account.
-- [ ] Register boundary tối thiểu, không expose unfinished business endpoints.
-- [ ] Kiểm tra OpenAPI không lộ password, raw token hoặc token hash.
+- [x] Register boundary tối thiểu, không expose unfinished business endpoints.
+- [x] Kiểm tra OpenAPI không lộ password, raw token hoặc token hash.
 
 ## Testing plan
 
-- [ ] .NET test project import access feature không circular dependency.
-- [ ] Fixture phân biệt acting account và attributed staff.
-- [ ] Staff không có account không tạo được authenticated session context.
-- [ ] Envelope và request ID của C0 không đổi.
-- [ ] OpenAPI 3.0 chỉ expose safe contracts.
-- [ ] `dotnet test` pass.
+- [x] .NET test project import access feature không circular dependency.
+- [x] Fixture phân biệt acting account và attributed staff.
+- [x] Staff không có account không tạo được authenticated session context.
+- [x] Envelope và request ID của C0 không đổi.
+- [x] OpenAPI 3.0 chỉ expose safe contracts.
+- [x] `dotnet test` pass — 18 passed, 0 failed.
 
 ## Acceptance criteria
 
-- [ ] Feature sau có thể inject một access context dependency dùng chung.
-- [ ] Principal, membership và attributed staff là các type/fixture độc lập.
-- [ ] Không trả password, raw token, token hash hoặc secret.
-- [ ] Không vô tình expose business endpoint.
-- [ ] c1-002 và c1-003 dùng cùng contract/context/fixture, không duplicate logic.
-- [ ] Plan sẵn sàng chuyển cho Antigravity làm UI shell.
+- [x] Feature sau có thể inject một access context dependency dùng chung.
+- [x] Principal, membership và attributed staff là các type/fixture độc lập.
+- [x] Không trả password, raw token, token hash hoặc secret.
+- [x] Không vô tình expose business endpoint.
+- [x] c1-002 và c1-003 có thể dùng cùng contract/context/fixture, không duplicate logic.
+- [x] Plan sẵn sàng chuyển cho Antigravity làm UI shell.
 
 ## Change impact
 

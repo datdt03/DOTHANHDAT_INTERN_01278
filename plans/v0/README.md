@@ -1,6 +1,8 @@
 # RepairFlow v0 — implementation index
 
-> Status: ACTIVE — C0 accepted; C1 awaits explicit approval
+> Status: ACTIVE
+>
+> Current execution: C1 in progress; c1-001 is complete and c1-002 is next.
 >
 > Requirements baseline: Gate D0 closed on 2026-09-16.
 
@@ -21,8 +23,8 @@ Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và da
 
 | Cluster | Nội dung | Trạng thái | Plan hiện tại |
 | --- | --- | --- | --- |
-| C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE — ACCEPTED 2026-09-17 | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
-| C1 | Access, authentication, authorization và application shell | READY — AWAITING APPROVAL | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) |
+| C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
+| C1 | Access, authentication, authorization và application shell | IN PROGRESS | [c1-002-antigravity-ui-shell.md](./c1-access-and-application-shell/c1-002-antigravity-ui-shell.md) |
 | C2 | Customer, device và repair order | PLANNED | Chưa tạo task chi tiết |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
@@ -49,8 +51,8 @@ khôi phục các file database/migration prototype cũ trong các plan này.
 
 | Order | Plan | Owner | Depends on | Status |
 | ---: | --- | --- | --- | --- |
-| 1 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) | Codex | c0-003 | READY — AWAITING APPROVAL |
-| 2 | [c1-002-antigravity-ui-shell.md](./c1-access-and-application-shell/c1-002-antigravity-ui-shell.md) | Antigravity | c1-001 | PLANNED |
+| 1 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) | Codex | c0-003 | DONE |
+| 2 | [c1-002-antigravity-ui-shell.md](./c1-access-and-application-shell/c1-002-antigravity-ui-shell.md) | Antigravity | c1-001 | READY |
 | 3 | [c1-003-codex-auth-session.md](./c1-access-and-application-shell/c1-003-codex-auth-session.md) | Codex | c1-002 | PLANNED |
 | 4 | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) | Antigravity | c1-003 | PLANNED |
 | 5 | [c1-005-codex-permission-enforcement.md](./c1-access-and-application-shell/c1-005-codex-permission-enforcement.md) | Codex | c1-004 | PLANNED |

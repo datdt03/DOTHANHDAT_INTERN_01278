@@ -369,26 +369,17 @@ sequenceDiagram
     Portal->>API: Request public projection
     API->>DB: Check token hash, expiry, revoke, quote scope
 
-    alt Link valid
-        API->>DB: Create OTP challenge
-        API->>OTP: Send one-time code
-        OTP-->>Customer: Deliver OTP
-        Customer->>Portal: Enter OTP
-        Portal->>API: Verify OTP
-        API->>DB: Check hash, expiry, attempts, rate limit
-
-        alt OTP valid
-            API-->>Portal: Return limited public data
-            Customer->>Portal: Approve or reject current quote
-            Portal->>API: Submit decision
-            API->>DB: Validate version + idempotency
-            API->>DB: Save decision and status history
-        else OTP invalid or expired
-            API-->>Portal: Reject access and expose no order data
-        end
-    else Link expired or revoked
-        API-->>Portal: Reject access and contact the shop
-    end
+    API->>DB: Create OTP challenge for a valid link
+    API->>OTP: Send one-time code
+    OTP-->>Customer: Deliver OTP
+    Customer->>Portal: Enter OTP
+    Portal->>API: Verify OTP
+    API->>DB: Check hash, expiry, attempts and rate limit
+    API-->>Portal: Return limited public data
+    Customer->>Portal: Approve or reject current quote
+    Portal->>API: Submit decision
+    API->>DB: Validate version and idempotency
+    API->>DB: Save decision and status history
 ```
 
 The v0 security baseline is: customer link expiry after 7 days; six-digit OTP
@@ -561,7 +552,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 **Last reviewed:** 2026-09-17<br>
 **Current phase:** `v0 — Implementation`<br>
 **Overall status:** `READY — Gate D0 is closed`<br>
-**Current implementation gate:** `C0 — ACCEPTED; C1 awaits explicit approval`
+**Current implementation gate:** `C1 — IN PROGRESS; c1-001 DONE; c1-002 READY`
 
 ### Delivery status
 
@@ -570,7 +561,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 | Requirements baseline | `READY — D0 CLOSED` | [`docs/v0/`](docs/v0/README.md); implement from the closed baseline. |
 | Architecture diagrams | `DECIDED — BASELINE CLOSED` | [`04-architecture-c4-arc42.md`](docs/v0/04-architecture-c4-arc42.md); keep diagrams aligned with implementation. |
 | Runtime foundation | `DONE — C0 ACCEPTED` | [`C0 acceptance evidence`](plans/v0/c0-runtime-stack-migration/c0-003-acceptance-evidence.md). |
-| Business API | `NOT STARTED` | Start implementation from C1 after explicit approval. |
+| Business API | `IN PROGRESS — C1 access foundation` | Continue with the next C1 vertical slice. |
 | UI integration | `FOUNDATION VERIFIED — LIVE HEALTH ADAPTER` | [`src/ui/`](src/ui/) and [`src/ui/README.md`](src/ui/README.md). |
 | English standardization | `IN PROGRESS` | Continue the language pass and run the language audit. |
 | Deployment and monitoring | `DEFERRED` | Define in a later phase. |
@@ -594,7 +585,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 2. The dashboard, order detail, and customer link still depend on mock data
    until the business API is implemented.
 3. Business endpoints and management/staff authentication still need to be
-   implemented after C1 approval.
+   implemented in the remaining C1 slices.
 
 These are implementation tasks after D0 closure, not requirements-gate
 blockers. The closure record is maintained in
@@ -605,7 +596,7 @@ blockers. The closure record is maintained in
 | Cluster | Business capability | Status |
 | --- | --- | --- |
 | C0 | Target runtime, migration runner, adapter boundary, and test harness | `DONE — ACCEPTED` |
-| C1 | Owner/Manager access and application shell | `READY — AWAITING APPROVAL` |
+| C1 | Owner/Manager access and application shell | `IN PROGRESS — c1-001 DONE` |
 | C2 | Customer, device, and order creation | `OPEN FOR IMPLEMENTATION` |
 | C3 | Intake checklist and evidence | `OPEN FOR IMPLEMENTATION` |
 | C4 | Diagnosis and quotation draft | `OPEN FOR IMPLEMENTATION` |

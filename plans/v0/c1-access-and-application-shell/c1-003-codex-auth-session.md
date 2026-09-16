@@ -91,7 +91,7 @@ session có hạn sử dụng, gắn đúng workspace context và không làm l�
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/0007_access_sessions.sql`, chỉ khi schema contract cần delta.
+- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0001__spec-v0__create-access-identity-and-sessions.sql`, chỉ khi schema contract cần delta.
 - [ ] `src/server/RepairFlow.Api/Features/Access/Application/CredentialHasher.cs`.
 - [ ] `src/server/RepairFlow.Api/Features/Access/Application/AuthenticationService.cs`.
 - [ ] `src/server/RepairFlow.Api/Features/Access/Application/SessionService.cs`.
