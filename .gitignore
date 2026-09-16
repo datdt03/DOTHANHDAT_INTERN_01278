@@ -31,6 +31,26 @@ coverage/
 .tmp/
 tmp/
 
+# .NET and ASP.NET Core build artifacts
+**/bin/
+**/obj/
+**/.vs/
+**/artifacts/
+TestResults/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+
+# Local ASP.NET Core configuration that may contain secrets
+**/appsettings.Local.json
+**/appsettings.*.local.json
+
 # Logs
 *.log
 npm-debug.log*
