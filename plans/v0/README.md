@@ -2,7 +2,7 @@
 
 > Status: ACTIVE
 >
-> Current execution: C1 in progress; c1-001 through c1-005 are complete; c1-006 is next.
+> Current execution: C1 complete; c1-001 through c1-007 are complete; C2 plan is READY and implementation is next.
 >
 > Requirements baseline: Gate D0 closed on 2026-09-16.
 
@@ -17,15 +17,16 @@ Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và da
 3. Hoàn thành Codex server slice trước, sau đó Antigravity UI slice.
 4. Nếu UI phát hiện server gap, ghi nhận và tạo sequence Codex tiếp theo trước
    khi mở rộng UI.
-5. Chỉ đánh dấu cluster `DONE` sau shared integration acceptance.
+5. Chỉ đánh dấu cluster `DONE` sau acceptance của backend và từng UI area theo
+   plan. Với C2, shared chỉ tổng hợp contract/evidence; không có shared UI flow.
 
 ## Execution status
 
 | Cluster | Nội dung | Trạng thái | Plan hiện tại |
 | --- | --- | --- | --- |
 | C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
-| C1 | Access, authentication, authorization và application shell | IN PROGRESS | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) |
-| C2 | Customer, device và repair order | PLANNED | Chưa tạo task chi tiết |
+| C1 | Access, authentication, authorization và application shell | DONE | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) |
+| C2 | Customer, device và repair order | READY | [C2 area-first implementation plan](../c2/README.md) |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
 | C5 | Quotation publishing và customer decision | PLANNED | Chưa tạo task chi tiết |
@@ -56,8 +57,8 @@ khôi phục các file database/migration prototype cũ trong các plan này.
 | 3 | [c1-003-codex-auth-session.md](./c1-access-and-application-shell/c1-003-codex-auth-session.md) | Codex | c1-002 | DONE |
 | 4 | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) | Antigravity | c1-003 | DONE |
 | 5 | [c1-005-codex-permission-enforcement.md](./c1-access-and-application-shell/c1-005-codex-permission-enforcement.md) | Codex | c1-004 | DONE |
-| 6 | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) | Antigravity | c1-005 | READY |
-| 7 | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) | Shared | c1-006 | PLANNED |
+| 6 | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) | Antigravity | c1-005 | DONE |
+| 7 | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) | Shared | c1-006 | DONE |
 
 ## Rủi ro triển khai hiện tại
 

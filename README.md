@@ -552,7 +552,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 **Last reviewed:** 2026-09-17<br>
 **Current phase:** `v0 — Implementation`<br>
 **Overall status:** `READY — Gate D0 is closed`<br>
-**Current implementation gate:** `C1 — IN PROGRESS; c1-001 DONE; c1-002 DONE; c1-003 DONE; c1-004 DONE; c1-005 DONE; c1-006 READY`
+**Current implementation gate:** `C1 — DONE; c1-001 through c1-007 ACCEPTED; C2 NEXT`
 
 ### Delivery status
 
@@ -561,7 +561,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 | Requirements baseline | `READY — D0 CLOSED` | [`docs/v0/`](docs/v0/README.md); implement from the closed baseline. |
 | Architecture diagrams | `DECIDED — BASELINE CLOSED` | [`04-architecture-c4-arc42.md`](docs/v0/04-architecture-c4-arc42.md); keep diagrams aligned with implementation. |
 | Runtime foundation | `DONE — C0 ACCEPTED` | [`C0 acceptance evidence`](plans/v0/c0-runtime-stack-migration/c0-003-acceptance-evidence.md). |
-| Business API | `IN PROGRESS — C1 access/authorization` | Continue with c1-006 role-aware navigation, then shared integration acceptance. |
+| Business API | `IN PROGRESS — C1 access/authorization accepted` | Continue with C2 customer, device, and repair-order endpoints. |
 | UI integration | `FOUNDATION VERIFIED — LIVE HEALTH ADAPTER` | [`src/ui/`](src/ui/) and [`src/ui/README.md`](src/ui/README.md). |
 | English standardization | `IN PROGRESS` | Continue the language pass and run the language audit. |
 | Deployment and monitoring | `DEFERRED` | Define in a later phase. |
@@ -578,14 +578,14 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
   boundary, explicit preview mode, and reusable shared primitives. The adapter
   has been smoke-tested against the target ASP.NET Core `/health` endpoint.
 
-### Remaining implementation gaps after C0
+### Remaining implementation gaps after C1
 
 1. Each future business migration still requires its own apply/re-run
    verification in the capability plan.
 2. The dashboard, order detail, and customer link still depend on mock data
    until the business API is implemented.
-3. Business endpoints, role-aware navigation, and shared C1 integration
-   acceptance still need to be implemented in the remaining C1 slices.
+3. C1 access, role-aware navigation, and shared integration acceptance are
+   complete; C2 business endpoints remain to be implemented.
 
 These are implementation tasks after D0 closure, not requirements-gate
 blockers. The closure record is maintained in
@@ -596,8 +596,8 @@ blockers. The closure record is maintained in
 | Cluster | Business capability | Status |
 | --- | --- | --- |
 | C0 | Target runtime, migration runner, adapter boundary, and test harness | `DONE — ACCEPTED` |
-| C1 | Owner/Manager access and application shell | `IN PROGRESS — c1-005 DONE; c1-006 READY` |
-| C2 | Customer, device, and order creation | `OPEN FOR IMPLEMENTATION` |
+| C1 | Owner/Manager access and application shell | `DONE — c1-007 ACCEPTED` |
+| C2 | Customer, device, and order creation | `READY — area-first plan in plans/c2` |
 | C3 | Intake checklist and evidence | `OPEN FOR IMPLEMENTATION` |
 | C4 | Diagnosis and quotation draft | `OPEN FOR IMPLEMENTATION` |
 | C5 | Quotation publishing and customer decision | `OPEN FOR IMPLEMENTATION` |
@@ -749,7 +749,8 @@ decision labels, and the required workflow for documentation changes.
 - [x] Core workflow, access, OTP, retention, backup, and cancellation decisions are recorded in v0 documentation.
 - [x] Core architecture, state, data, and customer-link diagrams are summarized in this README and maintained in canonical v0 documents.
 - [x] UI is connected to the real API health boundary.
-- [ ] Business API, full permission enforcement, and role-aware auth UI are complete.
+- [x] C1 access API, permission/workspace enforcement, and role-aware auth UI are complete.
+- [ ] Full business API is complete.
 - [ ] English standardization audit is complete.
 - [ ] Deployment and monitoring are defined for a later phase.
 

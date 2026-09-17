@@ -11,7 +11,7 @@ Read [the documentation guide](../README.md) first. It defines the documentation
 ## Phase status
 
 - **Phase status:** `DECIDED — Gate D0 is closed`.
-- The v0 product baseline is closed for implementation; business clusters C1–C10 remain gated by their dependencies.
+- The v0 product baseline is closed for implementation; business clusters C2–C10 remain gated by their dependencies.
 - ASP.NET Core Web API trên .NET, PostgreSQL và versioned SQL migrations là
   nền tảng kỹ thuật target; .NET là backend/API bắt buộc.
 - The previous C0 Python/FastAPI runtime, Python tests and prototype migration
@@ -22,9 +22,8 @@ Read [the documentation guide](../README.md) first. It defines the documentation
   database was reset to a clean target volume during final acceptance.
 - C0 target runtime is active under `src/server` and the React/Vite adapter has
   been smoke-tested against the real `/health` endpoint. C1 implementation is
-  in progress; c1-001 access foundation, c1-002 React shell, c1-003
-  authentication/session, c1-004 auth UI and c1-005 authorization are complete.
-  c1-006 role-aware navigation is next.
+  complete; c1-001 through c1-007 have passed their access, role-aware UI and
+  shared integration acceptance. C2 is next.
 - Business implementation continues by cluster; the UI prototype is still backed by mock data until its adapter is connected.
 - The target web UI is React + Vite + TypeScript; React is not the authoritative
   business API layer.

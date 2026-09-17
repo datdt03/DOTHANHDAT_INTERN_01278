@@ -10,22 +10,26 @@ database contract hoặc API contract phải cập nhật source of truth trư�
 ```text
 plans/
 ├── README.md
-└── v0/
+├── v0/
+│   ├── README.md
+│   ├── 00-master-plan.md
+│   ├── c0-runtime-stack-migration/
+│   │   ├── c0-001-codex-dotnet-api-foundation.md
+│   │   ├── c0-002-antigravity-react-vite-foundation.md
+│   │   └── c0-003-shared-stack-migration-acceptance.md
+│   └── c1-access-and-application-shell/
+│       └── ...
+└── c2/
     ├── README.md
-    ├── 00-master-plan.md
-    ├── c0-runtime-stack-migration/
-    │   ├── c0-001-codex-dotnet-api-foundation.md
-    │   ├── c0-002-antigravity-react-vite-foundation.md
-    │   └── c0-003-shared-stack-migration-acceptance.md
-    ├── c1-access-and-application-shell/
-    │   └── ...
-    └── c2-customer-device-order/
-        └── ...
+    └── c2-... area-first implementation plans
 ```
 
 Chỉ tạo plan chi tiết cho cluster kế tiếp khi output của cluster trước đã được
 kiểm chứng và đủ thông tin. `00-master-plan.md` là bản đồ ổn định; các file
 `cX-...` mới chứa hướng triển khai chi tiết.
+
+Theo quyết định triển khai C2, bộ plan chi tiết hiện hành được đặt tại
+`plans/c2/`; `plans/v0/README.md` giữ vai trò index và trỏ tới bộ plan này.
 
 ## Đánh số và thứ tự
 
@@ -41,7 +45,8 @@ Ví dụ: `c1-001-codex-api-foundation.md` là lát đầu tiên của C1,
 - Số thứ tự thể hiện hướng triển khai dự kiến; trường `Depends on` mới là
   dependency cuối cùng khi có ngoại lệ.
 - `codex` phụ trách server/API; `antigravity` phụ trách UI; `shared` là bước
-  hai bên cùng kiểm thử và nghiệm thu.
+  tổng hợp contract/evidence. UI acceptance có thể chạy độc lập theo area khi
+  plan yêu cầu.
 - Không đổi số của plan đã bắt đầu hoặc đã hoàn tất. Scope nhỏ thì tăng
   `Revision`; phát sinh task mới thì dùng sequence tiếp theo.
 - Thay đổi ảnh hưởng nhiều cluster phải cập nhật master plan và tạo amendment
@@ -102,7 +107,7 @@ Codex: điều chỉnh API khi UI phát hiện gap đã xác nhận
     ↓
 Antigravity: hoàn thiện UI state, responsive và visual QA
     ↓
-Shared: integration + acceptance
+Shared: contract/evidence acceptance; UI acceptance may remain area-specific
 ```
 
 API-first nghĩa là server phải cung cấp behavior tối thiểu và contract có thể
@@ -116,7 +121,7 @@ bộ backend của một cluster trước khi Antigravity bắt đầu.
 | Backend/API | ASP.NET Core endpoints, contracts/OpenAPI 3.0, application services, policy, transaction | Dùng API qua adapter, phản hồi gap bằng plan | Verify behavior end-to-end |
 | Database | EF Core + Npgsql, versioned SQL migration runner, constraints, query và fixture | Không truy cập database trực tiếp | Kiểm tra dữ liệu hiển thị và isolation |
 | UI | Cung cấp response/error/loading/forbidden states của boundary | React components, screens, navigation, state, Vite build, responsive/visual QA | Scenario và acceptance |
-| Tests | .NET unit/API/integration/migration tests | Type-check, Vite build, UI/manual/visual checks theo khả năng repo | Acceptance matrix |
+| Tests | .NET unit/API/integration/migration tests | Type-check, Vite build, UI/manual/visual checks theo khả năng repo | Aggregate evidence; UI acceptance theo từng area khi plan yêu cầu |
 | Business rules | Enforce đúng docs/v0 ở backend | Chỉ phản ánh rule, không tự phát minh hoặc dùng UI làm security boundary | Escalate conflict về docs/v0 |
 
 ## Header bắt buộc
