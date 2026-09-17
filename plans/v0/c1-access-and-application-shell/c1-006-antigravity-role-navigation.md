@@ -6,9 +6,9 @@ Title: Hoàn thiện navigation và entry screen theo role bằng React
 
 Owner: Antigravity
 
-Status: READY
+Status: DONE
 
-Revision: 3
+Revision: 4
 
 Depends on: c1-005-codex-permission-enforcement.md
 
@@ -82,47 +82,57 @@ cấp quyền, suy role từ URL hoặc thay thế backend authorization.
 
 ## Files to write
 
-- [ ] `src/ui/app/navigation.tsx`.
-- [ ] `src/ui/app/routes.tsx`.
-- [ ] `src/ui/app/role-entry.ts`.
-- [ ] `src/ui/features/access/role-navigation.tsx`.
-- [ ] `src/ui/features/access/role-navigation.css`.
-- [ ] `src/ui/features/dashboard/dashboard-placeholder.tsx`.
-- [ ] `src/ui/features/technician/my-work-placeholder.tsx`.
-- [ ] `src/ui/features/receptionist/today-lookup-placeholder.tsx`.
-- [ ] `src/ui/shared/components/forbidden-state.tsx`.
+- [x] `src/ui/app/navigation.tsx`.
+- [x] `src/ui/app/routes.tsx`.
+- [x] `src/ui/app/role-entry.ts`.
+- [x] `src/ui/features/access/role-navigation.tsx`.
+- [x] `src/ui/features/access/role-navigation.css`.
+- [x] `src/ui/features/dashboard/dashboard-placeholder.tsx`.
+- [x] `src/ui/features/technician/my-work-placeholder.tsx`.
+- [x] `src/ui/features/receptionist/today-lookup-placeholder.tsx`.
+- [x] `src/ui/shared/components/forbidden-state.tsx`.
 
 ## Step-by-step implementation
 
-- [ ] Đọc capability projection và map thành presentation navigation model.
-- [ ] Chọn entry route từ server context sau session hydrate, không từ URL tự do.
-- [ ] Render navigation variant cho Manager/Owner, Receptionist và Technician.
-- [ ] Giữ dashboard, Today/lookup và My Work là destinations rõ ràng dù data còn
+- [x] Đọc capability projection và map thành presentation navigation model.
+- [x] Chọn entry route từ server context sau session hydrate, không từ URL tự do.
+- [x] Render navigation variant cho Manager/Owner, Receptionist và Technician.
+- [x] Giữ dashboard, Today/lookup và My Work là destinations rõ ràng dù data còn
   là placeholder của C9.
-- [ ] Ẩn presentation action không liên quan; direct unavailable route phải ra
+- [x] Ẩn presentation action không liên quan; direct unavailable route phải ra
   forbidden/empty state, không render protected data.
-- [ ] Giữ customer-link route layout riêng, không gắn internal nav.
-- [ ] Kiểm tra active route, mobile sidebar và logout cho từng role.
-- [ ] Chạy type-check/build và review screenshot ở viewport docs/v0.
+- [x] Giữ customer-link route layout riêng, không gắn internal nav.
+- [x] Kiểm tra active route, mobile sidebar và logout cho từng role.
+- [x] Chạy type-check/build và review screenshot ở viewport docs/v0.
 
 ## Testing plan
 
-- [ ] Manager/Owner thấy management entry và không nhận customer-only shell.
-- [ ] Receptionist thấy operational lookup và không có technical edit controls.
-- [ ] Technician thấy My Work và không có workspace-wide management controls.
-- [ ] Direct navigation tới route unavailable hiển thị forbidden/empty state.
-- [ ] Customer-link route tách khỏi internal navigation.
-- [ ] Refresh/logout giữ đúng access boundary.
-- [ ] Vite build/type-check và manual desktop/mobile check pass.
+- [x] Manager/Owner thấy management entry và không nhận customer-only shell.
+- [x] Receptionist thấy operational lookup và không có technical edit controls.
+- [x] Technician thấy My Work và không có workspace-wide management controls.
+- [x] Direct navigation tới route unavailable hiển thị forbidden/empty state.
+- [x] Customer-link route tách khỏi internal navigation.
+- [x] Refresh/logout giữ đúng access boundary.
+- [x] Vite build/type-check và manual desktop/mobile check pass.
 
 ## Acceptance criteria
 
-- [ ] Mỗi MVP role vào đúng entry screen.
-- [ ] Navigation phản ánh server context và không tạo authorization.
-- [ ] UI không expose protected data trước response filtering của API.
-- [ ] Placeholder destination ghi rõ chưa có data thật, không đổi requirements.
-- [ ] React target không còn phụ thuộc vanilla bundle để render C1.
-- [ ] c1-007 có thể chạy acceptance bằng API thật.
+- [x] Mỗi MVP role vào đúng entry screen.
+- [x] Navigation phản ánh server context và không tạo authorization.
+- [x] UI không expose protected data trước response filtering của API.
+- [x] Placeholder destination ghi rõ chưa có data thật, không đổi requirements.
+- [x] React target không còn phụ thuộc vanilla bundle để render C1.
+- [x] c1-007 có thể chạy acceptance bằng API thật.
+
+## Implementation evidence
+
+- Role entry mapping qua `src/ui/app/role-entry.ts`: Owner/Manager -> `#/dashboard`, Receptionist -> `#/today`, Technician -> `#/my-work`.
+- Route boundary bảo vệ qua `src/ui/app/navigation.tsx` và `src/ui/app/routes.tsx`: chặn truy cập trực tiếp bằng `<ForbiddenState />` 403, hoàn toàn không render protected data.
+- Placeholders chuyên biệt: `dashboard-placeholder.tsx` (UI-A06), `today-lookup-placeholder.tsx` (UI-A07/B02, read-only), `my-work-placeholder.tsx` (UI-A08, SLA-priority list).
+- Checklist kiểm thử `tests/ui/access/role-navigation-checklist.md` đã hoàn thành.
+- TypeScript `npm run type-check` pass (0 errors).
+- Vite `npm run build` pass (0 errors, 1.17s).
+- Backend tests `dotnet test src/server/RepairFlow.sln` pass (45/45 tests).
 
 ## Change impact
 

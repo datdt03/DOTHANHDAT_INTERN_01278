@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { CustomerFooter, CustomerHeader, PrimaryButton, SecondaryButton } from '../../shared/components';
+import {
+  CustomerFooter,
+  CustomerHeader,
+  IconShield,
+  PrimaryButton,
+  SecondaryButton,
+} from '../../shared/components';
 
 interface CustomerProgressViewProps {
   orderId?: string;
@@ -114,7 +120,8 @@ export function CustomerProgressView({ orderId = 'RF-2026-0891' }: CustomerProgr
         )}
 
         <p className="customer-security-note">
-          🔒 Liên kết này được bảo mật riêng cho thiết bị của bạn.
+          <IconShield size={14} aria-hidden="true" />
+          <span>Liên kết này được bảo mật riêng cho thiết bị của bạn.</span>
         </p>
       </main>
 

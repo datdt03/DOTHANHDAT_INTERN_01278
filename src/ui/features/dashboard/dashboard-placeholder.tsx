@@ -7,8 +7,6 @@ import {
   EmptyState,
   IconAlertTriangle,
   IconClock,
-  IconInbox,
-  IconLookup,
   IconOrders,
   IconOverview,
   IconQueue,
@@ -18,6 +16,8 @@ import {
   SecondaryButton,
   StatCard,
 } from '../../shared/components';
+import { ReceptionistTodayLookupPlaceholder } from '../receptionist/today-lookup-placeholder';
+import { TechnicianMyWorkPlaceholder } from '../technician/my-work-placeholder';
 
 export type ScreenState = 'ready' | 'loading' | 'empty' | 'error' | 'unavailable';
 
@@ -34,48 +34,22 @@ export function DashboardPlaceholder({
 }: DashboardPlaceholderProps) {
   const [currentState, setCurrentState] = useState<ScreenState>('ready');
 
-  const getRoleConfig = () => {
-    switch (role) {
-      case 'owner':
-      case 'manager':
-        return {
-          title: 'Tổng quan vận hành',
-          subtitle: `Xin chào ${userName} (${roleTitle}) • Khu vực điều phối xưởng, theo dõi tiến độ và kiểm soát chất lượng dịch vụ.`,
-          eyebrow: 'RepairFlow / Tổng quan',
-          scopeNote:
-            'Không gian làm việc: Điều phối vận hành dành cho Quản lý / Chủ cửa hàng. Các chỉ số KPI thời gian thực, cảnh báo đơn quá hạn SLA và phân công kỹ thuật viên sẽ được kết nối chính thức trong chặng C9 sau khi hoàn tất các nghiệp vụ thành phần (C2–C8).',
-          icon: <IconOverview size={20} />,
-        };
-      case 'receptionist':
-        return {
-          title: 'Tổng quan hôm nay & Tra cứu tiến độ',
-          subtitle: `Xin chào ${userName} (${roleTitle}) • Khu vực tiếp nhận thiết bị tại quầy và tra cứu thông tin hỗ trợ khách hàng.`,
-          eyebrow: 'RepairFlow / Hôm nay',
-          scopeNote:
-            'Không gian làm việc: Tiếp nhận và tra cứu tiến độ dành cho Lễ tân. Cho phép tra cứu tiến độ toàn bộ phiếu sửa chữa trong cửa hàng ở chế độ chỉ xem (Read-only) để giải đáp khách hàng. Dữ liệu tiếp nhận và bàn giao sẽ được tích hợp trong C2 và C9.',
-          icon: <IconInbox size={20} />,
-        };
-      case 'technician':
-        return {
-          title: 'Hàng chờ công việc (My Work)',
-          subtitle: `Xin chào ${userName} (${roleTitle}) • Khu vực xử lý kỹ thuật, chẩn đoán lỗi và kiểm tra chất lượng thiết bị.`,
-          eyebrow: 'RepairFlow / Hàng chờ công việc',
-          scopeNote:
-            'Không gian làm việc: Danh sách công việc được phân công cho Kỹ thuật viên (ưu tiên theo hạn cam kết SLA). Chức năng ghi nhận chẩn đoán, đề xuất báo giá, sửa chữa và kiểm tra chất lượng (QC) sẽ được tích hợp trong C6 và C9.',
-          icon: <IconQueue size={20} />,
-        };
-    }
-  };
+  // Delegate to dedicated role placeholders if requested
+  if (role === 'receptionist') {
+    return <ReceptionistTodayLookupPlaceholder userName={userName} roleTitle={roleTitle} />;
+  }
 
-  const config = getRoleConfig();
+  if (role === 'technician') {
+    return <TechnicianMyWorkPlaceholder userName={userName} roleTitle={roleTitle} />;
+  }
 
   return (
     <div className="dashboard-placeholder-view">
       {/* Page Header */}
       <PageHeader
-        title={config.title}
-        subtitle={config.subtitle}
-        eyebrow={config.eyebrow}
+        title="Tổng quan vận hành"
+        subtitle={`Xin chào ${userName} (${roleTitle}) • Trung tâm điều phối xưởng, theo dõi tiến độ SLA và kiểm soát chất lượng dịch vụ.`}
+        eyebrow="RepairFlow / Quản lý vận hành"
       />
 
       {/* Scope / Architectural Boundary Banner */}
@@ -92,14 +66,14 @@ export function DashboardPlaceholder({
         }}
       >
         <span style={{ color: 'var(--rf-primary, #0284c7)', marginTop: '2px' }} aria-hidden="true">
-          {config.icon}
+          <IconOverview size={20} />
         </span>
         <div style={{ flex: 1 }}>
           <strong style={{ display: 'block', fontSize: '13px', color: 'var(--rf-text-main, #0f172a)', marginBottom: '4px' }}>
-            Ranh giới kiến trúc (Task C1-002 Application Shell)
+            Ranh giới kiến trúc Quản lý vận hành (UI-A06 • Kế hoạch C1-006)
           </strong>
           <span style={{ fontSize: '12px', color: 'var(--rf-text-muted, #64748b)', lineHeight: 1.5 }}>
-            {config.scopeNote}
+            Không gian làm việc: Điều phối vận hành dành cho Quản lý / Chủ cửa hàng. Các chỉ số KPI thời gian thực, cảnh báo đơn quá hạn SLA và phân công kỹ thuật viên sẽ được kết nối chính thức trong chặng C9 sau khi hoàn tất các nghiệp vụ thành phần (C2–C8). Không tạo API hoặc dữ liệu nghiệp vụ giả lập.
           </span>
         </div>
       </div>
@@ -185,7 +159,7 @@ export function DashboardPlaceholder({
         <CardPanel>
           <CardPanelBody>
             <EmptyState
-              title="Chưa có dữ liệu ghi nhận"
+              title="Chưa có dữ liệu vận hành"
               description="Khu vực này hiện chưa có dữ liệu phát sinh. Dữ liệu sẽ tự động hiển thị khi các đơn sửa chữa thực tế được tiếp nhận và vận hành."
               action={<PrimaryButton onClick={() => setCurrentState('ready')}>Làm mới danh sách</PrimaryButton>}
             />
@@ -255,183 +229,64 @@ export function DashboardPlaceholder({
       )}
 
       {currentState === 'ready' && (
-        <>
-          {/* Manager / Owner View Placeholder */}
-          {(role === 'manager' || role === 'owner') && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="stat-grid">
-                <StatCard
-                  label="Tiếp nhận & Chẩn đoán"
-                  value="--"
-                  sub="Chờ kết nối C9"
-                  icon={<IconOrders size={20} />}
-                />
-                <StatCard
-                  label="Chờ khách duyệt"
-                  value="--"
-                  sub="Chờ kết nối C9"
-                  icon={<IconClock size={20} />}
-                />
-                <StatCard
-                  label="Đang sửa chữa"
-                  value="--"
-                  sub="Chờ kết nối C9"
-                  icon={<IconQueue size={20} />}
-                />
-                <StatCard
-                  label="Chờ kiểm tra QC"
-                  value="--"
-                  sub="Chờ kết nối C9"
-                  icon={<IconOverview size={20} />}
-                />
-              </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="stat-grid">
+            <StatCard
+              label="Tiếp nhận & Chẩn đoán"
+              value="--"
+              sub="Chờ kết nối C9"
+              icon={<IconOrders size={20} />}
+            />
+            <StatCard
+              label="Chờ khách duyệt"
+              value="--"
+              sub="Chờ kết nối C9"
+              icon={<IconClock size={20} />}
+            />
+            <StatCard
+              label="Đang sửa chữa"
+              value="--"
+              sub="Chờ kết nối C9"
+              icon={<IconQueue size={20} />}
+            />
+            <StatCard
+              label="Chờ kiểm tra QC"
+              value="--"
+              sub="Chờ kết nối C9"
+              icon={<IconOverview size={20} />}
+            />
+          </div>
 
-              <div className="two-column-layout">
-                <CardPanel>
-                  <CardPanelHeader title="Theo dõi tiến độ đơn sửa chữa" />
-                  <CardPanelBody>
-                    <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
-                      <p style={{ margin: '0 0 12px' }}>
-                        Khu vực hiển thị danh sách phiếu sửa chữa thực tế từ backend ASP.NET Core.
-                      </p>
-                      <span style={{ fontSize: '11px', color: 'var(--rf-text-muted, #94a3b8)' }}>
-                        [Placeholder C1-002: Không tạo dữ liệu giả lập C9]
-                      </span>
-                    </div>
-                  </CardPanelBody>
-                </CardPanel>
+          <div className="two-column-layout">
+            <CardPanel>
+              <CardPanelHeader title="Theo dõi tiến độ đơn sửa chữa toàn xưởng" />
+              <CardPanelBody>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
+                  <p style={{ margin: '0 0 12px' }}>
+                    Khu vực hiển thị danh sách phiếu sửa chữa thực tế từ backend ASP.NET Core.
+                  </p>
+                  <span style={{ fontSize: '11px', color: 'var(--rf-text-muted, #94a3b8)' }}>
+                    [Placeholder C1-006: Dữ liệu thời gian thực thuộc phạm vi C9]
+                  </span>
+                </div>
+              </CardPanelBody>
+            </CardPanel>
 
-                <CardPanel>
-                  <CardPanelHeader title="Phân bổ nhân sự & Bàn làm việc" />
-                  <CardPanelBody>
-                    <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
-                      <p style={{ margin: '0 0 12px' }}>
-                        Bảng phân bổ công việc theo năng lực xử lý của từng kỹ thuật viên.
-                      </p>
-                      <span style={{ fontSize: '11px', color: 'var(--rf-text-muted, #94a3b8)' }}>
-                        [Placeholder C1-002: Sẽ kết nối trong C1-006 / C9]
-                      </span>
-                    </div>
-                  </CardPanelBody>
-                </CardPanel>
-              </div>
-            </div>
-          )}
-
-          {/* Receptionist View Placeholder */}
-          {role === 'receptionist' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="stat-grid">
-                <StatCard
-                  label="Phiếu tiếp nhận hôm nay"
-                  value="--"
-                  sub="Chờ kết nối C2"
-                  icon={<IconInbox size={20} />}
-                />
-                <StatCard
-                  label="Phiếu nháp chưa gửi"
-                  value="--"
-                  sub="Chờ kết nối C2"
-                  icon={<IconOrders size={20} />}
-                />
-                <StatCard
-                  label="Sẵn sàng bàn giao"
-                  value="--"
-                  sub="Chờ kết nối C7"
-                  icon={<IconClock size={20} />}
-                />
-              </div>
-
-              <CardPanel>
-                <CardPanelHeader title="Tra cứu tiến độ toàn cửa hàng (Read-only)" />
-                <CardPanelBody>
-                  <div style={{ padding: '16px 0' }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '8px',
-                        marginBottom: '16px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '0 12px',
-                          height: '38px',
-                          borderRadius: 'var(--rf-radius-md, 8px)',
-                          border: '1px solid var(--rf-border, #e2e8f0)',
-                          backgroundColor: '#ffffff',
-                        }}
-                      >
-                        <IconLookup size={16} style={{ color: 'var(--rf-text-muted, #64748b)' }} />
-                        <input
-                          type="text"
-                          placeholder="Nhập mã phiếu, SĐT hoặc tên khách để tra cứu nhanh..."
-                          style={{
-                            border: 'none',
-                            outline: 'none',
-                            width: '100%',
-                            fontSize: '13px',
-                            color: 'var(--rf-text-main, #0f172a)',
-                          }}
-                          readOnly
-                        />
-                      </div>
-                      <PrimaryButton disabled>Tra cứu</PrimaryButton>
-                    </div>
-
-                    <p style={{ margin: 0, textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
-                      Chức năng tra cứu tiến độ nhanh (Read-only lookup) cho phép Lễ tân xem trạng thái an toàn mà không có quyền sửa chữa hay thay đổi báo giá.
-                    </p>
-                  </div>
-                </CardPanelBody>
-              </CardPanel>
-            </div>
-          )}
-
-          {/* Technician View Placeholder */}
-          {role === 'technician' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="stat-grid">
-                <StatCard
-                  label="Việc cần làm ngay"
-                  value="--"
-                  sub="Ưu tiên SLA cao nhất"
-                  icon={<IconQueue size={20} />}
-                />
-                <StatCard
-                  label="Đang chẩn đoán"
-                  value="--"
-                  sub="Chờ kết nối C6"
-                  icon={<IconOrders size={20} />}
-                />
-                <StatCard
-                  label="Chờ kiểm tra chất lượng"
-                  value="--"
-                  sub="QC Check"
-                  icon={<IconClock size={20} />}
-                />
-              </div>
-
-              <CardPanel>
-                <CardPanelHeader title="Hàng chờ công việc được phân công (My Work Queue)" />
-                <CardPanelBody>
-                  <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
-                    <p style={{ margin: '0 0 12px' }}>
-                      Kỹ thuật viên chỉ xem và thao tác trên các phiếu sửa chữa được phân công trực tiếp.
-                    </p>
-                    <span style={{ fontSize: '11px', color: 'var(--rf-text-muted, #94a3b8)' }}>
-                      [Placeholder C1-002: Chuẩn bị cho task C6 và C9]
-                    </span>
-                  </div>
-                </CardPanelBody>
-              </CardPanel>
-            </div>
-          )}
-        </>
+            <CardPanel>
+              <CardPanelHeader title="Phân bổ nhân sự & Điều phối bàn sửa" />
+              <CardPanelBody>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--rf-text-muted, #64748b)', fontSize: '13px' }}>
+                  <p style={{ margin: '0 0 12px' }}>
+                    Bảng phân bổ công việc theo năng lực xử lý và SLA của từng kỹ thuật viên.
+                  </p>
+                  <span style={{ fontSize: '11px', color: 'var(--rf-text-muted, #94a3b8)' }}>
+                    [Placeholder C1-006: Sẽ kết nối chính thức trong C9]
+                  </span>
+                </div>
+              </CardPanelBody>
+            </CardPanel>
+          </div>
+        </div>
       )}
     </div>
   );

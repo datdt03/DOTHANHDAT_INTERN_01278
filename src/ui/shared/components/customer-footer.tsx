@@ -1,3 +1,5 @@
+import { IconShield } from './icons';
+
 export interface CustomerFooterProps {
   storeName?: string;
   hotline?: string;
@@ -17,7 +19,8 @@ export function CustomerFooter({
         {address && <span> • {address}</span>}
       </p>
       <p className="customer-footer__secured">
-        <span aria-hidden="true">🔒</span> Hệ thống theo dõi tiến độ sửa chữa thiết bị RepairFlow
+        <IconShield size={14} aria-hidden="true" />
+        <span>Hệ thống theo dõi tiến độ sửa chữa thiết bị RepairFlow</span>
       </p>
     </footer>
   );

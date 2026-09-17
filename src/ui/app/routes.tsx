@@ -3,7 +3,9 @@ import { useSession } from './session-context';
 import { AccessShell } from '../features/access/access-shell';
 import { CustomerLinkRoute } from '../features/customer-link/customer-link-route';
 import { InternalShell } from './internal-shell';
+import { RoleAwareNavigationShell } from './navigation';
 import { GenericErrorScreen, SessionCheckingScreen } from './status-screens';
+import { getRoleEntryRoute } from './role-entry';
 
 export type AppRoute =
   | { kind: 'customer-link'; orderId: string }
@@ -31,7 +33,7 @@ interface RouteBoundaryProps {
 
 export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): ReactNode {
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
-  const { sessionStatus, isAuthenticated, capabilities, errorMessage, retrySessionCheck } =
+  const { sessionStatus, isAuthenticated, currentUser, capabilities, errorMessage, retrySessionCheck } =
     useSession();
 
   useEffect(() => {
@@ -48,10 +50,10 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
       isAuthenticated &&
       (currentHash === '#/login' || !currentHash || currentHash === '#/' || currentHash === '#')
     ) {
-      const defaultRoute = capabilities?.defaultRoute || '#/dashboard';
+      const defaultRoute = getRoleEntryRoute(currentUser?.role) || capabilities?.defaultRoute || '#/dashboard';
       window.location.hash = defaultRoute;
     }
-  }, [isAuthenticated, currentHash, capabilities]);
+  }, [isAuthenticated, currentHash, capabilities, currentUser?.role]);
 
   const route = resolveRoute(currentHash);
 
@@ -62,6 +64,9 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
 
   // 2. Component Showcase (Publicly accessible for review / design system verification)
   if (route.kind === 'showcase') {
+    if (isAuthenticated) {
+      return <RoleAwareNavigationShell previewMode={previewMode} onRetry={onRetry} />;
+    }
     return <InternalShell previewMode={previewMode} onRetry={onRetry} />;
   }
 
@@ -87,6 +92,6 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     return <AccessShell />;
   }
 
-  // 3d. Authenticated State -> Render Internal Application Shell
-  return <InternalShell previewMode={previewMode} onRetry={onRetry} />;
+  // 3d. Authenticated State -> Render Role-Aware Application Shell with Route Guarding
+  return <RoleAwareNavigationShell previewMode={previewMode} onRetry={onRetry} />;
 }

@@ -24,6 +24,12 @@ public sealed class TestAccessRepository : IAccessRepository
         AccessFixtureSet fixture,
         ICredentialHasher credentialHasher)
     {
+        var integrationManagerStaff = new StaffProfile(
+            Guid.Parse("00000000-0000-0000-0000-000000000106"),
+            "Manager Integration",
+            "+84912345678",
+            StaffProfileStatus.Active);
+
         return new TestAccessRepository(
             [
                 new AccessAccount(
@@ -37,6 +43,22 @@ public sealed class TestAccessRepository : IAccessRepository
                 new AccessAccount(
                     fixture.InactiveManagerAccount,
                     fixture.ManagerStaff,
+                    credentialHasher.Hash(AccessFixture.KnownPassword)),
+                new AccessAccount(
+                    new AccessPrincipal(
+                        Guid.Parse("00000000-0000-0000-0000-000000000204"),
+                        "technician.integration@example.test",
+                        fixture.TechnicianStaff.Id,
+                        AccountStatus.Active),
+                    fixture.TechnicianStaff,
+                    credentialHasher.Hash(AccessFixture.KnownPassword)),
+                new AccessAccount(
+                    new AccessPrincipal(
+                        Guid.Parse("00000000-0000-0000-0000-000000000205"),
+                        "manager.integration@example.test",
+                        integrationManagerStaff.Id,
+                        AccountStatus.Active),
+                    integrationManagerStaff,
                     credentialHasher.Hash(AccessFixture.KnownPassword))
             ],
             [
@@ -44,7 +66,23 @@ public sealed class TestAccessRepository : IAccessRepository
                 new AccessWorkspaceMembership(fixture.SecondaryWorkspace, fixture.SecondaryOwnerMembership),
                 new AccessWorkspaceMembership(fixture.PrimaryWorkspace, fixture.ReceptionistMembership),
                 new AccessWorkspaceMembership(fixture.PrimaryWorkspace, fixture.SuspendedManagerMembership),
-                new AccessWorkspaceMembership(fixture.PrimaryWorkspace, fixture.UnprovisionedStaffMembership)
+                new AccessWorkspaceMembership(fixture.PrimaryWorkspace, fixture.UnprovisionedStaffMembership),
+                new AccessWorkspaceMembership(
+                    fixture.PrimaryWorkspace,
+                    new WorkspaceMembership(
+                        Guid.Parse("00000000-0000-0000-0000-000000000306"),
+                        fixture.PrimaryWorkspace.Id,
+                        integrationManagerStaff.Id,
+                        AccessRole.Manager,
+                        MembershipStatus.Active)),
+                new AccessWorkspaceMembership(
+                    fixture.PrimaryWorkspace,
+                    new WorkspaceMembership(
+                        Guid.Parse("00000000-0000-0000-0000-000000000307"),
+                        fixture.PrimaryWorkspace.Id,
+                        fixture.TechnicianStaff.Id,
+                        AccessRole.Technician,
+                        MembershipStatus.Active))
             ]);
     }
 

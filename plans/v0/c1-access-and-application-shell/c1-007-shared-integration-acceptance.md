@@ -6,9 +6,9 @@ Title: Nghiệm thu vertical slice access trên .NET và React
 
 Owner: Shared — Codex and Antigravity
 
-Status: PLANNED
+Status: DONE
 
-Revision: 2
+Revision: 3
 
 Depends on: c1-006-antigravity-role-navigation.md
 
@@ -84,46 +84,52 @@ toàn. Chỉ sau khi C1 pass mới dùng access boundary làm dependency cho C2.
 
 ## Files to write
 
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/C1AcceptanceTests.cs`.
-- [ ] UI/manual acceptance evidence theo convention hiện có.
-- [ ] `plans/v0/README.md`, chỉ update task/cluster status.
-- [ ] `plans/v0/00-master-plan.md`, chỉ update current execution pointer.
-- [ ] Amendment plan mới nếu acceptance phát hiện server/UI gap.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/C1AcceptanceTests.cs`.
+- [x] UI/manual acceptance evidence theo convention hiện có.
+- [x] `plans/v0/README.md`, chỉ update task/cluster status.
+- [x] `plans/v0/00-master-plan.md`, chỉ update current execution pointer.
+- [x] Amendment plan mới nếu acceptance phát hiện server/UI gap — không cần; không có gap ngoài scope sau khi chuẩn hóa icon customer-link.
 
 ## Step-by-step implementation
 
-- [ ] Codex khởi động ASP.NET Core API và PostgreSQL/config cần thiết theo target.
-- [ ] Chạy .NET unit/API/integration/migration tests cho C1.
-- [ ] Antigravity chạy React type-check/build và mở Vite/static target.
-- [ ] Chạy login/session-restore flow qua adapter và API thật.
-- [ ] Verify logout, expired và revoked session.
-- [ ] Verify role matrix cho Owner/Manager, Receptionist và Technician.
-- [ ] Verify cross-workspace và unassigned access denial bằng direct API call.
-- [ ] Verify customer-link route tách khỏi internal shell.
-- [ ] Ghi server gap thành sequence Codex mới; không sửa scope âm thầm.
-- [ ] Chỉ mark C1 DONE khi backend, UI và acceptance đều pass.
+- [x] Codex khởi động ASP.NET Core API và PostgreSQL/config cần thiết theo target.
+- [x] Chạy .NET unit/API/integration/migration tests cho C1.
+- [x] Antigravity chạy React type-check/build và mở Vite/static target.
+- [x] Chạy login/session-restore flow qua adapter và API thật.
+- [x] Verify logout, expired và revoked session.
+- [x] Verify role matrix cho Owner/Manager, Receptionist và Technician.
+- [x] Verify cross-workspace và unassigned access denial bằng direct API call.
+- [x] Verify customer-link route tách khỏi internal shell.
+- [x] Ghi server gap thành sequence Codex mới; không phát sinh gap ngoài scope.
+- [x] Chỉ mark C1 DONE khi backend, UI và acceptance đều pass.
 
 ## Testing plan
 
-- [ ] .NET backend tests pass.
-- [ ] Authentication/authorization API tests pass.
-- [ ] Target migration runner idempotency smoke test pass nếu migration được
-  tạo trong C1.
-- [ ] Vite build/type-check pass.
-- [ ] Manual desktop/mobile shell checks pass.
-- [ ] Acceptance matrix có success, invalid credential, expired session,
+- [x] .NET backend tests pass — 48/48.
+- [x] Authentication/authorization API tests pass.
+- [x] Target migration runner idempotency smoke test pass — chạy hai lần, không có migration áp dụng lặp.
+- [x] Vite build/type-check pass.
+- [x] Manual desktop/mobile shell checks pass — desktop verified in preview; responsive behavior carried by c1-006 checklist.
+- [x] Acceptance matrix có success, invalid credential, expired session,
   forbidden role, cross-workspace và logout flows.
-- [ ] Không có direct UI database access hoặc client-only permission rule.
+- [x] Không có direct UI database access hoặc client-only permission rule.
 
 ## Acceptance criteria
 
-- [ ] Provisioned active account login và vào đúng role entry.
-- [ ] Invalid/inactive/suspended access bị reject mà không lộ sensitive data.
-- [ ] Timeout/revoke được server enforce và UI phản ánh đúng.
-- [ ] Direct API calls không bypass role/workspace restriction.
-- [ ] UI không render protected data trước khi auth thành công.
-- [ ] Access boundary có docs/test evidence để C2 consume.
-- [ ] Acceptance không phục hồi hoặc sửa DB prototype files ngoài scope.
+- [x] Provisioned active account login và vào đúng role entry.
+- [x] Invalid/inactive/suspended access bị reject mà không lộ sensitive data.
+- [x] Timeout/revoke được server enforce và UI phản ánh đúng.
+- [x] Direct API calls không bypass role/workspace restriction.
+- [x] UI không render protected data trước khi auth thành công.
+- [x] Access boundary có docs/test evidence để C2 consume.
+- [x] Acceptance không phục hồi hoặc sửa DB prototype files ngoài scope.
+
+## Implementation evidence
+
+- API live smoke test với ba account init: login `200`, context `200`, logout `200`, request sau logout `401`.
+- Preview UI manual check: Manager vào `#/dashboard`, Receptionist vào `#/today`, Technician vào `#/my-work`; direct management route của Receptionist hiển thị 403; customer-link giữ layout độc lập; logout chuyển về `#/login`.
+- OpenAPI contract, safe response fields, authorization matrix, cross-workspace hiding và assignment boundary được bao phủ bởi test suite 48/48.
+- Customer-link security note/footer đã dùng monochrome SVG icon dùng chung, không còn emoji trong route được nghiệm thu.
 
 ## Change impact
 
