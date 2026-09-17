@@ -51,6 +51,34 @@ public sealed record WorkspaceMembership(
     AccessRole Role,
     MembershipStatus Status);
 
+public sealed record AccessAccount(
+    AccessPrincipal Principal,
+    StaffProfile StaffProfile,
+    string CredentialHash);
+
+public sealed record AccessWorkspaceMembership(
+    Workspace Workspace,
+    WorkspaceMembership Membership);
+
+public sealed record AccessSession(
+    Guid Id,
+    Guid PrincipalId,
+    Guid StaffProfileId,
+    Guid WorkspaceId,
+    string TokenHash,
+    DateTimeOffset IssuedAt,
+    DateTimeOffset LastAccessedAt,
+    DateTimeOffset AbsoluteExpiresAt,
+    DateTimeOffset? RevokedAt,
+    string? RevokeReason,
+    string? IpHash,
+    string? UserAgent);
+
+public sealed record AccessSessionSnapshot(
+    AccessSession Session,
+    AccessAccount Account,
+    AccessWorkspaceMembership WorkspaceMembership);
+
 public sealed record AttributedStaffContext(Guid StaffProfileId, string DisplayName)
 {
     public static AttributedStaffContext From(StaffProfile staffProfile) =>

@@ -1,6 +1,6 @@
 using RepairFlow.Api.Features.Access.Domain;
 
-namespace RepairFlow.Api.Features.Access.Infrastructure;
+namespace RepairFlow.Api.Features.Access.Application;
 
 /// <summary>
 /// Persistence port for the access feature. The concrete database implementation
@@ -8,24 +8,30 @@ namespace RepairFlow.Api.Features.Access.Infrastructure;
 /// </summary>
 public interface IAccessRepository
 {
-    Task<AccessPrincipal?> FindPrincipalByEmailAsync(
+    Task<AccessAccount?> FindAccountByEmailAsync(
         string normalizedEmail,
         CancellationToken cancellationToken = default);
 
-    Task<AccessPrincipal?> FindPrincipalByIdAsync(
-        Guid principalId,
-        CancellationToken cancellationToken = default);
-
-    Task<StaffProfile?> FindStaffProfileAsync(
+    Task<IReadOnlyList<AccessWorkspaceMembership>> FindMembershipsAsync(
         Guid staffProfileId,
         CancellationToken cancellationToken = default);
 
-    Task<Workspace?> FindWorkspaceAsync(
-        Guid workspaceId,
+    Task<AccessSessionSnapshot?> FindSessionByTokenHashAsync(
+        string tokenHash,
         CancellationToken cancellationToken = default);
 
-    Task<WorkspaceMembership?> FindMembershipAsync(
-        Guid staffProfileId,
-        Guid workspaceId,
+    Task CreateSessionAsync(
+        AccessSession session,
+        CancellationToken cancellationToken = default);
+
+    Task TouchSessionAsync(
+        Guid sessionId,
+        DateTimeOffset accessedAt,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RevokeSessionAsync(
+        string tokenHash,
+        DateTimeOffset revokedAt,
+        string reason,
         CancellationToken cancellationToken = default);
 }

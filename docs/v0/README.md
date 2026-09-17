@@ -22,7 +22,8 @@ Read [the documentation guide](../README.md) first. It defines the documentation
   database was reset to a clean target volume during final acceptance.
 - C0 target runtime is active under `src/server` and the React/Vite adapter has
   been smoke-tested against the real `/health` endpoint. C1 implementation is
-  in progress; c1-001 access foundation is complete.
+  in progress; c1-001 access foundation, c1-002 React shell and c1-003
+  authentication/session are complete. c1-004 auth UI is next.
 - Business implementation continues by cluster; the UI prototype is still backed by mock data until its adapter is connected.
 - The target web UI is React + Vite + TypeScript; React is not the authoritative
   business API layer.

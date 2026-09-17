@@ -4,9 +4,9 @@
 >
 > Status: ACTIVE
 >
-> Revision: 2
+> Revision: 3
 >
-> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration accepted on 2026-09-17. C1 is in progress; c1-001 is complete.
+> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration accepted on 2026-09-17. C1 is in progress; c1-001, c1-002 and c1-003 are complete.
 
 ## Goal
 
@@ -167,7 +167,7 @@ c1-001 Codex: access API foundation — DONE
 C0 đã xác nhận health contract `/health`, request ID, error/response envelope,
 OpenAPI 3.0, PostgreSQL provider boundary, migration convention/runner và UI
 adapter trên database sạch. C1 đã được phê duyệt để triển khai; c1-001 access
-API foundation đã hoàn tất và c1-002 là lát tiếp theo.
+API foundation, React shell và authentication/session đã hoàn tất; c1-004 là lát tiếp theo.
 
 ## C1 execution map
 

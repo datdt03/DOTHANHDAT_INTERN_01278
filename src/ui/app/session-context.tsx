@@ -12,10 +12,11 @@ import {
   type RoleCapabilities,
   type UserProfile,
   type UserRole,
+  type DevelopmentRole,
   DEMO_ACCOUNTS,
 } from '../shared/api/access-api';
 
-export type { UserRole, UserProfile, RoleCapabilities };
+export type { UserRole, DevelopmentRole, UserProfile, RoleCapabilities };
 export type StaffProfile = UserProfile;
 
 export const DEMO_STAFF_ACCOUNTS = DEMO_ACCOUNTS;

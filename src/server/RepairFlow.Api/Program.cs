@@ -56,7 +56,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -65,6 +66,7 @@ var app = builder.Build();
 app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("UiDevelopment");
+app.UseMiddleware<AccessSessionMiddleware>();
 
 app.UseSwagger();
 if (app.Environment.IsDevelopment())
@@ -82,6 +84,22 @@ if (app.Environment.IsEnvironment("Testing"))
             "Validation failed.",
             new Dictionary<string, string[]> { ["field"] = ["The field is required."] }))
         .ExcludeFromDescription();
+}
+
+if (args.Any(argument => string.Equals(argument, "--seed-development-access", StringComparison.OrdinalIgnoreCase)))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException("Development access seeding is only available when ASPNETCORE_ENVIRONMENT=Development.");
+    }
+
+    using var scope = app.Services.CreateScope();
+    var migrationRunner = scope.ServiceProvider.GetRequiredService<IVersionedMigrationRunner>();
+    await migrationRunner.ApplyPendingAsync();
+    var seeder = scope.ServiceProvider.GetRequiredService<IDevelopmentAccessSeeder>();
+    var seedResult = await seeder.SeedAsync();
+    Console.WriteLine($"Seeded development access accounts: {string.Join(", ", seedResult.Emails)}");
+    return;
 }
 
 if (args.Any(argument => string.Equals(argument, "--migrate", StringComparison.OrdinalIgnoreCase)))

@@ -6,9 +6,9 @@ Title: Nối login/session UI React với access API
 
 Owner: Antigravity
 
-Status: PLANNED
+Status: READY
 
-Revision: 2
+Revision: 3
 
 Depends on: c1-003-codex-auth-session.md
 

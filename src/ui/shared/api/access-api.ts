@@ -6,6 +6,7 @@
  */
 
 export type UserRole = 'owner' | 'manager' | 'receptionist' | 'technician';
+export type DevelopmentRole = Exclude<UserRole, 'owner'>;
 
 export interface UserProfile {
   id: string;
@@ -60,23 +61,15 @@ export interface LoginResult {
   isLocked?: boolean;
 }
 
-export const DEMO_ACCOUNTS: Record<UserRole, UserProfile> = {
-  owner: {
-    id: 'staff-000',
-    name: 'Nguyễn Văn Minh',
-    role: 'owner',
-    roleTitle: 'Chủ cửa hàng (Owner)',
-    email: 'minh.owner@repairflow.vn',
-    initials: 'NM',
-    storeName: 'Minh Tâm Store',
-    workspaceId: 'ws-main',
-  },
+// Development/demo accounts mirror the development database seed. The product still
+// supports the owner role, but owner is intentionally not provisioned in this test set.
+export const DEMO_ACCOUNTS: Record<DevelopmentRole, UserProfile> = {
   manager: {
     id: 'staff-001',
     name: 'Minh Tâm',
     role: 'manager',
     roleTitle: 'Quản lý vận hành',
-    email: 'minhtam@repairflow.vn',
+    email: 'manager@repairflow.vn',
     initials: 'MT',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
@@ -86,7 +79,7 @@ export const DEMO_ACCOUNTS: Record<UserRole, UserProfile> = {
     name: 'Thu Hà',
     role: 'receptionist',
     roleTitle: 'Lễ tân tiếp nhận',
-    email: 'thuha@repairflow.vn',
+    email: 'receptionist@repairflow.vn',
     initials: 'TH',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
@@ -96,7 +89,7 @@ export const DEMO_ACCOUNTS: Record<UserRole, UserProfile> = {
     name: 'Quốc Bảo',
     role: 'technician',
     roleTitle: 'Kỹ thuật viên trưởng',
-    email: 'quocbao@repairflow.vn',
+    email: 'technician@repairflow.vn',
     initials: 'QB',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
@@ -172,6 +165,7 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
 
 const STORAGE_KEY = 'repairflow_active_session';
 const SESSION_DURATION_MS = 30 * 60 * 1000; // 30 mins idle timeout
+const DEVELOPMENT_PASSWORD = '123456';
 
 export interface AccessApi {
   login(credentials: LoginCredentials): Promise<LoginResult>;
@@ -189,7 +183,7 @@ class MockAccessAdapter implements AccessApi {
     await new Promise((r) => setTimeout(r, 150));
 
     const matched = Object.values(DEMO_ACCOUNTS).find((u) => u.email.toLowerCase() === trimmed);
-    if (!matched) {
+    if (!matched || credentials.password !== DEVELOPMENT_PASSWORD) {
       return {
         success: false,
         errorMessage: 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.',
@@ -216,7 +210,7 @@ class MockAccessAdapter implements AccessApi {
   }
 
   async quickLogin(role: UserRole): Promise<SessionContext> {
-    const user = DEMO_ACCOUNTS[role] || DEMO_ACCOUNTS.manager;
+    const user = role === 'owner' ? DEMO_ACCOUNTS.manager : DEMO_ACCOUNTS[role];
     const session: SessionContext = {
       token: `mock-token-${user.id}-${Date.now()}`,
       user,

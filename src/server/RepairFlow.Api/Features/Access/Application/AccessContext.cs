@@ -7,7 +7,14 @@ public interface IAccessContextAccessor
     AccessContext? Current { get; }
 }
 
-public sealed class RequestAccessContextAccessor : IAccessContextAccessor
+public interface IAccessContextWriter
 {
-    public AccessContext? Current => null;
+    void SetCurrent(AccessContext? context);
+}
+
+public sealed class RequestAccessContextAccessor : IAccessContextAccessor, IAccessContextWriter
+{
+    public AccessContext? Current { get; private set; }
+
+    public void SetCurrent(AccessContext? context) => Current = context;
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useSession, DEMO_STAFF_ACCOUNTS, type UserRole } from '../../app/session-context';
+import { useSession, DEMO_STAFF_ACCOUNTS, type DevelopmentRole } from '../../app/session-context';
 import {
   BrandMark,
   IconAlert,
@@ -131,7 +131,7 @@ export function AccessShell() {
           </div>
 
           <div className="access-quick-grid">
-            {(Object.keys(DEMO_STAFF_ACCOUNTS) as UserRole[]).map((role) => {
+            {(Object.keys(DEMO_STAFF_ACCOUNTS) as DevelopmentRole[]).map((role) => {
               const account = DEMO_STAFF_ACCOUNTS[role];
               return (
                 <button

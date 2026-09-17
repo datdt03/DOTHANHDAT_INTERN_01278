@@ -21,6 +21,8 @@ public sealed record AccessFixtureSet(
 
 public static class AccessFixture
 {
+    public const string KnownPassword = "correct-horse-battery-staple";
+
     public static AccessFixtureSet Create()
     {
         var primaryWorkspace = new Workspace(

@@ -27,8 +27,30 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
         Assert.True(document.RootElement.GetProperty("paths").TryGetProperty(
             "/api/access/context",
             out _));
-        Assert.DoesNotContain("password", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("token", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("token hash", json, StringComparison.OrdinalIgnoreCase);
+
+        var schemas = document.RootElement
+            .GetProperty("components")
+            .GetProperty("schemas");
+        var loginRequest = schemas.GetProperty("LoginRequest");
+        Assert.True(loginRequest.GetProperty("properties").TryGetProperty("password", out _));
+
+        foreach (var schemaName in new[]
+                 {
+                     "AccessContextResponse",
+                     "LoginResponse",
+                     "CurrentSessionResponse",
+                     "LogoutResponse"
+                 })
+        {
+            if (!schemas.TryGetProperty(schemaName, out var schema))
+            {
+                continue;
+            }
+
+            var safeSchema = schema.GetRawText();
+            Assert.DoesNotContain("password", safeSchema, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("token", safeSchema, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("hash", safeSchema, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

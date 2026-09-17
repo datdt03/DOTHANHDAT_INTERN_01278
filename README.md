@@ -552,7 +552,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 **Last reviewed:** 2026-09-17<br>
 **Current phase:** `v0 — Implementation`<br>
 **Overall status:** `READY — Gate D0 is closed`<br>
-**Current implementation gate:** `C1 — IN PROGRESS; c1-001 DONE; c1-002 READY`
+**Current implementation gate:** `C1 — IN PROGRESS; c1-001 DONE; c1-002 DONE; c1-003 DONE; c1-004 READY`
 
 ### Delivery status
 
@@ -561,7 +561,7 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
 | Requirements baseline | `READY — D0 CLOSED` | [`docs/v0/`](docs/v0/README.md); implement from the closed baseline. |
 | Architecture diagrams | `DECIDED — BASELINE CLOSED` | [`04-architecture-c4-arc42.md`](docs/v0/04-architecture-c4-arc42.md); keep diagrams aligned with implementation. |
 | Runtime foundation | `DONE — C0 ACCEPTED` | [`C0 acceptance evidence`](plans/v0/c0-runtime-stack-migration/c0-003-acceptance-evidence.md). |
-| Business API | `IN PROGRESS — C1 access foundation` | Continue with the next C1 vertical slice. |
+| Business API | `IN PROGRESS — C1 access/authentication` | Continue with c1-004 auth UI, then permission enforcement. |
 | UI integration | `FOUNDATION VERIFIED — LIVE HEALTH ADAPTER` | [`src/ui/`](src/ui/) and [`src/ui/README.md`](src/ui/README.md). |
 | English standardization | `IN PROGRESS` | Continue the language pass and run the language audit. |
 | Deployment and monitoring | `DEFERRED` | Define in a later phase. |
@@ -584,8 +584,8 @@ For the complete decision set and any `OPEN` or `PROPOSED` items, start at
    verification in the capability plan.
 2. The dashboard, order detail, and customer link still depend on mock data
    until the business API is implemented.
-3. Business endpoints and management/staff authentication still need to be
-   implemented in the remaining C1 slices.
+3. Business endpoints, full permission enforcement, and React auth UI
+   integration still need to be implemented in the remaining C1 slices.
 
 These are implementation tasks after D0 closure, not requirements-gate
 blockers. The closure record is maintained in
@@ -596,7 +596,7 @@ blockers. The closure record is maintained in
 | Cluster | Business capability | Status |
 | --- | --- | --- |
 | C0 | Target runtime, migration runner, adapter boundary, and test harness | `DONE — ACCEPTED` |
-| C1 | Owner/Manager access and application shell | `IN PROGRESS — c1-001 DONE` |
+| C1 | Owner/Manager access and application shell | `IN PROGRESS — c1-003 DONE; c1-004 READY` |
 | C2 | Customer, device, and order creation | `OPEN FOR IMPLEMENTATION` |
 | C3 | Intake checklist and evidence | `OPEN FOR IMPLEMENTATION` |
 | C4 | Diagnosis and quotation draft | `OPEN FOR IMPLEMENTATION` |
@@ -647,6 +647,22 @@ dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --migrat
 
 Migrations are SQL-first and must follow the naming and baseline rules in
 [`05-database-requirements.md`](docs/v0/05-database-requirements.md#120-quyết-định-và-quy-ước-file-migration).
+
+### Seed development access accounts
+
+After the migrations are applied, create or reset the three local test
+accounts with:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --seed-development-access
+```
+
+The command is Development-only and idempotent. It provisions Manager
+(`manager@repairflow.vn`), Receptionist (`receptionist@repairflow.vn`) and
+Technician (`technician@repairflow.vn`) in `Minh Tâm Store`, with initial
+password `123456`. The database stores a password hash; no Owner account is
+created by this development seed.
 
 ### Run the target UI
 
@@ -733,7 +749,7 @@ decision labels, and the required workflow for documentation changes.
 - [x] Core workflow, access, OTP, retention, backup, and cancellation decisions are recorded in v0 documentation.
 - [x] Core architecture, state, data, and customer-link diagrams are summarized in this README and maintained in canonical v0 documents.
 - [x] UI is connected to the real API health boundary.
-- [ ] Business API and Owner/Manager authentication are complete.
+- [ ] Business API, full permission enforcement, and role-aware auth UI are complete.
 - [ ] English standardization audit is complete.
 - [ ] Deployment and monitoring are defined for a later phase.
 

@@ -6,9 +6,9 @@ Title: Implement internal authentication và session lifecycle trên .NET
 
 Owner: Codex
 
-Status: PLANNED
+Status: DONE
 
-Revision: 2
+Revision: 3
 
 Depends on: c1-002-antigravity-ui-shell.md
 
@@ -91,61 +91,69 @@ session có hạn sử dụng, gắn đúng workspace context và không làm l�
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0001__spec-v0__create-access-identity-and-sessions.sql`, chỉ khi schema contract cần delta.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/CredentialHasher.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AuthenticationService.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/SessionService.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessSessionRepository.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AccessEndpoints.cs`.
-- [ ] `src/server/RepairFlow.Api/Configuration/AuthOptions.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthenticationTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/SessionTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthApiTests.cs`.
+- [x] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0001__spec-v0__create-access-identity-and-sessions.sql`, schema delta đã được runner áp dụng.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/CredentialHasher.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AuthenticationService.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/SessionService.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Infrastructure/AccessSessionRepository.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AccessEndpoints.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Infrastructure/DevelopmentAccessSeeder.cs`, chỉ dùng cho Development local.
+- [x] `src/server/RepairFlow.Api/Configuration/AuthOptions.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthenticationTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/SessionTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthApiTests.cs`.
 
 Không sửa hoặc khôi phục các migration file prototype cũ. Migration mới phải
 được đối chiếu với docs/v0/05 và đăng ký qua runner target .NET.
 
+Implementation note: current-session dùng route đã được freeze từ c1-001 là
+`GET /api/access/context`; c1-003 bổ sung `POST /api/access/login` và
+`POST /api/access/logout`. Session token chỉ nằm trong HttpOnly cookie; response
+body chỉ trả safe context và expiry.
+
 ## Step-by-step implementation
 
-- [ ] Đối chiếu schema identity và auth baseline; xác định session delta trước
+- [x] Đối chiếu schema identity và auth baseline; xác định session delta trước
   khi tạo migration mới.
-- [ ] Thiết kế migration versioned cho credential hash/session expiry, last
+- [x] Thiết kế migration versioned cho credential hash/session expiry, last
   activity, revoke state, workspace context và audit fields cần thiết.
-- [ ] Đảm bảo migration transactional/idempotent theo runner C0 và không sửa
+- [x] Đảm bảo migration transactional/idempotent theo runner C0 và không sửa
   lịch sử migration đã có trong target schema contract.
-- [ ] Implement credential hash verification không lưu/log plaintext.
-- [ ] Implement session creation với idle và absolute expiry từ options.
-- [ ] Resolve current session từ hashed token; reject revoked/expired/inactive/
+- [x] Implement credential hash verification không lưu/log plaintext.
+- [x] Implement session creation với idle và absolute expiry từ options.
+- [x] Resolve current session từ hashed token; reject revoked/expired/inactive/
   cross-workspace context.
-- [ ] Implement logout/revoke và repeated logout safe.
-- [ ] Trả safe context gồm account, workspace, role/capability cần cho UI; không
+- [x] Implement logout/revoke và repeated logout safe.
+- [x] Trả safe context gồm account, workspace, role/capability cần cho UI; không
   trả token hash, password hoặc dữ liệu workspace khác.
-- [ ] Giữ acting account tách với attributed staff profile.
-- [ ] Thêm audit/rate-limit hooks ở boundary không kéo thêm service ngoài MVP.
-- [ ] Register endpoints và kiểm tra OpenAPI 3.0.
-- [ ] Chốt route/schema/error behavior với Antigravity trước c1-004.
+- [x] Giữ acting account tách với attributed staff profile.
+- [x] Thêm audit/rate-limit hooks ở boundary không kéo thêm service ngoài MVP.
+- [x] Register endpoints và kiểm tra OpenAPI 3.0.
+- [x] Giữ development access seed tách khỏi provisioning production và chỉ cho
+  phép chạy khi environment là Development.
+- [x] Chốt route/schema/error behavior với Antigravity trước c1-004.
 
 ## Testing plan
 
-- [ ] Active principal + active membership authenticate được.
-- [ ] Wrong credential trả generic auth error, không account enumeration.
-- [ ] Inactive/locked principal hoặc suspended/removed membership bị từ chối.
-- [ ] Staff không có account không thể login.
-- [ ] Session idle/absolute expiry và revoke được enforce.
-- [ ] Session không đọc/ghi chéo workspace.
-- [ ] Logout lặp an toàn; token hash/password không xuất hiện trong response/log.
-- [ ] Audit/rate-limit hook nhận đúng success/failure/denied event.
-- [ ] OpenAPI không expose secret và `dotnet test` pass.
+- [x] Active principal + active membership authenticate được.
+- [x] Wrong credential trả generic auth error, không account enumeration.
+- [x] Inactive/locked principal hoặc suspended/removed membership bị từ chối.
+- [x] Staff không có account không thể login.
+- [x] Session idle/absolute expiry và revoke được enforce.
+- [x] Session không đọc/ghi chéo workspace.
+- [x] Logout lặp an toàn; token hash/password không xuất hiện trong response/log.
+- [x] Audit/rate-limit hook nhận đúng success/failure/denied event.
+- [x] OpenAPI không expose secret và `dotnet test` pass — 32 passed, 0 failed.
 
 ## Acceptance criteria
 
-- [ ] Có thể authenticate provisioned account qua ASP.NET Core API thật.
-- [ ] Current session và logout/revoke hoạt động theo timeout policy.
-- [ ] Authenticated context được feature sau dùng qua dependency chung.
-- [ ] Các failure path không làm lộ account/credential/workspace khác.
-- [ ] Migration target được runner .NET quản lý, không phục hồi DB prototype.
-- [ ] c1-004 nhận được contract ổn định để nối adapter.
+- [x] Có thể authenticate provisioned account qua ASP.NET Core API thật.
+- [x] Current session và logout/revoke hoạt động theo timeout policy.
+- [x] Authenticated context được feature sau dùng qua dependency chung.
+- [x] Các failure path không làm lộ account/credential/workspace khác.
+- [x] Migration target được runner .NET quản lý, không phục hồi DB prototype.
+- [x] c1-004 nhận được contract ổn định để nối adapter.
 
 ## Change impact
 
