@@ -16,8 +16,8 @@ export function PrimaryButton({ fullWidth = false, className, children, ...props
   return <button type="button" className={joinClasses('primary-button', fullWidth && 'primary-button--full', className)} {...props}>{children}</button>;
 }
 
-export function SecondaryButton({ className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
-  return <button type="button" className={joinClasses('secondary-button', className)} {...props}>{children}</button>;
+export function SecondaryButton({ fullWidth = false, className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { fullWidth?: boolean; children: ReactNode }) {
+  return <button type="button" className={joinClasses('secondary-button', fullWidth && 'primary-button--full', className)} {...props}>{children}</button>;
 }
 
 export function TextButton({ className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {

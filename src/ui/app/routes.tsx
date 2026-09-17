@@ -71,19 +71,19 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     return <SessionCheckingScreen />;
   }
 
-  // 3b. Session Error State (Generic error with retry)
-  if (sessionStatus === 'error') {
+  // 3b. Session Error / Unavailable State (Generic error with retry)
+  if (sessionStatus === 'error' || sessionStatus === 'unavailable') {
     return (
       <GenericErrorScreen
-        title="Lỗi kiểm tra phiên làm việc"
+        title="Không thể kết nối tới hệ thống"
         message={errorMessage || 'Không thể xác thực phiên làm việc. Vui lòng thử lại.'}
         onRetry={retrySessionCheck}
       />
     );
   }
 
-  // 3c. Unauthenticated State -> Render Access Shell (Login boundary for C1-004)
-  if (!isAuthenticated || sessionStatus === 'unauthenticated') {
+  // 3c. Unauthenticated / Expired / Submitting State -> Render Access Shell (Login boundary for C1-004)
+  if (!isAuthenticated || sessionStatus === 'unauthenticated' || sessionStatus === 'expired' || sessionStatus === 'submitting') {
     return <AccessShell />;
   }
 

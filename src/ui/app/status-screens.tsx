@@ -29,7 +29,7 @@ export function ApiUnavailableScreen({
 }: {
   message: string;
   onRetry: () => void;
-  onUsePreview: () => void;
+  onUsePreview?: () => void;
 }) {
   return (
     <div className="status-screen" role="alert">
@@ -37,10 +37,12 @@ export function ApiUnavailableScreen({
       <h1>Chưa kết nối được API</h1>
       <p>{message}</p>
       <div className="status-actions">
-        <PrimaryButton onClick={onUsePreview}>Mở bản preview UI</PrimaryButton>
-        <SecondaryButton onClick={onRetry}>Thử lại</SecondaryButton>
+        <PrimaryButton onClick={onRetry}>Thử lại</PrimaryButton>
+        {onUsePreview && (
+          <SecondaryButton onClick={onUsePreview}>Mở bản preview UI</SecondaryButton>
+        )}
       </div>
-      <small>Preview dùng dữ liệu mẫu và không ghi dữ liệu thật.</small>
+      {onUsePreview && <small>Preview dùng dữ liệu mẫu và không ghi dữ liệu thật.</small>}
     </div>
   );
 }

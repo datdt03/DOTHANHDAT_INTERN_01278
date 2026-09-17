@@ -5,25 +5,14 @@ import {
   AppFooter,
   AppHeader,
   AppSidebar,
-  TextButton,
 } from '../shared/components';
 import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
 import '../shared/styles/app-shell.css';
 
 interface InternalShellProps {
-  previewMode: boolean;
-  onRetry: () => void;
-}
-
-function PreviewNotice({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="preview-notice" role="status">
-      <span className="preview-notice__dot" aria-hidden="true" />
-      <span>Đang xem bản preview giao diện với dữ liệu mẫu (Chưa có backend API).</span>
-      <TextButton onClick={onRetry}>Thử kết nối lại</TextButton>
-    </div>
-  );
+  previewMode?: boolean;
+  onRetry?: () => void;
 }
 
 function resolveNavLabelFromHash(hash: string, role: UserRole): string {
@@ -47,8 +36,8 @@ function resolveNavLabelFromHash(hash: string, role: UserRole): string {
   return 'Tổng quan';
 }
 
-export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
-  const { currentUser, switchRole, logout, simulateSessionExpired, sessionNotice } = useSession();
+export function InternalShell({}: InternalShellProps) {
+  const { currentUser, logout, sessionNotice } = useSession();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
 
@@ -98,11 +87,7 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
         userRole={currentUser?.roleTitle}
         userInitials={currentUser?.initials}
         currentRole={currentRole}
-        onSwitchRole={(r: UserRole) => {
-          void switchRole(r);
-        }}
         onLogout={logout}
-        onSimulateTimeout={() => simulateSessionExpired()}
       />
 
       <div className="app-main">
@@ -120,14 +105,13 @@ export function InternalShell({ previewMode, onRetry }: InternalShellProps) {
 
         {/* Main Content Outlet with Notification/Feedback Slot */}
         <main className="page-content" id="main-content">
-          <div className="shell-feedback-slot">
-            {previewMode && <PreviewNotice onRetry={onRetry} />}
-            {sessionNotice && (
+          {sessionNotice && (
+            <div className="shell-feedback-slot">
               <div className="access-expired-banner" role="alert">
                 <strong>Thông báo phiên:</strong> {sessionNotice}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Dynamic View by Route & Persona */}
           {activeNav === 'Thư viện UI' ? (

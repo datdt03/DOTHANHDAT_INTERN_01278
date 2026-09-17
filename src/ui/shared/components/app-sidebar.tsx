@@ -3,7 +3,6 @@ import {
   IconClose,
   IconCustomers,
   IconDevices,
-  IconHourglass,
   IconInbox,
   IconLogout,
   IconLookup,
@@ -37,9 +36,7 @@ export interface AppSidebarProps {
   userRole?: string;
   userInitials?: string;
   currentRole?: UserRole;
-  onSwitchRole?: (role: UserRole) => void;
   onLogout?: () => void;
-  onSimulateTimeout?: () => void;
 }
 
 function renderNavIcon(iconId: string) {
@@ -84,9 +81,7 @@ export function AppSidebar({
   userRole = 'Quản lý vận hành',
   userInitials = 'MT',
   currentRole = 'manager',
-  onSwitchRole,
   onLogout,
-  onSimulateTimeout,
 }: AppSidebarProps) {
   const capabilities = getRoleCapabilities(currentRole);
   const navItems = capabilities.navigationItems;
@@ -192,38 +187,6 @@ export function AppSidebar({
             </div>
           )}
 
-          {!isCollapsed && onSwitchRole && (
-            <div className="sidebar-role-selector">
-              <span className="sidebar-role-label">Chuyển vai trò test:</span>
-              <div className="sidebar-role-chips">
-                <button
-                  type="button"
-                  className={`sidebar-role-chip ${currentRole === 'manager' ? 'sidebar-role-chip--active' : ''}`}
-                  onClick={() => onSwitchRole('manager')}
-                  title="Chuyển sang vai trò Quản lý"
-                >
-                  Quản lý
-                </button>
-                <button
-                  type="button"
-                  className={`sidebar-role-chip ${currentRole === 'receptionist' ? 'sidebar-role-chip--active' : ''}`}
-                  onClick={() => onSwitchRole('receptionist')}
-                  title="Chuyển sang vai trò Lễ tân"
-                >
-                  Lễ tân
-                </button>
-                <button
-                  type="button"
-                  className={`sidebar-role-chip ${currentRole === 'technician' ? 'sidebar-role-chip--active' : ''}`}
-                  onClick={() => onSwitchRole('technician')}
-                  title="Chuyển sang vai trò Kỹ thuật viên"
-                >
-                  KTV
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="sidebar-user">
             {isCollapsed ? (
               <div
@@ -245,22 +208,11 @@ export function AppSidebar({
                   <strong>{userName}</strong>
                   <span>{userRole}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {onSimulateTimeout && (
-                    <IconButton
-                      label="Hết hạn phiên"
-                      onClick={onSimulateTimeout}
-                      title="Test hết hạn phiên (UI-A03)"
-                    >
-                      <IconHourglass size={14} />
-                    </IconButton>
-                  )}
-                  {onLogout && (
-                    <IconButton label="Đăng xuất" onClick={onLogout} title="Đăng xuất tài khoản">
-                      <IconLogout size={14} />
-                    </IconButton>
-                  )}
-                </div>
+                {onLogout && (
+                  <IconButton label="Đăng xuất" onClick={onLogout} title="Đăng xuất tài khoản">
+                    <IconLogout size={14} />
+                  </IconButton>
+                )}
               </>
             )}
           </div>

@@ -74,7 +74,7 @@ stateDiagram-v2
 
     [*] --> received: Create repair order
 
-    received --> diagnosing: Intake complete; baseline locked
+    received --> diagnosing: "Intake complete; baseline locked"
     received --> cancelled: Cancel before repair
 
     diagnosing --> waiting_for_approval: Diagnosis + valid quote
@@ -95,7 +95,7 @@ stateDiagram-v2
     cancellation_requested --> ready_for_return: Technician / Owner confirms
 
     quality_check --> ready_for_pickup: QC passed
-    quality_check --> repairing: QC failed; rework required
+    quality_check --> repairing: "QC failed; rework required"
 
     rejected --> waiting_for_approval: Create a new quote version
     rejected --> ready_for_return: Do not continue

@@ -9,10 +9,24 @@ export interface HealthResponse {
   };
 }
 
+export interface ApiErrorPayload {
+  code?: string;
+  message?: string;
+  details?: unknown;
+}
+
+export interface ApiErrorEnvelope {
+  error?: ApiErrorPayload;
+  requestId?: string;
+}
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
     public readonly status?: number,
+    public readonly code?: string,
+    public readonly details?: unknown,
+    public readonly requestId?: string,
   ) {
     super(message);
     this.name = 'ApiClientError';
@@ -21,6 +35,7 @@ export class ApiClientError extends Error {
 
 export interface ApiClient {
   getHealth(): Promise<HealthResponse>;
+  request<T>(endpoint: string, options?: RequestInit): Promise<T>;
 }
 
 function createTimeoutSignal(timeoutMs: number): AbortSignal {
@@ -33,45 +48,77 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
   return controller.signal;
 }
 
-function getErrorMessage(status: number, payload: unknown): string {
-  if (typeof payload === 'object' && payload !== null && 'message' in payload) {
-    const message = (payload as { message?: unknown }).message;
-    if (typeof message === 'string' && message.trim()) {
-      return message;
+function parseApiError(status: number, payload: unknown): {
+  message: string;
+  code?: string;
+  details?: unknown;
+  requestId?: string;
+} {
+  if (typeof payload === 'object' && payload !== null) {
+    const envelope = payload as ApiErrorEnvelope & { message?: unknown };
+    const requestId = typeof envelope.requestId === 'string' ? envelope.requestId : undefined;
+
+    if (envelope.error && typeof envelope.error === 'object') {
+      const { code, message, details } = envelope.error;
+      return {
+        message: typeof message === 'string' && message.trim() ? message : `API trả về lỗi ${status}.`,
+        code: typeof code === 'string' ? code : undefined,
+        details,
+        requestId,
+      };
+    }
+
+    if (typeof envelope.message === 'string' && envelope.message.trim()) {
+      return {
+        message: envelope.message,
+        requestId,
+      };
     }
   }
 
-  if (typeof payload === 'object' && payload !== null && 'error' in payload) {
-    const error = (payload as { error?: { message?: unknown } }).error;
-    if (error && typeof error.message === 'string' && error.message.trim()) {
-      return error.message;
-    }
-  }
-
-  return `API trả về lỗi ${status}.`;
+  return {
+    message: `API trả về lỗi ${status}.`,
+  };
 }
 
 export function createApiClient(apiBaseUrl: string, timeoutMs: number): ApiClient {
-  async function getHealth(): Promise<HealthResponse> {
-    let response: Response;
+  async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${apiBaseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const headers = new Headers(options.headers || {});
 
+    if (!headers.has('Accept')) {
+      headers.set('Accept', 'application/json');
+    }
+
+    if (options.body && !headers.has('Content-Type') && typeof options.body === 'string') {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    let response: Response;
     try {
-      response = await fetch(`${apiBaseUrl}/health`, {
-        headers: { Accept: 'application/json' },
-        signal: createTimeoutSignal(timeoutMs),
+      response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: options.credentials || 'include',
+        signal: options.signal || createTimeoutSignal(timeoutMs),
       });
     } catch {
-      throw new ApiClientError('Không thể kết nối tới API.');
+      throw new ApiClientError('Không thể kết nối tới hệ thống.', 0, 'network_error');
     }
 
     const payload = await response.json().catch(() => undefined);
 
     if (!response.ok) {
-      throw new ApiClientError(getErrorMessage(response.status, payload), response.status);
+      const { message, code, details, requestId } = parseApiError(response.status, payload);
+      throw new ApiClientError(message, response.status, code, details, requestId);
     }
 
-    return (payload || {}) as HealthResponse;
+    return (payload ?? {}) as T;
   }
 
-  return { getHealth };
+  async function getHealth(): Promise<HealthResponse> {
+    return request<HealthResponse>('/health');
+  }
+
+  return { getHealth, request };
 }

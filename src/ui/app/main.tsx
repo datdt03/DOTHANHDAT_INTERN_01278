@@ -46,7 +46,7 @@ function App() {
   }
 
   return (
-    <SessionProvider>
+    <SessionProvider previewMode={previewMode}>
       <RouteBoundary previewMode={previewMode} onRetry={checkApi} />
     </SessionProvider>
   );

@@ -5,6 +5,9 @@
  * Serves as the single boundary for C1-003 and C1-004 to plug real authentication APIs.
  */
 
+import { runtimeConfig } from '../../config/runtime-config';
+import { createApiClient, ApiClientError, type ApiClient } from './api-client';
+
 export type UserRole = 'owner' | 'manager' | 'receptionist' | 'technician';
 export type DevelopmentRole = Exclude<UserRole, 'owner'>;
 
@@ -43,7 +46,7 @@ export interface RoleCapabilities {
 }
 
 export interface SessionContext {
-  token: string;
+  token?: string;
   user: UserProfile;
   expiresAt: string;
   capabilities: RoleCapabilities;
@@ -52,13 +55,31 @@ export interface SessionContext {
 export interface LoginCredentials {
   email: string;
   password?: string;
+  workspaceId?: string | null;
+}
+
+export interface WorkspaceChoice {
+  workspaceId: string;
+  workspaceName: string;
+  role: string;
 }
 
 export interface LoginResult {
   success: boolean;
   session?: SessionContext;
   errorMessage?: string;
-  isLocked?: boolean;
+  errorCode?: string;
+  workspaceChoices?: WorkspaceChoice[];
+}
+
+export interface ServerAccessContext {
+  accountId: string;
+  email: string;
+  workspaceId: string;
+  workspaceName: string;
+  role: string;
+  staffProfileId: string;
+  staffProfileName: string;
 }
 
 // Development/demo accounts mirror the development database seed. The product still
@@ -66,35 +87,70 @@ export interface LoginResult {
 export const DEMO_ACCOUNTS: Record<DevelopmentRole, UserProfile> = {
   manager: {
     id: 'staff-001',
-    name: 'Minh Tâm',
+    name: 'Quản lý RepairFlow',
     role: 'manager',
     roleTitle: 'Quản lý vận hành',
     email: 'manager@repairflow.vn',
-    initials: 'MT',
+    initials: 'QL',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
   },
   receptionist: {
     id: 'staff-002',
-    name: 'Thu Hà',
+    name: 'Lễ tân RepairFlow',
     role: 'receptionist',
     roleTitle: 'Lễ tân tiếp nhận',
     email: 'receptionist@repairflow.vn',
-    initials: 'TH',
+    initials: 'LT',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
   },
   technician: {
     id: 'staff-003',
-    name: 'Quốc Bảo',
+    name: 'Kỹ thuật viên RepairFlow',
     role: 'technician',
-    roleTitle: 'Kỹ thuật viên trưởng',
+    roleTitle: 'Kỹ thuật viên',
     email: 'technician@repairflow.vn',
-    initials: 'QB',
+    initials: 'KT',
     storeName: 'Minh Tâm Store',
     workspaceId: 'ws-main',
   },
 };
+
+export function getRoleTitle(role: UserRole): string {
+  switch (role) {
+    case 'owner':
+      return 'Chủ cửa hàng';
+    case 'manager':
+      return 'Quản lý vận hành';
+    case 'receptionist':
+      return 'Lễ tân tiếp nhận';
+    case 'technician':
+      return 'Kỹ thuật viên';
+  }
+}
+
+export function getInitials(name: string): string {
+  if (!name) return 'RF';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'RF';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function mapServerAccessContextToUserProfile(context: ServerAccessContext): UserProfile {
+  const normalizedRole = (context.role?.toLowerCase() || 'manager') as UserRole;
+  return {
+    id: context.staffProfileId || context.accountId,
+    name: context.staffProfileName || context.email,
+    role: normalizedRole,
+    roleTitle: getRoleTitle(normalizedRole),
+    email: context.email,
+    initials: getInitials(context.staffProfileName || context.email),
+    storeName: context.workspaceName || 'Minh Tâm Store',
+    workspaceId: context.workspaceId,
+  };
+}
 
 export function getRoleCapabilities(role: UserRole): RoleCapabilities {
   switch (role) {
@@ -169,13 +225,150 @@ const DEVELOPMENT_PASSWORD = '123456';
 
 export interface AccessApi {
   login(credentials: LoginCredentials): Promise<LoginResult>;
-  quickLogin(role: UserRole): Promise<SessionContext>;
+  quickLogin(role: UserRole): Promise<LoginResult>;
   logout(): Promise<void>;
   getCurrentSession(): Promise<SessionContext | null>;
   simulateTimeout(): void;
 }
 
-class MockAccessAdapter implements AccessApi {
+export class RealAccessAdapter implements AccessApi {
+  constructor(private readonly client: ApiClient) {}
+
+  async login(credentials: LoginCredentials): Promise<LoginResult> {
+    try {
+      const response = await this.client.request<{
+        data: {
+          context: ServerAccessContext;
+          expiresAt: string;
+        };
+        meta: { requestId: string };
+      }>('/api/access/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: credentials.email.trim(),
+          password: credentials.password ?? '',
+          workspaceId: credentials.workspaceId || null,
+        }),
+      });
+
+      const user = mapServerAccessContextToUserProfile(response.data.context);
+      const session: SessionContext = {
+        user,
+        expiresAt: response.data.expiresAt,
+        capabilities: getRoleCapabilities(user.role),
+      };
+
+      return {
+        success: true,
+        session,
+      };
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        if (err.status === 401) {
+          return {
+            success: false,
+            errorCode: 'authentication_failed',
+            errorMessage: 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.',
+          };
+        }
+
+        if (err.status === 409 && err.code === 'workspace_selection_required') {
+          const details = err.details as { workspaces?: WorkspaceChoice[] } | undefined;
+          return {
+            success: false,
+            errorCode: 'workspace_selection_required',
+            errorMessage: 'Vui lòng chọn chi nhánh làm việc để tiếp tục.',
+            workspaceChoices: details?.workspaces ?? [],
+          };
+        }
+
+        if (err.status === 400) {
+          return {
+            success: false,
+            errorCode: 'validation_error',
+            errorMessage: 'Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại.',
+          };
+        }
+
+        if (err.status === 429) {
+          return {
+            success: false,
+            errorCode: 'authentication_rate_limited',
+            errorMessage: 'Quá nhiều lần đăng nhập không thành công. Vui lòng thử lại sau ít phút.',
+          };
+        }
+
+        if (err.status === 0 || err.code === 'network_error') {
+          return {
+            success: false,
+            errorCode: 'network_error',
+            errorMessage: 'Không thể kết nối tới hệ thống. Vui lòng thử lại.',
+          };
+        }
+      }
+
+      return {
+        success: false,
+        errorCode: 'generic_error',
+        errorMessage: 'Không thể kết nối tới hệ thống. Vui lòng thử lại.',
+      };
+    }
+  }
+
+  async getCurrentSession(): Promise<SessionContext | null> {
+    try {
+      const response = await this.client.request<{
+        data: {
+          context: ServerAccessContext;
+          expiresAt: string;
+        };
+        meta: { requestId: string };
+      }>('/api/access/context', {
+        method: 'GET',
+      });
+
+      const user = mapServerAccessContextToUserProfile(response.data.context);
+      return {
+        user,
+        expiresAt: response.data.expiresAt,
+        capabilities: getRoleCapabilities(user.role),
+      };
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        // 401 with authentication_required means no active session
+        if (err.status === 401) {
+          return null;
+        }
+      }
+      // Re-throw network or 5xx error so SessionProvider can display retry
+      throw err;
+    }
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.client.request<{ data: { revoked: boolean } }>('/api/access/logout', {
+        method: 'POST',
+      });
+    } catch {
+      // Ignore errors on logout; UI always clears session locally
+    }
+  }
+
+  async quickLogin(role: UserRole): Promise<LoginResult> {
+    const account = role === 'owner' ? DEMO_ACCOUNTS.manager : DEMO_ACCOUNTS[role];
+    return this.login({
+      email: account.email,
+      password: DEVELOPMENT_PASSWORD,
+    });
+  }
+
+  simulateTimeout(): void {
+    // Session timeout is enforced by server cookie and backend expiry
+  }
+}
+
+export class MockAccessAdapter implements AccessApi {
   async login(credentials: LoginCredentials): Promise<LoginResult> {
     const trimmed = credentials.email.trim().toLowerCase();
 
@@ -187,6 +380,7 @@ class MockAccessAdapter implements AccessApi {
       return {
         success: false,
         errorMessage: 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.',
+        errorCode: 'authentication_failed',
       };
     }
 
@@ -209,7 +403,7 @@ class MockAccessAdapter implements AccessApi {
     };
   }
 
-  async quickLogin(role: UserRole): Promise<SessionContext> {
+  async quickLogin(role: UserRole): Promise<LoginResult> {
     const user = role === 'owner' ? DEMO_ACCOUNTS.manager : DEMO_ACCOUNTS[role];
     const session: SessionContext = {
       token: `mock-token-${user.id}-${Date.now()}`,
@@ -224,7 +418,10 @@ class MockAccessAdapter implements AccessApi {
       // Ignore storage errors
     }
 
-    return session;
+    return {
+      success: true,
+      session,
+    };
   }
 
   async logout(): Promise<void> {
@@ -277,4 +474,12 @@ class MockAccessAdapter implements AccessApi {
   }
 }
 
-export const accessApi: AccessApi = new MockAccessAdapter();
+export function getAccessAdapter(previewMode = runtimeConfig.previewMode): AccessApi {
+  if (previewMode) {
+    return new MockAccessAdapter();
+  }
+  const client = createApiClient(runtimeConfig.apiBaseUrl, runtimeConfig.apiTimeoutMs);
+  return new RealAccessAdapter(client);
+}
+
+export const accessApi: AccessApi = getAccessAdapter();

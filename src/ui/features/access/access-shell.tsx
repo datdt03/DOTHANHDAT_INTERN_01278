@@ -9,11 +9,21 @@ import {
   IconPalette,
   IconStore,
   PrimaryButton,
+  SecondaryButton,
 } from '../../shared/components';
 import './access-shell.css';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function AccessShell() {
-  const { login, quickLogin, sessionNotice, clearSessionNotice } = useSession();
+  const {
+    login,
+    quickLogin,
+    sessionNotice,
+    clearSessionNotice,
+    workspaceChoices,
+    clearWorkspaceChoices,
+  } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,10 +31,17 @@ export function AccessShell() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
 
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       setError('Vui lòng nhập địa chỉ email tài khoản.');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError('Địa chỉ email không đúng định dạng.');
       return;
     }
 
@@ -34,12 +51,20 @@ export function AccessShell() {
     }
 
     setIsSubmitting(true);
-    const result = await login(email, password);
+    const result = await login(trimmedEmail, password);
     setIsSubmitting(false);
 
-    if (!result.success) {
+    if (!result.success && !result.workspaceChoices) {
       setError(result.errorMessage || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.');
     }
+  };
+
+  const handleQuickLogin = async (role: DevelopmentRole) => {
+    if (isSubmitting) return;
+    setError('');
+    setIsSubmitting(true);
+    await quickLogin(role);
+    setIsSubmitting(false);
   };
 
   return (
@@ -76,53 +101,128 @@ export function AccessShell() {
           </div>
         )}
 
-        {/* UI-A01 & UI-A02: Login Form */}
-        <form className="access-form" onSubmit={handleSubmit} noValidate>
-          {error && (
-            <div className="access-alert" role="alert">
-              <span className="access-alert__icon" aria-hidden="true">
-                <IconAlert size={15} />
-              </span>
-              <span>{error}</span>
+        {/* UI-A04: Workspace Selection Step (when server returns 409 Conflict) */}
+        {workspaceChoices && workspaceChoices.length > 0 ? (
+          <div className="access-workspace-selection">
+            <h2 className="access-section-title">Chọn chi nhánh làm việc</h2>
+            <p className="access-section-desc">
+              Tài khoản của bạn có quyền truy cập vào các chi nhánh dưới đây. Vui lòng chọn chi nhánh để tiếp tục:
+            </p>
+
+            {error && (
+              <div className="access-alert" role="alert">
+                <span className="access-alert__icon" aria-hidden="true">
+                  <IconAlert size={15} />
+                </span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="access-workspace-list">
+              {workspaceChoices.map((ws) => (
+                <button
+                  key={ws.workspaceId}
+                  type="button"
+                  className="access-workspace-item"
+                  disabled={isSubmitting}
+                  onClick={async () => {
+                    if (isSubmitting) return;
+                    setIsSubmitting(true);
+                    setError('');
+                    const result = await login(email.trim(), password, ws.workspaceId);
+                    setIsSubmitting(false);
+                    if (!result.success) {
+                      setError(result.errorMessage || 'Không thể đăng nhập vào chi nhánh đã chọn.');
+                    }
+                  }}
+                >
+                  <div className="access-workspace-item__left">
+                    <span className="access-workspace-item__icon" aria-hidden="true">
+                      <IconStore size={16} />
+                    </span>
+                    <div className="access-workspace-item__info">
+                      <span className="access-workspace-item__name">{ws.workspaceName}</span>
+                      <span className="access-workspace-item__role">
+                        {ws.role === 'manager'
+                          ? 'Quản lý vận hành'
+                          : ws.role === 'receptionist'
+                          ? 'Lễ tân tiếp nhận'
+                          : ws.role === 'technician'
+                          ? 'Kỹ thuật viên'
+                          : ws.role === 'owner'
+                          ? 'Chủ cửa hàng'
+                          : ws.role}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="access-workspace-item__arrow" aria-hidden="true">
+                    <IconArrowRight size={14} />
+                  </span>
+                </button>
+              ))}
             </div>
-          )}
 
-          <div className="form-group">
-            <label htmlFor="access-email" className="form-label">
-              Email tài khoản
-            </label>
-            <input
-              id="access-email"
-              type="email"
-              className="form-input"
-              placeholder="tennhanvien@repairflow.vn"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            <SecondaryButton
+              fullWidth
+              type="button"
               disabled={isSubmitting}
-              autoComplete="username"
-            />
+              onClick={() => {
+                clearWorkspaceChoices();
+                setError('');
+              }}
+            >
+              Quay lại
+            </SecondaryButton>
           </div>
+        ) : (
+          /* UI-A01 & UI-A02: Login Form */
+          <form className="access-form" onSubmit={handleSubmit} noValidate>
+            {error && (
+              <div className="access-alert" role="alert">
+                <span className="access-alert__icon" aria-hidden="true">
+                  <IconAlert size={15} />
+                </span>
+                <span>{error}</span>
+              </div>
+            )}
 
-          <div className="form-group">
-            <label htmlFor="access-password" className="form-label">
-              Mật khẩu
-            </label>
-            <input
-              id="access-password"
-              type="password"
-              className="form-input"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isSubmitting}
-              autoComplete="current-password"
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="access-email" className="form-label">
+                Email tài khoản
+              </label>
+              <input
+                id="access-email"
+                type="email"
+                className="form-input"
+                placeholder="tennhanvien@repairflow.vn"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+                autoComplete="username"
+              />
+            </div>
 
-          <PrimaryButton fullWidth type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Đang xác thực...' : 'Đăng nhập'}
-          </PrimaryButton>
-        </form>
+            <div className="form-group">
+              <label htmlFor="access-password" className="form-label">
+                Mật khẩu
+              </label>
+              <input
+                id="access-password"
+                type="password"
+                className="form-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <PrimaryButton fullWidth type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Đang xác thực...' : 'Đăng nhập'}
+            </PrimaryButton>
+          </form>
+        )}
 
         {/* Quick Demo Logins for rapid testing & persona switching */}
         <div className="access-quick-section">
@@ -138,7 +238,8 @@ export function AccessShell() {
                   key={role}
                   type="button"
                   className="access-quick-btn"
-                  onClick={() => quickLogin(role)}
+                  onClick={() => handleQuickLogin(role)}
+                  disabled={isSubmitting}
                   title={`Đăng nhập nhanh với vai trò ${account.roleTitle}`}
                 >
                   <div className="access-quick-btn__left">

@@ -280,3 +280,101 @@
   text-decoration: underline;
   color: #0369a1;
 }
+
+/* Workspace Selection Step (UI-A04) */
+.access-workspace-selection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.access-section-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.access-section-desc {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--rf-text-muted, #64748b);
+  line-height: 1.45;
+}
+
+.access-workspace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.access-workspace-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background-color: var(--rf-surface, #ffffff);
+  color: var(--rf-text-main, #0f172a);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.access-workspace-item:hover:not(:disabled) {
+  background-color: var(--rf-bg-subtle, #f8fafc);
+  border-color: var(--rf-primary, #0284c7);
+}
+
+.access-workspace-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.access-workspace-item__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.access-workspace-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: var(--rf-bg-subtle, #f1f5f9);
+  border-radius: var(--rf-radius-md, 8px);
+  color: var(--rf-primary, #0284c7);
+  flex-shrink: 0;
+}
+
+.access-workspace-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.access-workspace-item__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.access-workspace-item__role {
+  font-size: 11.5px;
+  color: var(--rf-text-muted, #64748b);
+}
+
+.access-workspace-item__arrow {
+  color: var(--rf-text-muted, #94a3b8);
+  flex-shrink: 0;
+}
+
+.access-workspace-item:hover:not(:disabled) .access-workspace-item__arrow {
+  color: var(--rf-primary, #0284c7);
+}
+
