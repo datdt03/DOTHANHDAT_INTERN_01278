@@ -6,9 +6,9 @@ Title: Enforce authorization policy trên ASP.NET Core
 
 Owner: Codex
 
-Status: PLANNED
+Status: DONE
 
-Revision: 2
+Revision: 3
 
 Depends on: c1-004-antigravity-auth-ui.md
 
@@ -83,50 +83,56 @@ logic role, assignment hoặc workspace từ UI hay feature khác.
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AuthorizationPolicy.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AuthorizationRequirements.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/CapabilityProjection.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AuthorizationHandlers.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/Application/AccessService.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthorizationTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/WorkspaceIsolationTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/AssignmentScopeTests.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AuthorizationPolicy.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AuthorizationRequirements.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/CapabilityProjection.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AuthorizationHandlers.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Api/AccessContracts.cs`.
+- [x] `src/server/RepairFlow.Api/Features/Access/Application/AccessService.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AuthorizationTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/WorkspaceIsolationTests.cs`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/AssignmentScopeTests.cs`.
 
 ## Step-by-step implementation
 
-- [ ] Chuyển auth matrix thành named policy checks, không thêm custom role.
-- [ ] Enforce active principal và active membership trước role evaluation.
-- [ ] Enforce workspace identity ở mọi protected resource context.
-- [ ] Thêm role checks cho full, view, assigned và operational projection scope.
-- [ ] Thêm assignment/responsibility checks cho Receptionist và Technician writes.
-- [ ] Tách field filtering của operational projection khỏi raw entity access.
-- [ ] Giữ acting account và attributed staff là hai giá trị riêng.
-- [ ] Map unauthorized request sang safe 403/404/error envelope có request ID.
-- [ ] Expose capability information tối thiểu cho c1-006; không trả audit ẩn,
+- [x] Chuyển auth matrix thành named policy checks, không thêm custom role.
+- [x] Enforce active principal và active membership trước role evaluation.
+- [x] Enforce workspace identity ở mọi protected resource context.
+- [x] Thêm role checks cho full, view, assigned và operational projection scope.
+- [x] Thêm assignment/responsibility checks cho Receptionist và Technician writes.
+- [x] Tách field filtering của operational projection khỏi raw entity access.
+- [x] Giữ acting account và attributed staff là hai giá trị riêng.
+- [x] Map unauthorized request sang safe 403/404/error envelope có request ID.
+- [x] Expose capability information tối thiểu cho c1-006; không trả audit ẩn,
   credential, token hash hoặc internal notes.
-- [ ] Viết policy tests trước khi wiring vào business routes.
+- [x] Viết policy tests trước khi wiring vào business routes.
 
 ## Testing plan
 
-- [ ] Owner/Manager pass full workspace read checks.
-- [ ] Receptionist pass operational read projection nhưng fail unrestricted
+- [x] Owner/Manager pass full workspace read checks.
+- [x] Receptionist pass operational read projection nhưng fail unrestricted
   technical/audit access và unassigned writes.
-- [ ] Technician pass assigned-order checks nhưng fail order/workspace khác.
-- [ ] Inactive principal, suspended/removed membership fail.
-- [ ] Cross-workspace ID fail mà không lộ dữ liệu workspace kia.
-- [ ] Staff profile không account không satisfy authenticated principal.
-- [ ] Permission denied dùng envelope và request ID chuẩn.
-- [ ] `dotnet test` pass.
+- [x] Technician pass assigned-order checks nhưng fail order/workspace khác.
+- [x] Inactive principal, suspended/removed membership fail.
+- [x] Cross-workspace ID fail mà không lộ dữ liệu workspace kia.
+- [x] Staff profile không account không satisfy authenticated principal.
+- [x] Permission denied dùng envelope và request ID chuẩn.
+- [x] `dotnet test` pass — 45/45 tests.
 
 ## Acceptance criteria
 
-- [ ] Future internal route dùng named policy thay vì duplicate role/workspace logic.
-- [ ] Direct API call không bypass permission bằng cách bỏ qua UI navigation.
-- [ ] Receptionist và Technician scope khớp auth matrix.
-- [ ] Capability projection chỉ phục vụ presentation, không làm yếu backend check.
-- [ ] Test có positive/negative path cho mọi MVP role.
-- [ ] c1-006 có contract rõ ràng để render navigation.
+- [x] Future internal route dùng named policy thay vì duplicate role/workspace logic.
+- [x] Direct API call không bypass permission bằng cách bỏ qua UI navigation.
+- [x] Receptionist và Technician scope khớp auth matrix.
+- [x] Capability projection chỉ phục vụ presentation, không làm yếu backend check.
+- [x] Test có positive/negative path cho mọi MVP role.
+- [x] c1-006 có contract rõ ràng để render navigation.
+
+## Implementation evidence
+
+- ASP.NET Core có named policies, authentication/authorization handlers, capability projection và safe 403/404 mapping; `GET /api/access/context` đã được bảo vệ bằng policy authenticated.
+- Test-only protected routes chứng minh direct API denial, workspace isolation và request ID/error envelope mà không mở thêm business endpoint.
+- Local development seeder đã cập nhật credential hash của ba account init; plaintext credential không được lưu hoặc ghi log.
 
 ## Change impact
 

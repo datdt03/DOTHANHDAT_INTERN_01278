@@ -22,6 +22,7 @@ public static class AccessDependencies
         services.AddScoped<IAccessContextWriter>(provider =>
             provider.GetRequiredService<RequestAccessContextAccessor>());
         services.AddScoped<AccessService>();
+        services.AddSingleton<IAccessAuthorizationPolicy, AccessAuthorizationPolicy>();
         services.AddSingleton<ICredentialHasher, CredentialHasher>();
         services.AddSingleton<IAccessRateLimiter, InMemoryAccessRateLimiter>();
         services.AddScoped<IAccessAuditSink, DatabaseAccessAuditSink>();

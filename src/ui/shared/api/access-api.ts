@@ -221,7 +221,7 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
 
 const STORAGE_KEY = 'repairflow_active_session';
 const SESSION_DURATION_MS = 30 * 60 * 1000; // 30 mins idle timeout
-const DEVELOPMENT_PASSWORD = '123456';
+const DEVELOPMENT_PASSWORD = 'dat123456';
 
 export interface AccessApi {
   login(credentials: LoginCredentials): Promise<LoginResult>;

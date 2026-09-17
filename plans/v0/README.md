@@ -2,7 +2,7 @@
 
 > Status: ACTIVE
 >
-> Current execution: C1 in progress; c1-001, c1-002 and c1-003 are complete; c1-004 is next.
+> Current execution: C1 in progress; c1-001 through c1-005 are complete; c1-006 is next.
 >
 > Requirements baseline: Gate D0 closed on 2026-09-16.
 
@@ -24,7 +24,7 @@ Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và da
 | Cluster | Nội dung | Trạng thái | Plan hiện tại |
 | --- | --- | --- | --- |
 | C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
-| C1 | Access, authentication, authorization và application shell | IN PROGRESS | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) |
+| C1 | Access, authentication, authorization và application shell | IN PROGRESS | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) |
 | C2 | Customer, device và repair order | PLANNED | Chưa tạo task chi tiết |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
@@ -54,9 +54,9 @@ khôi phục các file database/migration prototype cũ trong các plan này.
 | 1 | [c1-001-codex-api-foundation.md](./c1-access-and-application-shell/c1-001-codex-api-foundation.md) | Codex | c0-003 | DONE |
 | 2 | [c1-002-antigravity-ui-shell.md](./c1-access-and-application-shell/c1-002-antigravity-ui-shell.md) | Antigravity | c1-001 | DONE |
 | 3 | [c1-003-codex-auth-session.md](./c1-access-and-application-shell/c1-003-codex-auth-session.md) | Codex | c1-002 | DONE |
-| 4 | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) | Antigravity | c1-003 | READY |
-| 5 | [c1-005-codex-permission-enforcement.md](./c1-access-and-application-shell/c1-005-codex-permission-enforcement.md) | Codex | c1-004 | PLANNED |
-| 6 | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) | Antigravity | c1-005 | PLANNED |
+| 4 | [c1-004-antigravity-auth-ui.md](./c1-access-and-application-shell/c1-004-antigravity-auth-ui.md) | Antigravity | c1-003 | DONE |
+| 5 | [c1-005-codex-permission-enforcement.md](./c1-access-and-application-shell/c1-005-codex-permission-enforcement.md) | Codex | c1-004 | DONE |
+| 6 | [c1-006-antigravity-role-navigation.md](./c1-access-and-application-shell/c1-006-antigravity-role-navigation.md) | Antigravity | c1-005 | READY |
 | 7 | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) | Shared | c1-006 | PLANNED |
 
 ## Rủi ro triển khai hiện tại

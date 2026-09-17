@@ -11,7 +11,7 @@ Tài liệu kiểm thử xác thực và phiên làm việc giữa React UI và 
 | ASP.NET Core API | `http://localhost:5191` (`ASPNETCORE_ENVIRONMENT=Development`) |
 | React UI | `http://localhost:5173` |
 | Database | PostgreSQL `127.0.0.1:5432/repairflow` |
-| Seed Data | 3 tài khoản: `manager@repairflow.vn`, `receptionist@repairflow.vn`, `technician@repairflow.vn` (Mật khẩu: `123456`) |
+| Seed Data | 3 tài khoản: `manager@repairflow.vn`, `receptionist@repairflow.vn`, `technician@repairflow.vn` (Mật khẩu: `dat123456`) |
 
 ---
 
@@ -25,15 +25,15 @@ Tài liệu kiểm thử xác thực và phiên làm việc giữa React UI và 
 
 ### B. Đăng nhập với API thật (Authentication Flows)
 - [x] **TC-AUTH-01 (Manager)**:
-  - Email: `manager@repairflow.vn`, Mật khẩu: `123456`
+  - Email: `manager@repairflow.vn`, Mật khẩu: `dat123456`
   - Kết quả: Server trả về 200 OK kèm cookie `repairflow_session` (HttpOnly, SameSite=Lax).
   - UI: Chuyển hướng chính xác vào `#/dashboard`.
 - [x] **TC-AUTH-02 (Receptionist)**:
-  - Email: `receptionist@repairflow.vn`, Mật khẩu: `123456`
+  - Email: `receptionist@repairflow.vn`, Mật khẩu: `dat123456`
   - Kết quả: Server trả về 200 OK kèm cookie.
   - UI: Chuyển hướng chính xác vào `#/today`.
 - [x] **TC-AUTH-03 (Technician)**:
-  - Email: `technician@repairflow.vn`, Mật khẩu: `123456`
+  - Email: `technician@repairflow.vn`, Mật khẩu: `dat123456`
   - Kết quả: Server trả về 200 OK kèm cookie.
   - UI: Chuyển hướng chính xác vào `#/my-work`.
 - [x] **TC-AUTH-04 (Sai thông tin xác thực)**:

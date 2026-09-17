@@ -6,9 +6,9 @@ Title: Hoàn thiện navigation và entry screen theo role bằng React
 
 Owner: Antigravity
 
-Status: PLANNED
+Status: READY
 
-Revision: 2
+Revision: 3
 
 Depends on: c1-005-codex-permission-enforcement.md
 

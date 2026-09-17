@@ -14,7 +14,7 @@ public sealed record DevelopmentAccessSeedResult(IReadOnlyList<string> Emails);
 
 public sealed class DevelopmentAccessSeeder : IDevelopmentAccessSeeder
 {
-    private const string DefaultInitialPassword = "123456";
+    private const string DefaultInitialPassword = "dat123456";
 
     private static readonly Guid WorkspaceId = Guid.Parse("30000000-0000-0000-0000-000000000001");
 

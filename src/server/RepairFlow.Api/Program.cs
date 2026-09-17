@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Api;
+using RepairFlow.Api.Features.Access.Application;
 using RepairFlow.Api.Features.Access.Infrastructure;
 using RepairFlow.Api.Features.Health;
 using RepairFlow.Api.Infrastructure.Database;
@@ -26,6 +29,25 @@ var postgresConnection = builder.Configuration.GetConnectionString("Postgres")
 builder.Services.AddDbContext<RepairFlowDbContext>(options =>
     options.UseNpgsql(postgresConnection));
 builder.Services.AddAccessFoundation();
+builder.Services
+    .AddAuthentication(AccessAuthenticationDefaults.Scheme)
+    .AddScheme<AuthenticationSchemeOptions, AccessAuthenticationHandler>(
+        AccessAuthenticationDefaults.Scheme,
+        _ => { });
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var (policyName, action) in AccessPolicies.Definitions)
+    {
+        options.AddPolicy(policyName, policy =>
+        {
+            policy.AddAuthenticationSchemes(AccessAuthenticationDefaults.Scheme);
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new AccessPolicyRequirement(action));
+        });
+    }
+});
+builder.Services.AddScoped<IAuthorizationHandler, AccessAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AccessAuthorizationMiddlewareResultHandler>();
 
 builder.Services.AddSingleton<IMigrationStore>(_ => new NpgsqlMigrationStore(postgresConnection));
 builder.Services.AddSingleton<IVersionedMigrationRunner>(serviceProvider =>
@@ -67,6 +89,8 @@ app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("UiDevelopment");
 app.UseMiddleware<AccessSessionMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwagger();
 if (app.Environment.IsDevelopment())
@@ -83,6 +107,14 @@ if (app.Environment.IsEnvironment("Testing"))
         throw new ApiValidationException(
             "Validation failed.",
             new Dictionary<string, string[]> { ["field"] = ["The field is required."] }))
+        .ExcludeFromDescription();
+    app.MapGet("/__test/audit", () => Results.Ok(new { status = "ok" }))
+        .RequireAuthorization(AccessPolicies.AuditRead)
+        .ExcludeFromDescription();
+    app.MapGet(
+            "/__test/workspaces/{workspaceId:guid}/operational",
+            () => Results.Ok(new { status = "ok" }))
+        .RequireAuthorization(AccessPolicies.OperationalRead)
         .ExcludeFromDescription();
 }
 

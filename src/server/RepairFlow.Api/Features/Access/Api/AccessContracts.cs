@@ -20,6 +20,25 @@ public sealed record WorkspaceChoice(
     string WorkspaceName,
     string Role);
 
+public sealed record AccessCapabilitiesResponse(
+    bool CanViewWorkspace,
+    bool CanManageWorkspace,
+    bool CanManageStaff,
+    bool CanManageCredentials,
+    bool CanManageAssignments,
+    bool CanViewWorkspaceOperations,
+    bool CanViewOperationalProjection,
+    bool CanViewAssignedWork,
+    bool CanViewTechnicalDetails,
+    bool CanViewAudit,
+    bool CanWriteIntake,
+    bool CanWriteDiagnosis,
+    bool CanWriteQuoteDraft,
+    bool CanWriteRepair,
+    bool CanWriteQualityCheck,
+    bool CanWriteHandover,
+    bool WritesRequireAssignment);
+
 public sealed record AccessContextResponse(
     Guid AccountId,
     string Email,
@@ -27,4 +46,5 @@ public sealed record AccessContextResponse(
     string WorkspaceName,
     string Role,
     Guid StaffProfileId,
-    string StaffProfileName);
+    string StaffProfileName,
+    AccessCapabilitiesResponse Capabilities);

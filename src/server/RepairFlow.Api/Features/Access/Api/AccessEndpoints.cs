@@ -21,6 +21,7 @@ public static class AccessEndpoints
             .WithName("GetAccessContext")
             .Produces<ApiResponse<CurrentSessionResponse>>(StatusCodes.Status200OK)
             .Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+            .RequireAuthorization(AccessPolicies.Authenticated)
             .WithOpenApi();
 
         endpoints.MapPost("/api/access/logout", LogoutAsync)

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Features.Access.Api;
 
 namespace RepairFlow.Api.Tests.Features.Access;
@@ -115,6 +116,54 @@ public sealed class AuthApiTests : IClassFixture<ApiTestFactory>
         using var repeatedLogout = await _client.SendAsync(repeatedLogoutRequest);
         Assert.Equal(HttpStatusCode.OK, repeatedLogout.StatusCode);
         Assert.False(await ReadBooleanAsync(repeatedLogout, "revoked"));
+    }
+
+    [Fact]
+    public async Task Direct_audit_api_call_returns_a_safe_forbidden_envelope_for_receptionist()
+    {
+        var cookie = await LoginAndGetCookieAsync(
+            new LoginRequest(
+                _fixture.ActiveReceptionistAccount.Email,
+                AccessFixture.KnownPassword));
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/__test/audit");
+        request.Headers.Add("Cookie", cookie);
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var requestId = response.Headers.GetValues(RequestIdMiddleware.HeaderName).Single();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("forbidden", document.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(requestId, document.RootElement.GetProperty("requestId").GetString());
+        Assert.DoesNotContain("password", document.RootElement.GetRawText(), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("token", document.RootElement.GetRawText(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Direct_cross_workspace_api_call_returns_not_found_without_leaking_tenant_state()
+    {
+        var cookie = await LoginAndGetCookieAsync(
+            new LoginRequest(
+                _fixture.ActiveReceptionistAccount.Email,
+                AccessFixture.KnownPassword));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/__test/workspaces/{_fixture.SecondaryWorkspace.Id}/operational");
+        request.Headers.Add("Cookie", cookie);
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("not_found", document.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.DoesNotContain(_fixture.SecondaryWorkspace.Name, document.RootElement.GetRawText(), StringComparison.Ordinal);
+    }
+
+    private async Task<string> LoginAndGetCookieAsync(LoginRequest request)
+    {
+        using var response = await _client.PostAsJsonAsync("/api/access/login", request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return GetSetCookie(response).Split(';', 2)[0];
     }
 
     private static string GetSetCookie(HttpResponseMessage response) =>

@@ -13,5 +13,26 @@ public sealed class AccessService
             context.Workspace.Name,
             context.Membership.Role.ToString().ToLowerInvariant(),
             context.StaffProfile.Id,
-            context.StaffProfile.Name);
+            context.StaffProfile.Name,
+            ToCapabilitiesResponse(CapabilityProjection.For(context)));
+
+    private static AccessCapabilitiesResponse ToCapabilitiesResponse(AccessCapabilities capabilities) =>
+        new(
+            capabilities.CanViewWorkspace,
+            capabilities.CanManageWorkspace,
+            capabilities.CanManageStaff,
+            capabilities.CanManageCredentials,
+            capabilities.CanManageAssignments,
+            capabilities.CanViewWorkspaceOperations,
+            capabilities.CanViewOperationalProjection,
+            capabilities.CanViewAssignedWork,
+            capabilities.CanViewTechnicalDetails,
+            capabilities.CanViewAudit,
+            capabilities.CanWriteIntake,
+            capabilities.CanWriteDiagnosis,
+            capabilities.CanWriteQuoteDraft,
+            capabilities.CanWriteRepair,
+            capabilities.CanWriteQualityCheck,
+            capabilities.CanWriteHandover,
+            capabilities.WritesRequireAssignment);
 }
