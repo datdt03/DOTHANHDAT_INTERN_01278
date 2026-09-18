@@ -8,6 +8,9 @@ public static class RepairOrderDependencies
     public static IServiceCollection AddRepairOrderFeature(this IServiceCollection services)
     {
         services.AddScoped<IRepairOrderRepository, RepairOrderRepository>();
+        services.AddScoped<IRepairOrderIntakeRepository, RepairOrderIntakeRepository>();
+        services.AddScoped<IRepairOrderCredentialRepository, RepairOrderCredentialRepository>();
+        services.AddSingleton<ICredentialProtector, DataProtectionCredentialProtector>();
         services.AddScoped<RepairOrderService>();
         return services;
     }

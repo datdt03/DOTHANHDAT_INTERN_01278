@@ -6,9 +6,9 @@ Title: Codex customer/device/repair-order foundation và `CreateRepairIntake`
 
 Owner: Codex
 
-Status: READY — amendment của baseline DONE
+Status: DONE — amendment implemented; acceptance continues in c2-005
 
-Revision: 4
+Revision: 5
 
 Depends on: c2-000-shared-multi-role-ui-boundary.md
 
@@ -337,3 +337,21 @@ resolution đầy đủ được để sau C10; C2 chỉ trả conflict an toàn
 chuyển sang bảng item liên kết trước khi implement endpoint intake. Nếu schema
 không đủ cho device identity, credential encryption hoặc idempotency, ghi
 migration decision riêng trước khi sửa database.
+
+## Implementation evidence
+
+- [x] Feature-first implementation under `Customer`, `Device` and `RepairOrder`;
+      no cluster-based source path or shared `IC2Repository`.
+- [x] Added migrations `20260918_0004` and `20260918_0005` for repair-order items,
+      credential metadata/destroy state, identifier uniqueness and intake idempotency.
+- [x] Added atomic `POST /api/repair-orders/intake` with existing/new customer,
+      one-or-many repair items, duplicate conflict and request idempotency.
+- [x] Added Data Protection credential ciphertext storage plus reveal/destroy
+      authorization; normal DTOs and audit metadata do not expose plaintext.
+- [x] `dotnet build src/server/RepairFlow.sln --no-restore` passed.
+- [x] `dotnet test src/server/RepairFlow.sln --no-restore` passed: 64 tests.
+- [x] OpenAPI contract test covers intake, reveal/destroy paths and the required
+      `Idempotency-Key` header.
+- [x] PostgreSQL migration smoke test passed on first run and clean rerun.
+- [ ] Full live API data-path acceptance for intake/rollback/double-submit and
+      credential reveal/destroy remains part of c2-005 acceptance evidence.

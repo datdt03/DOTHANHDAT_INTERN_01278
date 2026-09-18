@@ -35,6 +35,7 @@ public static class CustomerEndpoints
             await service.SearchAsync(
                 httpContext.Request.Query["query"].FirstOrDefault() ?? httpContext.Request.Query["search"],
                 httpContext.Request.Query["phone"],
+                httpContext.Request.Query["email"],
                 cancellationToken),
             RequestIdMiddleware.GetRequestId(httpContext)));
 

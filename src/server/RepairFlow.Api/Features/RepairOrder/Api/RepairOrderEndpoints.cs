@@ -2,6 +2,7 @@ using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Application;
 using RepairFlow.Api.Features.RepairOrder.Application;
+using Microsoft.OpenApi.Models;
 
 namespace RepairFlow.Api.Features.RepairOrder.Api;
 
@@ -22,6 +23,35 @@ public static class RepairOrderEndpoints
         endpoints.MapPost("/api/repair-orders", CreateAsync)
             .WithName("CreateRepairOrder")
             .Produces<ApiResponse<RepairOrderResponse>>(StatusCodes.Status201Created)
+            .RequireAuthorization(AccessPolicies.Authenticated)
+            .WithOpenApi();
+        endpoints.MapPost("/api/repair-orders/intake", CreateIntakeAsync)
+            .WithName("CreateRepairIntake")
+            .Produces<ApiResponse<RepairIntakeResponse>>(StatusCodes.Status201Created)
+            .RequireAuthorization(AccessPolicies.Authenticated)
+            .WithOpenApi(operation =>
+            {
+                operation.Parameters.Add(new OpenApiParameter
+                {
+                    Name = "Idempotency-Key",
+                    In = ParameterLocation.Header,
+                    Required = true,
+                    Description = "A client-generated key that makes a retry return the original intake result."
+                });
+                return operation;
+            });
+        endpoints.MapPost(
+                "/api/repair-orders/{orderId:guid}/items/{itemId:guid}/credential/reveal",
+                RevealCredentialAsync)
+            .WithName("RevealRepairItemCredential")
+            .Produces<ApiResponse<CredentialRevealResponse>>()
+            .RequireAuthorization(AccessPolicies.Authenticated)
+            .WithOpenApi();
+        endpoints.MapPost(
+                "/api/repair-orders/{orderId:guid}/items/{itemId:guid}/credential/destroy",
+                DestroyCredentialAsync)
+            .WithName("DestroyRepairItemCredential")
+            .Produces<ApiResponse<CredentialDestroyResponse>>()
             .RequireAuthorization(AccessPolicies.Authenticated)
             .WithOpenApi();
         return endpoints;
@@ -64,6 +94,84 @@ public static class RepairOrderEndpoints
             $"/api/repair-orders/{data.Id}",
             ApiResponse<RepairOrderResponse>.Create(data, RequestIdMiddleware.GetRequestId(httpContext)));
     }
+
+    private static async Task<IResult> CreateIntakeAsync(
+        HttpContext httpContext,
+        CreateRepairIntakeRequest request,
+        RepairOrderService service,
+        CancellationToken cancellationToken)
+    {
+        var idempotencyKey = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new ApiValidationException(
+                "Repair-intake request is invalid.",
+                new Dictionary<string, string[]> { ["Idempotency-Key"] = ["The header is required."] });
+        }
+
+        if (request.Customer is null || request.RepairOrder is null || request.RepairItems is null)
+        {
+            throw new ApiValidationException(
+                "Repair-intake request is invalid.",
+                new Dictionary<string, string[]> { ["request"] = ["Customer, repair order and repair items are required."] });
+        }
+
+        var command = new CreateRepairIntakeCommand(
+            new CustomerIntakeCommand(
+                request.Customer.Mode,
+                request.Customer.Id,
+                request.Customer.Name,
+                request.Customer.Phone,
+                request.Customer.Email,
+                request.Customer.Note),
+            request.RepairItems.Select(item => new RepairItemIntakeCommand(
+                new DeviceIntakeCommand(
+                    item.Device.Type,
+                    item.Device.Brand,
+                    item.Device.Model,
+                    item.Device.SerialNumber,
+                    item.Device.Identifier),
+                item.ReportedIssue,
+                item.HandoverCondition,
+                item.Accessories,
+                item.ItemNotes,
+                item.Credential is null
+                    ? null
+                    : new CredentialIntakeCommand(
+                        item.Credential.Status,
+                        item.Credential.Value,
+                        item.Credential.Consent))).ToArray(),
+            request.RepairOrder.IntakeNotes,
+            request.ExpectedCompletedAt,
+            request.IntakeStaffId,
+            Guid.Empty,
+            idempotencyKey);
+
+        var data = await service.CreateIntakeAsync(command, cancellationToken);
+        return Results.Created(
+            $"/api/repair-orders/{data.RepairOrder.Id}",
+            ApiResponse<RepairIntakeResponse>.Create(data, RequestIdMiddleware.GetRequestId(httpContext)));
+    }
+
+    private static async Task<IResult> RevealCredentialAsync(
+        Guid orderId,
+        Guid itemId,
+        HttpContext httpContext,
+        RepairOrderService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(ApiResponse<CredentialRevealResponse>.Create(
+            await service.RevealCredentialAsync(orderId, itemId, cancellationToken),
+            RequestIdMiddleware.GetRequestId(httpContext)));
+
+    private static async Task<IResult> DestroyCredentialAsync(
+        Guid orderId,
+        Guid itemId,
+        HttpContext httpContext,
+        RepairOrderService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(ApiResponse<CredentialDestroyResponse>.Create(
+            await service.DestroyCredentialAsync(orderId, itemId, cancellationToken),
+            RequestIdMiddleware.GetRequestId(httpContext)));
 
     private static Guid? ParseOptionalGuid(string? raw, string field)
     {

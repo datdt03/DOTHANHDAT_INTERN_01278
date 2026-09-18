@@ -106,7 +106,13 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
 
         var assignments = await ReadAssignmentsAsync(connection, order.Id, cancellationToken);
         var history = await ReadStatusHistoryAsync(connection, order.Id, cancellationToken);
-        return order with { Assignments = assignments, StatusHistory = history };
+        var repairItems = await ReadRepairItemsAsync(connection, order.WorkspaceId, order.Id, cancellationToken);
+        return order with
+        {
+            Assignments = assignments,
+            StatusHistory = history,
+            RepairItems = repairItems
+        };
     }
 
     public async Task<RepairOrderEntity> CreateAsync(
@@ -198,6 +204,25 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
                 AddParameter(command, "created_at", now);
                 AddParameter(command, "updated_at", now);
                 await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await using (var itemCommand = CreateCommand(connection, """
+                INSERT INTO repair_order_items
+                    (id, workspace_id, repair_order_id, customer_id, device_id, item_index,
+                     status, reported_issue, created_at)
+                VALUES
+                    (@id, @workspace_id, @repair_order_id, @customer_id, @device_id, 1,
+                     'received', @reported_issue, @created_at);
+                """, transaction))
+            {
+                AddParameter(itemCommand, "id", Guid.NewGuid());
+                AddParameter(itemCommand, "workspace_id", workspaceId);
+                AddParameter(itemCommand, "repair_order_id", orderId);
+                AddParameter(itemCommand, "customer_id", data.CustomerId);
+                AddParameter(itemCommand, "device_id", data.DeviceId);
+                AddParameter(itemCommand, "reported_issue", data.CustomerDescription);
+                AddParameter(itemCommand, "created_at", now);
+                await itemCommand.ExecuteNonQueryAsync(cancellationToken);
             }
 
             if (intakeStaffId is not null)
@@ -493,6 +518,63 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
         }
 
         return history;
+    }
+
+    private static async Task<IReadOnlyList<RepairOrderItem>> ReadRepairItemsAsync(
+        DbConnection connection,
+        Guid workspaceId,
+        Guid orderId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(connection, """
+            SELECT roi.id, roi.repair_order_id, roi.item_index, roi.device_id, roi.status,
+                   d.device_type, d.brand, d.model, d.serial_number, d.device_identifier,
+                   roi.reported_issue, roi.handover_condition, roi.accessories, roi.item_notes,
+                   roi.credential_status, roi.credential_consent, roi.credential_received_at,
+                   roi.credential_expires_at, roi.credential_destroyed_at, roi.created_at
+            FROM repair_order_items roi
+            INNER JOIN devices d
+                ON d.workspace_id = roi.workspace_id
+               AND d.customer_id = roi.customer_id
+               AND d.id = roi.device_id
+            WHERE roi.workspace_id = @workspace_id AND roi.repair_order_id = @order_id
+            ORDER BY roi.item_index;
+            """);
+        AddParameter(command, "workspace_id", workspaceId);
+        AddParameter(command, "order_id", orderId);
+        var items = new List<RepairOrderItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (!RepairOrderStatusCodec.TryParse(reader.GetString(4), out var status))
+            {
+                throw new InvalidOperationException("The database contains an unsupported repair-item status.");
+            }
+
+            items.Add(new RepairOrderItem(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.GetInt32(2),
+                reader.GetGuid(3),
+                status,
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.GetString(10),
+                reader.IsDBNull(11) ? null : reader.GetString(11),
+                reader.IsDBNull(12) ? null : reader.GetString(12),
+                reader.IsDBNull(13) ? null : reader.GetString(13),
+                reader.GetString(14),
+                reader.GetBoolean(15),
+                reader.IsDBNull(16) ? null : reader.GetFieldValue<DateTimeOffset>(16),
+                reader.IsDBNull(17) ? null : reader.GetFieldValue<DateTimeOffset>(17),
+                reader.IsDBNull(18) ? null : reader.GetFieldValue<DateTimeOffset>(18),
+                reader.GetFieldValue<DateTimeOffset>(19)));
+        }
+
+        return items;
     }
 
     private static RepairOrderStatus ParseStatus(string value) =>

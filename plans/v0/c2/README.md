@@ -81,7 +81,7 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
 | Sequence | Plan | Owner | Nội dung | Status |
 | ---: | --- | --- | --- | --- |
 | 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area boundary | DONE |
-| 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | API nền và atomic `CreateRepairIntake` | READY — amendment của baseline DONE |
+| 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | API nền và atomic `CreateRepairIntake` | DONE — implementation verified |
 | 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Một `repair-intake-workflow` ba giai đoạn | READY — replan |
 | 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Supporting device/customer history views | DEFERRED, không block intake |
 | 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và mở lại intake workflow | READY — replan |

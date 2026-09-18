@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
@@ -17,6 +18,27 @@ using RepairFlow.Api.Features.Health;
 using RepairFlow.Api.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var dataProtection = builder.Services
+    .AddDataProtection()
+    .SetApplicationName("RepairFlow.Api");
+var keyRingPath = builder.Configuration["CredentialProtection:KeyRingPath"];
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    keyRingPath ??= Path.Combine(
+        builder.Environment.IsDevelopment()
+            ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+            : Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "RepairFlow",
+        "keys");
+    if (string.IsNullOrWhiteSpace(keyRingPath))
+    {
+        throw new InvalidOperationException("CredentialProtection:KeyRingPath is required outside Testing.");
+    }
+
+    Directory.CreateDirectory(keyRingPath);
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyRingPath));
+}
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

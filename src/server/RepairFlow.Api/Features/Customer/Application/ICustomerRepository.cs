@@ -9,6 +9,7 @@ public interface ICustomerRepository
         Guid workspaceId,
         string? search,
         string? phone,
+        string? email,
         Guid? assignedStaffId,
         CancellationToken cancellationToken = default);
 

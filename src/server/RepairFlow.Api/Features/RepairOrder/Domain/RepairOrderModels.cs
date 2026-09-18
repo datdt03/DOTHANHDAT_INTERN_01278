@@ -143,7 +143,8 @@ public sealed record RepairOrder(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<Assignment> Assignments,
-    IReadOnlyList<StatusHistory> StatusHistory);
+    IReadOnlyList<StatusHistory> StatusHistory,
+    IReadOnlyList<RepairOrderItem>? RepairItems = null);
 
 public sealed record CreateRepairOrderData(
     Guid CustomerId,

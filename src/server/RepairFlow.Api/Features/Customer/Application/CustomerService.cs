@@ -27,6 +27,13 @@ public sealed class CustomerService
         string? search,
         string? phone,
         CancellationToken cancellationToken)
+        => await SearchAsync(search, phone, null, cancellationToken);
+
+    public async Task<IReadOnlyList<CustomerResponse>> SearchAsync(
+        string? search,
+        string? phone,
+        string? email,
+        CancellationToken cancellationToken)
     {
         var context = RequireContext();
         EnsureListRead();
@@ -34,6 +41,7 @@ public sealed class CustomerService
             context.Workspace.Id,
             NormalizeOptional(search),
             NormalizePhoneFilter(phone),
+            NormalizeOptional(email),
             TechnicianScope(context),
             cancellationToken);
         return customers.Select(ToResponse).ToArray();

@@ -23,6 +23,7 @@ public sealed class CustomerRepository : ICustomerRepository
         Guid workspaceId,
         string? search,
         string? phone,
+        string? email,
         Guid? assignedStaffId,
         CancellationToken cancellationToken = default)
     {
@@ -36,6 +37,7 @@ public sealed class CustomerRepository : ICustomerRepository
                    OR c.name ILIKE '%' || CAST(@search AS text) || '%'
                    OR c.phone ILIKE '%' || CAST(@search AS text) || '%')
               AND (CAST(@phone AS text) IS NULL OR c.phone = CAST(@phone AS text))
+              AND (CAST(@email AS text) IS NULL OR LOWER(c.email) = LOWER(CAST(@email AS text)))
               AND (CAST(@assigned_staff_id AS uuid) IS NULL OR EXISTS (
                     SELECT 1
                     FROM repair_orders ro
@@ -50,6 +52,7 @@ public sealed class CustomerRepository : ICustomerRepository
         AddParameter(command, "workspace_id", workspaceId);
         AddParameter(command, "search", search);
         AddParameter(command, "phone", phone);
+        AddParameter(command, "email", email);
         AddParameter(command, "assigned_staff_id", assignedStaffId);
 
         var customers = new List<CustomerEntity>();

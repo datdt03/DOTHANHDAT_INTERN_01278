@@ -36,7 +36,10 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
                      "/api/devices",
                      "/api/devices/{deviceId}",
                      "/api/repair-orders",
-                     "/api/repair-orders/{orderId}"
+                     "/api/repair-orders/{orderId}",
+                     "/api/repair-orders/intake",
+                     "/api/repair-orders/{orderId}/items/{itemId}/credential/reveal",
+                     "/api/repair-orders/{orderId}/items/{itemId}/credential/destroy"
                  })
         {
             Assert.True(paths.TryGetProperty(path, out _), $"Missing OpenAPI path: {path}");
@@ -49,6 +52,20 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
         Assert.True(loginRequest.GetProperty("properties").TryGetProperty("password", out _));
         var repairOrderResponse = schemas.GetProperty("RepairOrderResponse");
         Assert.False(repairOrderResponse.GetProperty("properties").TryGetProperty("internalNote", out _));
+        var repairItemResponse = schemas.GetProperty("RepairItemResponse");
+        var repairItemProperties = repairItemResponse.GetProperty("properties");
+        Assert.False(repairItemProperties.TryGetProperty("value", out _));
+        Assert.False(repairItemProperties.TryGetProperty("ciphertext", out _));
+        var intakeOperation = document.RootElement
+            .GetProperty("paths")
+            .GetProperty("/api/repair-orders/intake")
+            .GetProperty("post");
+        var idempotencyParameter = intakeOperation
+            .GetProperty("parameters")
+            .EnumerateArray()
+            .Single(parameter => parameter.GetProperty("name").GetString() == "Idempotency-Key");
+        Assert.Equal("header", idempotencyParameter.GetProperty("in").GetString());
+        Assert.True(idempotencyParameter.GetProperty("required").GetBoolean());
 
         foreach (var schemaName in new[]
                  {
