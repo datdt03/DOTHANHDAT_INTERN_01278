@@ -1,128 +1,145 @@
-# RepairFlow C2 — Customer, Device và Repair Order
+# RepairFlow C2 — Repair intake foundation
 
 > Plan ID: c2
 >
-> Title: Customer, device và repair-order foundation
+> Title: Customer, device và repair-order foundation theo workflow tiếp nhận
 >
 > Owner: Codex and Antigravity
 >
 > Status: IN PROGRESS
 >
-> Revision: 2
+> Revision: 3
 >
 > Depends on: c1-007-shared-integration-acceptance.md
 >
-> Produces: Customer/device/order API và các UI business area độc lập để triển khai tiếp các capability C3–C5
+> Produces: Feature-first Customer/Device/RepairOrder backend và một workflow
+> UI `RepairIntake` để tạo phiếu trong cùng một ngữ cảnh
 >
 > Consumed by: C3 intake/evidence, C4 diagnosis/quote và C9 dashboard
+
+## Quyết định điều chỉnh
+
+C2 không expose Customer, Device và RepairOrder thành chuỗi trang bắt buộc.
+Nghiệp vụ chính là **Tiếp nhận sửa chữa**. Người dùng hoàn tất một workflow có
+ba giai đoạn trong cùng màn hình:
+
+```text
+1. Thông tin khách hàng
+   Tìm theo số điện thoại/email hoặc chủ động chuyển sang tạo mới
+        ↓
+2. Thiết bị bàn giao và thông tin sửa chữa
+   Luôn nhập thiết bị được mang tới; không bắt chọn thiết bị từ danh sách
+        ↓
+3. Tổng hợp và xác nhận
+   Kiểm tra lại trước khi tạo Customer/Device/RepairOrder
+```
+
+UI là task-first nhưng backend vẫn feature-first:
+
+```text
+src/server/RepairFlow.Api/Features/
+├── Customer/
+├── Device/
+└── RepairOrder/       ← application orchestration cho CreateRepairIntake
+
+src/ui/features/
+├── repair-intake-workflow/  ← workflow chính của C2
+└── repair-order-area/       ← danh sách/chi tiết sau khi đã tạo phiếu
+```
+
+Không tạo `Features/C2`, `C2Models.cs`, `C2Contracts.cs` hoặc
+`IC2Repository.cs`. Không tạo Customer/Device page riêng làm đường đi chính để
+tạo phiếu.
 
 ## Task context
 
 ```text
-Goal: Xây nền customer, device và repair order ở trạng thái received.
-Feature: C2 customer-device-repair-order
+Goal: Tạo một workflow tiếp nhận sửa chữa trực quan, atomic và ít chuyển trang.
+Feature: repair-intake-workflow
 Read first: docs/v0/02-use-cases.md, docs/v0/03-business-and-domain-requirements.md,
             docs/v0/05-database-requirements.md, docs/v0/06-ui-requirements.md,
             src/ui/AGENTS.md
-Allowed to change: plans/v0/c2, C2 backend/API/database/test và các UI area C2.
-Do not change: C3 intake/evidence, C4 diagnosis/quote, C5 customer link,
-               business rule chưa được quyết định trong docs/v0.
-Completion criteria: API, migration, multi-role context và ba business area
-                     có test/evidence độc lập; không có shared UI integration test.
+Allowed to change: plans/v0/c2, C2 backend/API/database/test và repair-intake UI.
+Do not change: C3 detailed evidence/completion, C4 diagnosis/quote, C5 customer link,
+               role-specific HTML hoặc business rule chưa được quyết định.
+Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order list/detail
+                     sau khi tạo, và acceptance evidence không phụ thuộc role-specific shell.
 ```
 
-## C2 direction đã chốt
+## Ranh giới C2/C3
 
-C2 không tách UI theo role và không tạo HTML riêng cho Manager, Receptionist
-hoặc Technician. Một user có thể có nhiều role trong cùng workspace và vẫn dùng
-một account, một session, một `index.html`.
-
-UI được tách theo business area:
-
-```text
-src/ui/index.html
-  └── app bootstrap tối thiểu
-      ├── Customer records area
-      ├── Device area
-      └── Repair-order area
-```
-
-Mỗi area sở hữu application shell, route boundary, local state và test harness
-riêng. Chỉ dùng chung design tokens, icon SVG, API contract/HTTP client và
-primitive component. Không dùng chung application shell, role navigation,
-business state hoặc UI integration flow.
-
-### Role context trong giao diện
-
-Role không quyết định cấu trúc HTML. Backend trả về `roles[]`, `activeRole` và
-`effectiveCapabilities` cho workspace hiện tại.
-
-- Desktop: nút `Ngữ cảnh làm việc` nằm trong header, sau Workspace switcher và
-  trước Notification/Avatar.
-- Mobile: đặt trong Account menu để không chiếm chiều rộng header.
-- Chỉ hiển thị bộ chọn khi user có từ hai role.
-- Chuyển role không logout, không đổi account, không tạo session mới và không
-  dùng role chưa được cấp.
-- `activeRole` chỉ đổi navigation/focus/attribution context; permission vẫn do
-  backend kiểm tra bằng membership, capability và assignment.
-
-### Ranh giới C2/C3
-
-- C2 tạo customer, device và repair order lõi; order bắt đầu ở `received`.
-- C3 sở hữu intake checklist, ảnh hiện trạng, hoàn tất intake và điều kiện mở
-  sang `diagnosing`.
-- C2 không tạo localStorage draft nghiệp vụ. Nếu cần draft server-side, C3 phải
-  có schema/state decision riêng trước khi triển khai.
+- C2 lưu Customer, Device, RepairOrder lõi ở trạng thái `received` và phần thông
+  tin bàn giao cơ bản cần để xác nhận phiếu.
+- C2 giữ customer-reported issue, device identity, phụ kiện/tình trạng bàn giao
+  dạng thông tin ban đầu nếu contract đã có.
+- C3 sở hữu checklist hiện trạng chi tiết, ảnh/evidence, intake completion và
+  điều kiện chuyển sang `diagnosing`.
+- C2 không tự tạo server-side draft hoặc chuyển trạng thái sang diagnosis.
 
 ## Work sequence
 
 | Sequence | Plan | Owner | Nội dung | Status |
 | ---: | --- | --- | --- | --- |
-| 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area-owned shell | DONE |
-| 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | Schema, migration, API và permission | READY |
-| 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Customer records area | READY |
-| 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Device area | READY |
-| 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Repair-order area và create core order | READY |
-| 005 | [c2-005-shared-area-acceptance.md](./c2-005-shared-area-acceptance.md) | Codex + Antigravity | Acceptance riêng từng area | READY |
+| 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area boundary | DONE |
+| 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | API nền và atomic `CreateRepairIntake` | READY — amendment của baseline DONE |
+| 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Một `repair-intake-workflow` ba giai đoạn | READY — replan |
+| 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Supporting device/customer history views | DEFERRED, không block intake |
+| 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và mở lại intake workflow | READY — replan |
+| 005 | [c2-005-shared-area-acceptance.md](./c2-005-shared-area-acceptance.md) | Codex + Antigravity | Acceptance workflow + API | READY — replan |
 
-`c2-005` là bước tổng hợp bằng chứng, không phải shared UI integration. Không
-có test flow chuyển role hoặc đi xuyên qua cả ba area trong cùng một scenario.
+C2-003 chỉ được kích hoạt khi có nhu cầu tra cứu/quản trị riêng. Nó không được
+đưa lại mô hình bắt người dùng đi qua Customer page rồi Device page để tạo order.
 
 ## Scope
 
-- Customer search/create/detail trong workspace.
-- Device search/create/detail và device history.
-- Repair order search/list/detail tối thiểu.
-- Tạo repair order lõi với customer, device, issue và trạng thái `received`.
-- Order code unique theo workspace.
-- Ghi creator, optional intake attribution, status history và audit.
-- Multi-role context switch trong cùng account/session.
-- UI area độc lập và acceptance độc lập.
+- Search customer theo số điện thoại/email trong workspace.
+- Chuyển chủ động giữa mode tìm customer cũ và form tạo customer mới trong cùng
+  màn hình.
+- Nhập thiết bị thực tế được bàn giao, không bắt người dùng chọn thiết bị có sẵn
+  theo customer context.
+- Nhập lỗi khách mô tả và thông tin tiếp nhận cơ bản.
+- Mỗi device/repair item có mô tả lỗi, ghi chú và trạng thái/credential unlock
+  riêng khi cần.
+- Review trước khi xác nhận.
+- Một application command tạo hoặc resolve Customer, tạo/resolve Device theo
+  identity policy và tạo RepairOrder `received` trong một transaction.
+- Order code unique theo workspace, creator, attribution, status history và audit.
+- Multi-role context trong cùng account/session/index.
+- Order list/detail sau khi tạo.
 
 ## Out of scope
 
-- Intake checklist, condition photo/evidence và intake completion — C3.
-- Diagnosis, quotation và calculation — C4.
-- Customer public link, OTP và customer decision — C5.
-- Dashboard KPI và operational reporting đầy đủ — C9.
-- Tách thành nhiều repository hoặc microfrontend runtime.
-- Role-specific HTML hoặc role-specific application shell.
+- Customer/Device CRUD page là đường đi chính của intake.
+- C3 intake checklist chi tiết, ảnh/evidence và intake completion.
+- C4 diagnosis, quotation và calculation.
+- C5 customer public link, OTP và customer decision.
+- C9 dashboard KPI và operational reporting đầy đủ.
+- Server-side draft/resume nếu chưa có state decision riêng.
+- Tách UI theo role, nhiều HTML hoặc microfrontend runtime.
 
 ## Shared Definition of Done cho C2
 
-- Migration chạy được trên database sạch và idempotent.
-- API có OpenAPI, response envelope, request ID và safe DTO.
-- Workspace isolation, role/capability và assignment được enforce tại backend.
-- Customer/device/order transaction không để lại dữ liệu rời rạc khi lỗi.
-- Mỗi area có mount point/route, shell, state và test riêng trong cùng `index.html`.
-- Không có component nào gọi database hoặc `fetch` trực tiếp.
-- Có loading, empty, error, unavailable và success state.
-- Customer, Device và Repair Order được test/evidence độc lập.
-- C2 không làm thay đổi business rule C3–C5.
+- Migration/API hiện có tiếp tục pass; amendment không phá vỡ CRUD contract đã
+  freeze.
+- Có OpenAPI contract cho atomic intake command, response envelope, request ID và
+  safe DTO.
+- Customer search/create, device intake và order create enforce workspace,
+  capability và assignment policy ở backend.
+- Một request intake thành công trả về customer, device và order liên quan.
+- Lỗi ở bất kỳ bước nào không để lại dữ liệu rời rạc.
+- Nếu cần lưu passcode, chỉ dùng encrypted storage bên trong RepairFlow API và
+  database hiện tại; không thêm container, vault hoặc storage service khác.
+- UI có một mount point cho `repair-intake-workflow`, state local và adapter
+  typed; không gọi database/fetch trực tiếp trong component.
+- Workflow có loading, validation, empty/search miss, duplicate, error/retry,
+  unavailable/preview và success state.
+- C2 acceptance kiểm tra workflow chính; không yêu cầu ba trang CRUD độc lập.
+- C2 không làm C3/C4/C5 thay đổi ngoài contract đã chốt.
 
 ## Change impact
 
-Plan này yêu cầu cập nhật access context từ một role sang nhiều role và thay đổi
-quy tắc UI từ shared application shell sang area-owned shell. Phải tạo migration
-mới và cập nhật `src/ui/AGENTS.md`/UI blueprint; không sửa migration C1 đã chạy,
-không xóa code C1 trước khi kiểm tra usage.
+Revision 3 thay đổi navigation/UX từ entity-first sang task-first. C2-001 cần
+amend application/API contract để tạo intake atomic. C2-002 trở thành workflow
+chính; c2-003 không còn là dependency bắt buộc. Các đoạn cũ về wizard bốn bước,
+`tìm/tạo device` và ba UI area đã được đồng bộ trong UI requirements và Stitch
+handoff.

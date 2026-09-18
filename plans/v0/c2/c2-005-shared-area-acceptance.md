@@ -1,163 +1,123 @@
-# C2-005 — Acceptance độc lập từng business area
+# C2-005 — Acceptance cho repair intake workflow
 
 Plan ID: c2-005
 
-Title: Nghiệm thu C2 theo từng UI area, không tích hợp UI chung
+Title: Nghiệm thu C2 theo workflow nghiệp vụ và backend contract
 
 Owner: Codex and Antigravity
 
-Status: READY
+Status: READY — replan
 
-Revision: 1
+Revision: 2
 
-Depends on: c2-001-codex-customer-device-order-api.md, c2-002-antigravity-customer-area.md, c2-003-antigravity-device-area.md, c2-004-antigravity-repair-order-area.md
+Depends on: c2-001-codex-customer-device-order-api.md,
+             c2-002-antigravity-customer-area.md,
+             c2-004-antigravity-repair-order-area.md
 
-Produces: API evidence và ba UI-area acceptance records độc lập
+Produces: API evidence, repair-intake workflow evidence và order list/detail evidence
 
 Consumed by: C3 intake/evidence và C2 completion record
 
 ## Task context
 
 ```text
-Goal: Chứng minh từng C2 business area có thể build/test/verify độc lập.
-Feature: c2-area-acceptance
-Read first: plans/v0/c2/README.md, c2-001, c2-002, c2-003, c2-004,
-            plans/v0/c1-access-and-application-shell/c1-007-shared-integration-acceptance.md
+Goal: Chứng minh luồng Tiếp nhận sửa chữa hoạt động atomic, trực quan và đúng quyền.
+Feature: c2-repair-intake-acceptance
+Read first: plans/v0/c2/README.md, c2-001, c2-002, c2-004,
+            docs/v0/06-ui-requirements.md
 Allowed to change: tests/ui/c2, tests/server C2 acceptance và evidence/docs pointer.
-Do not change: tạo shared UI integration flow hoặc gộp role thành nhiều HTML.
-Completion criteria: API pass; Customer/Device/Repair Order evidence pass riêng;
-                     C2 không phụ thuộc một role-specific shell.
+Do not change: C3/C4/C5 behavior, role-specific HTML hoặc tạo shared role shell.
+Completion criteria: API pass; intake workflow pass; order list/detail pass; không
+                     yêu cầu ba page CRUD độc lập.
 ```
 
 ## Goal
 
-Thay thế mô hình nghiệm thu UI tích hợp chung của C1 bằng mô hình test độc lập
-theo business area. C2 chỉ dùng shared step để tổng hợp kết quả, không để chạy
-một UI flow xuyên qua nhiều area.
-
-## Main business requirements
-
-- Backend là source of truth và được test riêng bằng .NET.
-- Customer, Device và Repair Order có test/evidence riêng.
-- Role context switch được kiểm tra trong area nơi nó xuất hiện, không dùng role
-  switch để thay thế area isolation.
-- Một account nhiều role vẫn là một identity/session.
-- Không test Customer → Device → Order như một scenario bắt buộc.
+Nghiệm thu theo task thực tế: nhân viên bắt đầu ở `Tiếp nhận sửa chữa`, resolve
+customer, nhập thiết bị bàn giao, nhập lỗi/thông tin tiếp nhận, review và xác nhận
+một lần. Backend phải tạo Customer/Device/RepairOrder atomic.
 
 ## Scope
 
-### API acceptance riêng
+### API acceptance
 
-- Migration clean run và idempotent rerun.
-- Customer/device/order validation, transaction, workspace isolation.
-- Order code uniqueness, `received` initial state, status history/audit.
-- Manager/Owner, Receptionist, Technician capability/assignment matrix.
-- Multi-role context, active-role validation và session lifecycle.
+- Migration clean run/idempotent rerun từ baseline.
+- Customer phone/email search và duplicate handling.
+- Atomic `POST /api/repair-orders/intake` với existing/new customer.
+- Device intake validation và identifier conflict policy.
+- Workspace isolation, capability/assignment matrix.
+- Order code unique, initial `received`, status history/audit.
+- Rollback và idempotency/double-submit.
+- Credential capture per repair item: encrypted ciphertext trong database hiện tại,
+  consent, expiry/destroy, reveal authorization; không plaintext trong DTO/log/audit.
 - OpenAPI/envelope/request ID/safe DTO.
 
-### Customer area acceptance
+### Repair intake workflow acceptance
 
-- Direct mount customer area.
-- Search, duplicate suggestion, create validation, detail.
-- Empty/error/unavailable/expired/forbidden states.
-- Workspace boundary và capability-driven action.
-
-### Device area acceptance
-
-- Direct mount device area.
-- Search/create/detail/history.
-- Ownership, serial duplicate và open-order warning.
-- Empty/error/unavailable/expired/forbidden states.
+- Direct mount workflow không cần Customer/Device page khác.
+- Giai đoạn 1: search phone/email hoặc chủ động chuyển sang create customer.
+- Giai đoạn 2: luôn nhập device bàn giao và thông tin repair intake.
+- Giai đoạn 3: review summary, back/edit và confirm.
+- Existing customer không tạo duplicate.
+- New customer + device + order tạo thành công qua một command.
+- Một RepairOrder có nhiều repair item và mỗi item giữ issue/notes/credential status
+  riêng.
+- Credential field được mask, không lưu browser-side và không yêu cầu external
+  vault/container/storage service.
+- Loading, validation, empty, duplicate, error/retry, unavailable/preview,
+  forbidden/session expired và success.
+- Vietnamese copy, keyboard/focus và viewport evidence.
 
 ### Repair-order area acceptance
 
-- Direct mount order area.
-- Create core order `received`.
-- List/detail/search và safe references.
-- Manager + Technician same-account context switch.
-- Không có intake/evidence/diagnosis/quote behavior.
+- Order list/search/detail độc lập.
+- Primary action mở intake workflow, không có form create thứ hai.
+- Customer/device/order safe projection và assignment/read-only behavior.
+
+Supporting customer/device history views trong c2-003 đang DEFERRED và không phải
+điều kiện block C2.
 
 ## Out of scope
 
-- E2E UI flow xuyên cả ba area.
-- Test đăng nhập nhiều account để mô phỏng nhiều role.
+- E2E qua các page Customer → Device → Order vì đó không còn là workflow chính.
+- C3 checklist/photo/evidence/intake completion.
+- C4 diagnosis/quote.
+- C5 customer public link/OTP.
+- Test nhiều account để mô phỏng nhiều role.
 - Role-specific HTML hoặc nhiều repository.
-- Customer public link.
-- C3/C4/C5 behavior.
-
-## Dependencies
-
-- Tất cả C2 implementation plans pass local checks.
-- UI test runner được freeze trước khi viết test. Repo hiện chưa có frontend
-  test script; phương án đề xuất là Vitest với test project/config độc lập theo
-  area, không phải một suite UI chung.
-
-## Input files
-
-- `src/ui/package.json`.
-- `src/ui/app/` và C2 feature areas.
-- `src/ui/shared/api/`.
-- `tests/server/RepairFlow.Api.Tests/`.
-- `docs/v0/02-use-cases.md` mục AT-01/AT-02/AT-17/AT-19.
-- `docs/v0/05-database-requirements.md` mục migration/query/transaction.
-- `docs/v0/06-ui-requirements.md` mục error states và acceptance.
-
-## Output files
-
-- C2 server acceptance tests.
-- `Customer`, `Device`, `Repair Order` area checklists riêng.
-- C2 evidence index không chứa cross-area UI flow.
-- Package scripts/config để chạy từng area độc lập.
 
 ## Files to write
 
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Customer/C2CustomerApiTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Device/C2DeviceApiTests.cs`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/RepairOrder/C2RepairOrderApiTests.cs`.
-- [ ] `tests/ui/c2/customer-area-checklist.md`.
-- [ ] `tests/ui/c2/device-area-checklist.md`.
+- [ ] Backend API acceptance tests theo feature.
+- [ ] `tests/ui/c2/repair-intake-workflow-checklist.md`.
 - [ ] `tests/ui/c2/repair-order-area-checklist.md`.
-- [ ] `tests/ui/c2/c2-area-acceptance-evidence.md`.
-- [ ] `src/ui/package.json` scripts/test configuration nếu cần.
+- [ ] `tests/ui/c2/c2-acceptance-evidence.md`.
+- [ ] Test config/package script chỉ khi runner hiện có yêu cầu.
 
 ## Step-by-step implementation
 
-- [ ] Freeze test runner/config and naming convention theo area.
-- [ ] Viết/run backend API tests độc lập với browser UI.
-- [ ] Chạy Customer area test/build/manual evidence.
-- [ ] Chạy Device area test/build/manual evidence.
-- [ ] Chạy Repair-order area test/build/manual evidence.
-- [ ] Chạy role context switch trong Repair-order area với cùng account/session.
-- [ ] Kiểm tra mỗi area có thể mount trực tiếp mà không cần area khác.
-- [ ] Kiểm tra no direct fetch/database/client-only permission.
-- [ ] Tổng hợp evidence theo area; không tạo integrated UI acceptance.
-- [ ] Chỉ đánh dấu C2 DONE khi cả API và từng area pass.
-
-## Testing plan
-
-- [ ] `dotnet test` cho C2 API/DB/permission.
-- [ ] `npm run type-check`.
-- [ ] Build riêng từng area.
-- [ ] Test riêng từng area bằng test project/config riêng.
-- [ ] Manual desktop `1440×1024` cho Manager/order và mobile `390×844` cho
-  Receptionist/customer-facing usage khi area có tác vụ mobile.
-- [ ] Active-role switch: cùng user/session trước và sau.
-- [ ] No cross-area browser navigation as an acceptance requirement.
-- [ ] Migration rerun và clean database verification.
+- [ ] Freeze API command/error matrix và test fixtures.
+- [ ] Chạy backend regression + atomic intake tests.
+- [ ] Chạy workflow UI theo ba giai đoạn.
+- [ ] Kiểm tra direct mount, capability, session expiry và unavailable state.
+- [ ] Chạy order list/detail evidence.
+- [ ] Kiểm tra không có direct fetch/database/client-only permission.
+- [ ] Tổng hợp evidence và chỉ đánh dấu C2 DONE khi API + workflow + order area pass.
 
 ## Acceptance criteria
 
-- [ ] Không còn tiêu chí yêu cầu UI tích hợp chung để pass C2.
-- [ ] Customer area có checklist/evidence riêng.
-- [ ] Device area có checklist/evidence riêng.
-- [ ] Repair-order area có checklist/evidence riêng.
-- [ ] Backend/API acceptance vẫn độc lập và enforce security.
-- [ ] Multi-role user dùng một account, một session và một `index.html`.
+- [ ] Một nhân viên có thể tạo phiếu mà không cần chuyển qua ba trang entity.
+- [ ] Có lựa chọn tìm hoặc tạo customer trong cùng màn hình.
+- [ ] Thiết bị được ghi nhận bằng form bàn giao, không bắt tìm trong customer device list.
+- [ ] Review/confirm tạo đúng order `received` và không có dữ liệu mồ côi khi lỗi.
+- [ ] Credential nếu được cung cấp chỉ tồn tại dạng ciphertext trong database hiện
+      tại, reveal/destroy đúng quyền và không lộ trong response/log/audit.
+- [ ] Multi-role vẫn dùng một account, session và `index.html`.
+- [ ] UI không được thay thế authorization backend.
 - [ ] C2 không làm C3/C4/C5 thay đổi ngoài contract đã chốt.
 
 ## Change impact
 
-Plan này thay đổi cách nghiệm thu UI sau C1: shared chỉ tổng hợp bằng chứng và
-API contract, không chạy shared UI integration. Nếu test runner hoặc browser
-tooling cần thêm dependency, phải kiểm tra lockfile/package policy trước khi
-install.
+Revision 2 thay thế acceptance theo ba UI area độc lập bằng acceptance của một
+workflow nghiệp vụ và các view phụ trợ. Shared ở đây chỉ là evidence/index, không
+phải shared application shell.

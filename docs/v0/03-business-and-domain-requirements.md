@@ -281,7 +281,10 @@ devices
     updated_at
 ```
 
-Không lưu mật khẩu, mã mở khóa hoặc dữ liệu nhạy cảm của thiết bị trong MVP. Nếu nghiệp vụ bắt buộc phải lưu, dữ liệu đó phải được mã hóa riêng và hạn chế quyền truy cập.
+Không lưu mật khẩu hoặc mã mở khóa trong Device master. Nếu nghiệp vụ sửa chữa
+thật sự cần giữ credential, chỉ lưu trong repair item bằng encrypted storage của
+RepairFlow API/database hiện tại, có consent, giới hạn quyền, expiry và audit;
+không plaintext, không đưa vào note/log và không thêm service lưu trữ bên ngoài.
 
 ### Phiếu sửa chữa
 
@@ -655,7 +658,9 @@ Một số luật cần áp dụng:
 - Kiểm tra MIME type, phần mở rộng, kích thước và tên file khi upload.
 - Không cho phép file được upload thực thi trực tiếp trên server.
 - Mã hóa dữ liệu khi truyền và khi lưu trữ.
-- Không lưu mã mở khóa thiết bị nếu không thật sự cần.
+- Chỉ lưu mã mở khóa thiết bị nếu thật sự cần cho thao tác sửa chữa và có consent;
+  lưu ciphertext trong backend/database hiện tại, không lưu trong Device master,
+  note tự do hoặc log. Nếu không cần giữ lại, chỉ lưu credential status.
 - Trong MVP không tự động xóa phiếu, audit, ảnh hoặc chữ ký. Chính sách
   retention và xóa dữ liệu chi tiết sẽ được bổ sung sau khi có yêu cầu pháp lý
   hoặc chính sách chính thức của workspace.

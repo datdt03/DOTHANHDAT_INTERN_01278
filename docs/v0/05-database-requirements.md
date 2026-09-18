@@ -1039,7 +1039,10 @@ Trong transaction bàn giao:
 
 ## 10. Bảo mật dữ liệu
 
-- Không lưu mã mở khóa thiết bị trong các bảng MVP.
+- Không lưu plaintext mã mở khóa thiết bị hoặc đặt mã mở khóa trong `devices`.
+  Khi nghiệp vụ thật sự cần, repair item có thể lưu ciphertext cùng key version,
+  consent/received time, expiry và destroyed time bằng encryption của RepairFlow
+  API/database hiện tại; không thêm container, vault hoặc storage service khác.
 - Token public chỉ lưu dạng hash.
 - Object Storage phải private; ảnh chỉ được xem qua signed URL có thời hạn.
 - Kiểm tra MIME type, phần mở rộng, kích thước và checksum trước khi tạo `repair_evidence`.

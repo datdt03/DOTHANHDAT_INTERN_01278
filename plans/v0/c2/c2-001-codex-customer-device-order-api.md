@@ -1,200 +1,339 @@
-# C2-001 — Customer, device và repair-order API
+# C2-001 — Customer, device và atomic repair intake API
 
 Plan ID: c2-001
 
-Title: Codex customer/device/repair-order foundation
+Title: Codex customer/device/repair-order foundation và `CreateRepairIntake`
 
 Owner: Codex
 
-Status: DONE
+Status: READY — amendment của baseline DONE
 
-Revision: 2
+Revision: 4
 
 Depends on: c2-000-shared-multi-role-ui-boundary.md
 
-Produces: PostgreSQL schema, .NET API, authorization và test fixtures cho C2
+Produces: Feature-first schema/API, authorization và transaction boundary cho
+Customer, Device, RepairOrder; thêm application command tạo intake atomic
 
-Consumed by: c2-002, c2-003, c2-004, C3 intake/evidence
+Consumed by: c2-002, c2-004, C3 intake/evidence
+
+## Baseline đã hoàn thành
+
+Baseline c2-001 Revision 2 đã có migration `0003`, CRUD/search API, safe DTO,
+workspace/capability checks và test backend. Amendment này không thay thế hoặc
+phá vỡ các contract đó. Phần cần bổ sung là use case tạo phiếu từ một workflow
+duy nhất, thay cho việc frontend tự gọi tuần tự Customer → Device → Order.
 
 ## Task context
 
 ```text
-Goal: Cung cấp API thật để tạo/tra cứu customer, device và repair order lõi.
+Goal: Cung cấp một API command atomic cho workflow Tiếp nhận sửa chữa.
 Feature: Customer, Device và RepairOrder feature roots
 Read first: docs/v0/02-use-cases.md, docs/v0/03-business-and-domain-requirements.md,
             docs/v0/05-database-requirements.md, docs/v0/07-authentication-and-authorization.md,
-            c2-000-shared-multi-role-ui-boundary.md
+            plans/v0/c2/README.md và baseline c2-001 đã triển khai
 Allowed to change:
 - src/server/RepairFlow.Api/Features/Customer/
 - src/server/RepairFlow.Api/Features/Device/
 - src/server/RepairFlow.Api/Features/RepairOrder/
-- src/server/RepairFlow.Api/Infrastructure/Database/Migrations/
-- tests/server/RepairFlow.Api.Tests/Features/Customer/
-- tests/server/RepairFlow.Api.Tests/Features/Device/
-- tests/server/RepairFlow.Api.Tests/Features/RepairOrder/
-Do not change: intake/evidence, diagnosis/quote, customer link hoặc state transition
-               sau trạng thái received.
+- OpenAPI và API tests liên quan
+- migration chỉ khi contract/database requirements thật sự cần
+Do not change: C3 evidence/completion, C4 diagnosis/quote, C5 customer link,
+               state transition sau received.
 Do not create: Features/C2, C2Models.cs, C2Contracts.cs hoặc IC2Repository.cs.
-Completion criteria: database sạch/migration idempotent, API contract rõ và test
-                     pass cho validation, transaction, workspace và permission.
+Completion criteria: command intake tạo/resolve Customer, tạo/resolve Device theo
+                     policy và tạo RepairOrder received trong một transaction,
+                     có test rollback, duplicate, workspace và permission.
 ```
 
 ## Goal
 
-Triển khai nguồn dữ liệu nghiệp vụ đầu tiên sau C1: customer, device và repair
-order. Mọi dữ liệu phải được giới hạn theo workspace và mọi order mới phải có
-order code unique, trạng thái `received`, creator và lịch sử ban đầu.
+Cho phép UI gửi một request mô tả trọn vẹn việc tiếp nhận: một customer có sẵn
+hoặc customer mới, một hoặc nhiều thiết bị thực tế được bàn giao, lỗi/ghi chú
+riêng từng thiết bị và thông tin order chung. Backend chịu trách nhiệm
+orchestration và commit atomic.
 
-## Main business requirements
+Quan hệ nghiệp vụ cần freeze:
 
-- Customer thuộc một workspace; chống trùng theo số điện thoại đã chuẩn hóa.
-- Device thuộc customer và workspace; giữ được lịch sử nhiều order.
-- Repair order là entity trung tâm, liên kết customer/device/workspace.
-- Không lưu passcode/mật khẩu thiết bị.
-- Staff attribution dùng `repair_order_staff`, không ghi đè lịch sử.
-- Tạo order phải atomic và ghi status history/audit trong transaction.
+```text
+Customer 1 ─── N RepairOrder
+RepairOrder 1 ─── N RepairOrderItem ─── 1 Device
+```
 
-## Scope
+`Device` là hồ sơ nhận diện có thể dùng lại theo lịch sử. `RepairOrderItem` là
+snapshot của một thiết bị trong một lần sửa chữa và sở hữu `reportedIssue`,
+`itemNotes`, handover data và credential metadata của lần đó.
 
-### Database
+## Decision closure trước khi implement
 
-- Migration mới cho `customers`, `devices`, `repair_orders`,
-  `repair_order_staff` và `status_history` theo docs/v0.
-- Giữ `audit_logs` từ C1 và tạo index nghiệp vụ cần thiết.
-- FK workspace/customer/device/user dùng `RESTRICT` theo database requirements.
-- Unique customer phone theo workspace sau normalize.
-- Conditional unique device serial theo workspace khi serial tồn tại.
-- Unique `repair_orders.order_code` theo workspace.
-- Index tìm customer phone/name, device serial/identifier và order code/status.
-- Sequence/order-code generation chịu được concurrent request.
+1. **Duplicate device identity:** xử lý đầy đủ là ngoại lệ deferred sau C10.
+   C2 không tự link, merge hoặc mở flow xử lý duplicate; nếu serial/IMEI/identifier
+   đụng unique constraint thì trả conflict rõ ràng và giữ transaction an toàn.
+2. **Status:** `RepairOrder` và mỗi `RepairOrderItem` bắt đầu ở `received`. C2
+   chưa triển khai lifecycle độc lập cho từng item; C3/C4 sẽ quyết định cách item
+   tiến độ khác nhau ảnh hưởng tới order tổng.
+3. **Required fields:** Customer bắt buộc name + phone; email optional. Mỗi
+   repair item bắt buộc device type và brand/model hoặc identifier, cùng
+   `reportedIssue`. Handover condition, accessories, item notes và credential là
+   optional theo tình huống.
+4. **Credential access:** chỉ Manager hoặc Technician được assignment mới được
+   reveal. Credential bị destroy khi bàn giao hoặc đóng phiếu, tùy thời điểm nào
+   đến trước; vẫn giữ expiry kỹ thuật nếu có.
+5. **Customer matching:** phone normalize là identity chính; email search không
+   phân biệt hoa thường. Không tự merge customer; người dùng phải chọn hồ sơ cũ
+   hoặc chủ động chuyển sang mode tạo mới.
+6. **Atomic failure/retry:** C2 dùng all-or-nothing và idempotency. Đây là
+   semantics kỹ thuật của một lần submit, không phải business workflow mới; xem
+   phần giải thích trong plan và test rollback/double-submit.
 
-### API contract dự kiến
+### Giải thích atomic failure/retry
 
-Tên route và DTO phải được freeze trong OpenAPI trước khi UI bắt đầu; contract
-dự kiến gồm:
+- **All-or-nothing:** một request có 3 thiết bị mà thiết bị thứ 2 thiếu field thì
+  backend không lưu Customer, không lưu Device 1 và không tạo RepairOrder dở dang.
+  Người dùng sửa dữ liệu rồi submit lại toàn bộ request.
+- **Idempotency:** nếu người dùng bấm submit hai lần hoặc mạng timeout khiến client
+  retry, cùng một idempotency key chỉ tạo một RepairOrder. Lần retry nhận lại
+  kết quả của lần đầu thay vì tạo order thứ hai.
+- Đây là cách bảo vệ tính nhất quán dữ liệu khi một order có nhiều repair item;
+  không phải thêm bước nghiệp vụ mới cho người dùng.
 
-- `GET /api/customers?query=&phone=` — search trong workspace.
-- `POST /api/customers` — create customer.
-- `GET /api/customers/{customerId}` — safe customer detail.
-- `GET /api/customers/{customerId}/devices` — devices của customer.
-- `GET /api/devices?query=&serialNumber=&customerId=` — device search.
-- `POST /api/devices` — create device.
-- `GET /api/devices/{deviceId}` — device detail/history summary.
-- `GET /api/repair-orders?query=&status=&customerId=&deviceId=` — order list.
-- `POST /api/repair-orders` — create order lõi ở `received`.
-- `GET /api/repair-orders/{orderId}` — order detail.
+## API contract cần bổ sung/freeze
 
-Response phải dùng envelope hiện có, có request ID, safe fields và không trả
-credential, session secret hoặc dữ liệu ngoài workspace.
+Các API search/detail hiện có tiếp tục được giữ để phục vụ picker và order detail:
 
-### Validation/transaction
+- `GET /api/customers?query=&phone=&email=` — search theo workspace; `email` là
+  filter rõ ràng nếu `query` hiện tại chưa đủ semantics.
+- `POST /api/customers` và `GET /api/customers/{customerId}` — giữ contract cũ.
+- `GET /api/devices/{deviceId}` và history projection — giữ cho detail/supporting
+  views; không bắt buộc UI intake phải gọi device search.
+- `GET /api/repair-orders` và `GET /api/repair-orders/{orderId}` — giữ cho list/detail.
 
-- Customer name/phone bắt buộc; email/note tùy chọn.
-- Device type/brand/model và serial/identifier validate theo policy; không tự
-  sinh serial giả.
-- Customer/device phải cùng workspace.
-- Issue khách mô tả bắt buộc và giữ nguyên, không biến thành diagnosis.
-- Cảnh báo device đang có order mở trước khi tạo order mới.
-- Transaction tạo customer/device/order/assignment/status history/audit rollback
-  toàn bộ khi một bước lỗi.
-- Order mới chưa có intake completion; không mở đường tắt sang `diagnosing`.
+Thêm command:
 
-### Authorization
+```text
+POST /api/repair-orders/intake
+```
 
-- Owner/Manager: đọc/ghi trong workspace theo capability.
-- Receptionist: create/search/read theo intake/operational policy.
-- Technician: chỉ đọc/thao tác order được assignment cho phần được cấp; C2 chưa
-  mở diagnosis/repair write.
-- Workspace khác: trả 403/404 phù hợp, không lộ existence.
+Request phải phân biệt customer hiện có và customer mới, đồng thời luôn nhận
+`repairItems[]`. Mỗi item là một thiết bị được bàn giao; phải có tối thiểu một
+item và có thể có nhiều item trong cùng RepairOrder:
+
+```json
+{
+  "customer": {
+    "mode": "existing",
+    "id": "customer-id"
+  },
+  "repairItems": [
+    {
+      "device": {
+        "type": "phone",
+        "brand": "Apple",
+        "model": "iPhone 13",
+        "serialNumber": "SN-001",
+        "identifier": null
+      },
+      "reportedIssue": "Máy không lên nguồn",
+      "handoverCondition": "Mặt kính xước nhẹ",
+      "accessories": "Củ sạc, cáp sạc",
+      "itemNotes": "Khách yêu cầu giữ nguyên dữ liệu",
+      "credential": {
+        "status": "customer_unlocked_device",
+        "value": null,
+        "consent": true
+      }
+    },
+    {
+      "device": {
+        "type": "tablet",
+        "brand": "Samsung",
+        "model": "Tab S8",
+        "serialNumber": "SN-002",
+        "identifier": null
+      },
+      "reportedIssue": "Màn hình bị sọc",
+      "handoverCondition": "...",
+      "accessories": "...",
+      "itemNotes": "...",
+      "credential": {
+        "status": "not_required",
+        "value": null,
+        "consent": false
+      }
+    }
+  ],
+  "repairOrder": {
+    "intakeNotes": "..."
+  }
+}
+```
+
+Khi tạo customer mới, `customer` dùng form `{ mode: "new", name, phone,
+email?, note? }`. Tên field cuối cùng phải theo domain/API đã freeze, không tự
+phát minh field ngoài requirements.
+
+`reportedIssue` không nằm ở `repairOrder` chung; nó thuộc từng item. Response
+thành công trả về safe projection của:
+
+```text
+{ data: { customer, repairOrder, repairItems[] }, meta: { requestId } }
+```
+
+Repair order phải ở `received`, có order code, creator, initial status history
+và audit theo contract hiện có.
+
+## Device unlock credential
+
+Nếu khách cung cấp mật khẩu/passcode để Technician mở khóa thiết bị, C2 được
+phép lưu để phục vụ sửa chữa nhưng phải lưu trong **internal encrypted credential
+storage** của RepairFlow:
+
+- Không cài thêm container, vault service hoặc storage service nào khác.
+- API hiện tại mã hóa credential trước khi ghi vào database hiện tại.
+- Dùng `ASP.NET Core Data Protection`/`IDataProtector` ở backend; key ring được
+  lưu ngoài source và ngoài database với quyền truy cập giới hạn.
+- Credential thuộc repair item của lần sửa chữa, không thuộc bản ghi Device
+  master vì cùng một thiết bị có thể có cách xử lý khác ở các lần sau.
+- Database chỉ lưu ciphertext, key version, status, consent/received time,
+  expiry và destroyed time; không lưu plaintext.
+- DTO detail/list, log, audit message và error response không được chứa giá trị
+  credential.
+- Chỉ Manager hoặc Technician được assignment mới được gọi endpoint/action reveal
+  riêng; request phải qua HTTPS và có audit access.
+- Credential phải có expiry kỹ thuật và destroy operation; destroy bắt buộc khi
+  bàn giao hoặc đóng phiếu, tùy thời điểm nào đến trước.
+- Nếu key ring không khả dụng, fail closed; không fallback sang plaintext.
+
+Tên field và endpoint reveal/destroy phải được freeze trong OpenAPI trước khi
+implement. C2 không đưa credential vào customer/device note.
+
+## Business/transaction rules
+
+- Search customer theo phone/email chỉ là bước hỗ trợ UI; người dùng có thể chủ
+  động chọn mode tạo mới ngay trong cùng màn hình.
+- Customer phone phải normalize và không tạo duplicate trong workspace.
+- Mỗi repair item luôn bắt đầu từ form thiết bị được bàn giao; không yêu cầu chọn
+  một device có sẵn theo customer context.
+- Nếu serial/identifier trùng, giữ unique policy của database và trả conflict
+  rõ ràng. C2 không tự silently link/merge device; flow xử lý ngoại lệ đầy đủ
+  được deferred sau C10.
+- Customer/device/workspace relationship phải được kiểm tra tại backend.
+- Customer name/phone, device type và brand/model hoặc identifier, cùng
+  `reportedIssue` là dữ liệu tối thiểu để tạo intake; email, handover condition,
+  accessories, item notes và credential là optional.
+- `reportedIssue` giữ nguyên là dữ liệu khách mô tả, không biến thành diagnosis.
+- Mỗi repair item có `reportedIssue`, `itemNotes`, handover data và
+  trạng thái/credential unlock riêng nếu có; ghi chú cấp RepairOrder chỉ dùng cho
+  thông tin chung.
+- Một RepairOrder phải tạo được nhiều repair item trong cùng transaction; thứ tự
+  item ổn định để đối chiếu với thiết bị thực tế.
+- RepairOrder và từng RepairOrderItem khởi tạo ở `received`; item lifecycle độc
+  lập để dành cho C3/C4.
+- Transaction bao phủ resolve/create customer, create/resolve từng device theo
+  policy, lưu toàn bộ repair item/credential metadata, create order, staff
+  attribution, status history và audit.
+- Rollback toàn bộ khi một bước lỗi.
+- Hỗ trợ idempotency hoặc request correlation để double-submit không tạo hai order.
+- Không chuyển sang `diagnosing`, không hoàn tất C3 intake và không xử lý quote.
+
+## Authorization
+
+Giữ capability matrix hiện có. Backend quyết định quyền create/search/read;
+frontend chỉ điều chỉnh presentation. Không tạo capability mới chỉ để phục vụ
+UI nếu chưa có requirements decision.
 
 ## Out of scope
 
-- Upload/evidence/checklist.
-- Diagnosis, quote, customer link.
-- Dashboard aggregation đầy đủ.
-- Delete customer/device/order.
+- C3 checklist chi tiết, ảnh/evidence, intake completion.
+- C4 diagnosis/quote.
+- C5 public customer link/OTP.
+- Delete semantics.
 - Tự động email/SMS.
+- Shared repository/port kiểu C2.
+- External credential vault/container/storage service.
 
-## Dependencies
+## Files to update
 
-- C1 session/auth/authorization pass.
-- c2-000 multi-role contract pass.
-- Database migration convention trong `plans/README.md` và mục migration docs.
-
-## Input files
-
-- `src/server/RepairFlow.Api/Features/Access/`.
-- `src/server/RepairFlow.Api/Infrastructure/Database/`.
-- `src/server/RepairFlow.Api/Api/Responses/`.
-- `tests/server/RepairFlow.Api.Tests/Features/Access/`.
-- `docs/v0/02-use-cases.md` mục UC-03/UC-12/AT-01/AT-02/AT-17/AT-19.
-- `docs/v0/05-database-requirements.md` mục 5.4–5.7, 7 và 9.
-
-## Output files
-
-- C2 SQL migration(s).
-- Feature folders cho customer, device và repair order trong server.
-- OpenAPI contracts và safe DTOs.
-- Unit/API/integration/migration tests.
-- Development fixtures đủ workspace, duplicate, open-order và assignment cases.
-
-## Files to write
-
-- [x] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0003__spec-v0__create-customer-device-repair-order.sql`.
-- [x] `src/server/RepairFlow.Api/Features/Customer/`.
-- [x] `src/server/RepairFlow.Api/Features/Device/`.
-- [x] `src/server/RepairFlow.Api/Features/RepairOrder/`.
-- [x] `tests/server/RepairFlow.Api.Tests/Features/Customer/`.
-- [x] `tests/server/RepairFlow.Api.Tests/Features/Device/`.
-- [x] `tests/server/RepairFlow.Api.Tests/Features/RepairOrder/`.
+- [ ] Feature application/contract/endpoint trong `Customer`, `Device`,
+  `RepairOrder` theo structure hiện có; schema liên kết `RepairOrder` với nhiều
+  `RepairOrderItem` và mỗi item với một `Device`.
+- [ ] OpenAPI contract và error examples cho intake.
+- [ ] API tests cho existing/new customer, duplicate, device identity conflict,
+  workspace, permission, rollback, idempotency và credential access policy.
+- [ ] Encryption/decryption, key version, expiry/destroy, reveal authorization;
+  không có plaintext trong DTO/log/audit/error.
+- [ ] Migration cần thiết cho quan hệ one-to-many/repair item và encrypted
+  credential metadata; không sửa migration lịch sử nếu không cần.
 
 ## Step-by-step implementation
 
-- [x] Freeze schema/API mapping against docs/v0 before writing SQL.
-- [x] Create SQL migration with metadata, constraints, indexes and seed-safe behavior.
-- [x] Add domain/application models and transaction boundary.
-- [x] Implement customer search/create/detail with normalized phone handling.
-- [x] Implement device search/create/detail/history and ownership checks.
-- [x] Implement order create/list/detail and concurrent order-code generation.
-- [x] Implement staff attribution and initial status history/audit.
-- [x] Add policies for workspace, capability and assignment.
-- [x] Add OpenAPI descriptions and safe response/error behavior.
-- [x] Run migration on clean database and rerun without duplicate application.
+- [ ] Đối chiếu baseline CRUD contract và freeze command request/response.
+- [ ] Đặt orchestration/transaction boundary tại `RepairOrder/Application`.
+- [ ] Dùng port/repository riêng của Customer và Device; không tạo `IC2Repository`.
+- [ ] Resolve customer existing/new với normalize/duplicate policy.
+- [ ] Tạo/resolve từng device intake từ form bàn giao và kiểm tra identifier policy.
+- [ ] Tạo tối thiểu một repair item, hỗ trợ nhiều item trong một order.
+- [ ] Lưu reported issue, item notes và credential metadata riêng cho từng repair item.
+- [ ] Tạo order `received`, history/audit trong cùng transaction.
+- [ ] Thêm encrypted credential storage bằng runtime/backend hiện có; không thêm
+  container hoặc dịch vụ lưu trữ khác.
+- [ ] Thêm error mapping có field-level validation và candidate/conflict khi cần.
+- [ ] Cập nhật OpenAPI và chạy clean/idempotent migration verification nếu có migration.
 
 ## Testing plan
 
-- [x] Missing/invalid customer, device and issue validation.
-- [x] Duplicate customer phone behavior inside/outside workspace.
-- [x] Device ownership, serial uniqueness and open-order warning.
-- [x] Atomic rollback when customer/device/order step fails.
-- [x] Concurrent order-code generation is serialized by the workspace counter and device advisory lock.
-- [x] Initial status `received`, status history and audit are created together.
-- [x] Cross-workspace read/write denial.
-- [x] Receptionist, Manager and Technician capability matrix.
-- [x] Safe DTO does not expose credential/token/internal secrets.
-- [x] Migration clean run and idempotent rerun.
+- [ ] Existing customer + một device + valid order.
+- [ ] Existing customer + nhiều device/repair item + một valid order.
+- [ ] New customer + một hoặc nhiều device/repair item + valid order.
+- [ ] Search phone/email và chọn existing không tạo duplicate customer.
+- [ ] Duplicate phone, invalid fields, device identifier conflict.
+- [ ] Customer/device/repair item mismatch hoặc cross-workspace denial.
+- [ ] Duplicate serial/identifier chỉ trả conflict rõ ràng, không silent link/merge;
+  full exception flow được ghi nhận cho C10.
+- [ ] Rollback khi một device item, order/history/audit step lỗi; không tạo order một phần.
+- [ ] Double-submit/idempotency.
+- [ ] Initial status `received` cho order và từng repair item, order code, history và audit.
+- [ ] Mỗi repair item giữ đúng reported issue, handover, item notes và credential metadata.
+- [ ] Required/optional field matrix: customer name/phone, device identity tối thiểu,
+  reported issue; email/handover/accessories/notes/credential optional.
+- [ ] Reveal credential chỉ Manager hoặc assigned Technician; destroy khi handover
+  hoặc close order.
+- [ ] Manager, Receptionist và Technician theo capability/assignment policy.
+- [ ] Safe DTO/error envelope/request ID.
+- [ ] Credential không xuất hiện trong normal response, log hoặc audit message;
+  reveal/destroy có authorization và audit riêng.
+- [ ] Existing c2-001 regression suite vẫn pass.
 
 ## Acceptance criteria
 
-- [x] C2 entities exist only through target .NET migration boundary.
-- [x] Customer/device/order API is available in OpenAPI and has request IDs.
-- [x] A valid create request returns a unique order code and `received` order.
-- [x] No diagnosis/intake completion is possible through C2 endpoints.
-- [x] All reads/writes enforce workspace and capability/assignment policy.
-- [x] Failed transaction leaves no orphan customer/device/order.
-- [x] C2 UI areas can consume the contract without guessing business rules.
+- [ ] UI có thể tạo một phiếu với một hoặc nhiều device bằng một command, không cần
+      gọi tuần tự các create API.
+- [ ] Customer có thể được chọn hoặc tạo mới trong cùng workflow.
+- [ ] Mỗi device được nhập từ form bàn giao, không phụ thuộc device list của customer.
+- [ ] RepairOrder liên kết đúng customer và nhiều repair item/device ở `received`.
+- [ ] Lỗi ở bất kỳ item nào không để lại customer/device/item/order rời rạc.
+- [ ] Duplicate device identity được trả về như conflict rõ ràng và không làm C2
+      tự động link/merge; ngoại lệ chi tiết deferred sau C10.
+- [ ] Status `received` được ghi cho order và các item ban đầu.
+- [ ] Passcode nếu được cung cấp có thể dùng lại theo quyền Technician nhưng chỉ
+      được lưu dạng ciphertext trong database hiện tại, có expiry/destroy.
+- [ ] API contract không tạo namespace/path C2 cũ và không đổi ngoài scope.
 
 ## Verification
 
-- `dotnet build src/server/RepairFlow.sln --no-restore`: pass, 0 warnings, 0 errors.
-- `dotnet test src/server/RepairFlow.sln --no-restore`: pass, 61 tests.
-- PostgreSQL development database: migration `20260917_0003` applied and rerun with no duplicate application.
-- PostgreSQL clean database: migrations `0001`, `0002`, `0003` applied successfully and rerun idempotently.
-- API smoke test: login, customer/device/order creation, duplicate phone, open-order warning, initial history and safe response verified.
-- Backend structure check: no `Features/C2`, `Features.C2`, `C2Models.cs`, `C2Contracts.cs` or `IC2Repository.cs` remains in source/tests.
+- [ ] `dotnet build src/server/RepairFlow.sln --no-restore`.
+- [ ] `dotnet test src/server/RepairFlow.sln --no-restore`.
+- [ ] OpenAPI smoke test cho `/api/repair-orders/intake`.
+- [ ] Regression test các endpoint c2-001 baseline.
+- [ ] Kiểm tra source không có `Features/C2`, `Features.C2`, `C2Models.cs`,
+  `C2Contracts.cs` hoặc `IC2Repository.cs`.
 
 ## Change impact
 
-Đây là migration/schema mở rộng đầu tiên sau access schema C1. Không sửa
-migration lịch sử. Nếu docs/v0 không đủ để freeze một route, field hoặc draft
-semantics, dừng phần đó và ghi decision trước khi implement.
+Đây là amendment application/API và data relationship một RepairOrder — nhiều
+RepairOrderItem, không phải đổi C3/C4 state machine. Duplicate device identity
+resolution đầy đủ được để sau C10; C2 chỉ trả conflict an toàn. Nếu existing schema hiện
+đang gắn trực tiếp một `device_id` vào `repair_orders`, phải có migration/decision
+chuyển sang bảng item liên kết trước khi implement endpoint intake. Nếu schema
+không đủ cho device identity, credential encryption hoặc idempotency, ghi
+migration decision riêng trước khi sửa database.

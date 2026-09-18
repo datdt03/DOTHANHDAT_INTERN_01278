@@ -112,7 +112,7 @@ Source PlantUML: [repairflow-usecase-overview.puml](./architecture/repairflow-us
 | BR-10 | Nếu QC không đạt, phiếu phải quay lại `repairing`, không được nhảy thẳng đến bàn giao. | Khóa `ready_for_pickup`. |
 | BR-11 | Chỉ được bàn giao khi QC đã `passed` và có biên bản bàn giao. | Từ chối transaction bàn giao. |
 | BR-12 | Warranty không thuộc workflow MVP. | Không tạo trạng thái hoặc bước kích hoạt warranty trong MVP; module warranty sẽ triển khai sau. |
-| BR-13 | Không lưu mật khẩu/mã mở khóa thiết bị trong MVP. | Từ chối trường nhạy cảm hoặc lưu theo chính sách mã hóa riêng ở giai đoạn sau. |
+| BR-13 | Mã mở khóa thiết bị chỉ được lưu khi thật sự cần cho sửa chữa và có consent của khách. | Lưu bằng encrypted storage trong RepairFlow API/database hiện tại; không plaintext, không đưa vào note/log và không thêm container hoặc dịch vụ lưu trữ khác. |
 | BR-14 | File ảnh/tài liệu private; chỉ hiển thị qua signed URL. | Không đưa object storage URL public trực tiếp vào response. |
 | BR-15 | Audit log, bằng chứng, customer decision và status history không bị xóa cứng trong luồng thường. | Chỉ cho phép archive/retention theo chính sách được phê duyệt. |
 | BR-16 | `overdue` là điều kiện tính từ `expected_completed_at` và status hiện tại. | Dashboard phải cảnh báo và ghi nhận xử lý, không tự ý làm mất trạng thái nghiệp vụ. |
@@ -331,11 +331,11 @@ Owner/Manager là người dùng có access session trong MVP; Receptionist/Tech
 
 | Bước | Actor | Hành động | Kiểm tra và dữ liệu lưu |
 | ---: | --- | --- | --- |
-| 1 | Owner/Manager | Mở form tạo phiếu và chọn staff profile Receptionist nếu cần. | Form chia rõ Customer → Device → Issue/Intake; có save/cancel. |
+| 1 | Owner/Manager | Mở form tạo phiếu và chọn staff profile Receptionist nếu cần. | Form chia rõ Customer → một hoặc nhiều Device/repair item → Issue/Intake; có review/cancel. |
 | 2 | Owner/Manager | Nhập số điện thoại/tìm customer. | System đề xuất customer cùng workspace; không tạo trùng nếu hồ sơ đã tồn tại. |
 | 3 | Owner/Manager | Chọn customer cũ hoặc tạo customer mới. | Validate tên/phone; lưu workspace_id. |
-| 4 | Owner/Manager | Tra cứu serial/IMEI/device identifier. | Hiển thị lịch sử thiết bị và cảnh báo order đang mở nếu có. |
-| 5 | Owner/Manager | Chọn device cũ hoặc tạo device mới. | Device phải thuộc đúng customer/workspace; không lưu passcode/mật khẩu. |
+| 4 | Owner/Manager | Thêm một hoặc nhiều device item được mang tới. | Mỗi item có identity, tình trạng bàn giao, phụ kiện và lỗi riêng; không bắt buộc tra cứu device cũ. |
+| 5 | Owner/Manager | Ghi nhận cách xử lý mở khóa thiết bị nếu cần. | Passcode chỉ nhập qua ô masked, có consent và được mã hóa trong backend/database hiện tại; không lưu vào note/log. |
 | 6 | Owner/Manager | Nhập issue khách mô tả và thông tin nhận máy. | Giữ nguyên lời mô tả, không biến thành diagnosis. |
 | 7 | Owner/Manager | Chọn người tiếp nhận/phụ trách nếu có. | Tạo `repair_order_staff` responsibility `intake`; staff profile inactive không được nhận mới. |
 | 8 | System | Submit transaction. | Tạo customer/device/order, order code unique, status history đầu tiên và audit create. |
@@ -351,7 +351,7 @@ Owner/Manager là người dùng có access session trong MVP; Receptionist/Tech
 | A4 | Trùng order code do concurrent request | Backend retry/regen code trong transaction; không trả thành công cho hai order cùng mã. |
 | A5 | Submit lỗi giữa transaction | Rollback toàn bộ; không để customer/device tồn tại rời rạc nếu transaction được thiết kế atomic. |
 | A6 | User bỏ form | Không tạo order; giữ cảnh báo unsaved nếu UI hỗ trợ. |
-| A7 | Thiết bị có dữ liệu nhạy cảm | Không đưa passcode/mật khẩu vào field tự do; hiển thị cảnh báo thao tác đúng policy. |
+| A7 | Thiết bị có dữ liệu nhạy cảm | Không đưa passcode/mật khẩu vào field tự do; nếu thật sự cần thì dùng credential field masked, encrypted, có consent, expiry và giới hạn quyền. |
 
 #### Tiêu chí nghiệm thu
 

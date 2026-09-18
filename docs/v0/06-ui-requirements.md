@@ -117,10 +117,8 @@ flowchart TD
     M02 --> M07["Cảnh báo overdue,<br/>chờ duyệt, QC, bàn giao"]
 
     M03 --> M08["UI-C01<br/>Repair-order detail"]
-    M04 --> M09["UI-B04 → UI-B05<br/>Customer → Device"]
-    M09 --> M10["UI-B06 → UI-B07<br/>Intake + condition + evidence"]
-    M10 --> M11["UI-B08<br/>Review + hoàn tất hoặc lưu nháp"]
-    M11 --> M08
+    M04 --> M09["UI-B04 → UI-B06<br/>Repair intake: customer → handover → review"]
+    M09 --> M08
 
     M08 --> M12{"Trạng thái và next action"}
     M12 -->|received, intake chưa đủ| M10
@@ -164,14 +162,12 @@ flowchart TD
     R04 -.-> R05["Không có edit,<br/>assignment, technical note,<br/>audit hoặc token"]
 
     R02 --> R06["Create repair order<br/>Assigned intake task"]
-    R06 --> R07["UI-B04<br/>Tìm/tạo customer"]
-    R07 --> R08["UI-B05<br/>Tìm/tạo device"]
-    R08 --> R09["UI-B06<br/>Issue + accessories + intake"]
-    R09 --> R10["UI-B07<br/>Condition checklist + photo"]
-    R10 --> R11["UI-B08<br/>Review, save draft hoặc complete"]
-    R11 --> R12["UI-C01<br/>Order detail"]
-    R11 -.-> R13["UI-B09<br/>Resume draft"]
-    R13 --> R09
+    R06 --> R07["UI-B04<br/>Customer: tìm hoặc tạo mới"]
+    R07 --> R08["UI-B05<br/>Thiết bị bàn giao + lỗi/tiếp nhận"]
+    R08 --> R09["UI-B06<br/>Tổng hợp + xác nhận"]
+    R09 --> R10["UI-B08<br/>Tạo thành công → order detail"]
+    R09 -.-> R11["Validation/error/retry<br/>Giữ state local để sửa"]
+    R11 --> R08
 
     R12 -->|Quote đã được phát hành| R14["UI-C04<br/>Copy/send/reissue link<br/>trong phạm vi được cấp"]
     R12 -->|Yêu cầu hủy trước khi sửa| R15["Hủy với lý do bắt buộc"]
@@ -389,52 +385,43 @@ Minimum filters:
 - Overdue orders.
 - Orders waiting for the customer.
 
-### 6.3. Create repair order
+### 6.3. Create repair intake
 
-The create flow is a four-step wizard. Every step supports **Save draft** and
-**Continue later**. A draft may be incomplete, but it cannot move to diagnosis
-until the required intake conditions are satisfied.
+The create flow is a three-stage workflow in one screen. The user must review
+the complete intake before confirming. C2 keeps the state in the current
+workflow and does not introduce server-side draft/resume semantics.
 
-#### Step 1: Select or create a customer
+#### Stage 1: Search or create a customer
 
-The form includes:
+The same surface provides two explicit modes:
 
-- Customer name.
-- Phone number.
-- Email.
-- Notes.
+- Search by phone number or email and select an existing customer.
+- Switch to a basic new-customer form with name, phone, email and notes.
 
-When a phone number already exists, suggest the existing customer profile to prevent duplicates.
+The new-customer form is available by choice; it is not shown only after a
+failed search. When a normalized phone already exists, suggest the existing
+profile and prevent a duplicate record.
 
-#### Step 2: Select or create a device
+#### Stage 2: Record the device handed over and repair intake
 
-The form includes:
+The user always fills the device brought to the shop. The flow does not require
+selecting a device from the customer's existing device list.
 
-- Device type.
-- Brand and model.
-- Serial number or identifier.
-- Device notes.
+The form includes the fields frozen by the API/domain contract, such as:
 
-When the device has history, show recent repair orders.
+- Device type, brand, model and serial/identifier when available.
+- Handover condition, received accessories and handover notes.
+- Customer-reported issue and intake notes.
 
-#### Step 3: Record the reported issue and intake information
+Detailed condition checklist, photos/evidence and intake completion remain in
+the C3 boundary.
 
-The form includes:
+#### Stage 3: Review and confirm
 
-- Customer-reported issue.
-- Start time, when known.
-- Power state.
-- Received accessories.
-- Expected completion date.
-- Intake notes.
-
-#### Step 4: Review and complete intake
-
-Show a compact summary of customer, device, reported issue, accessories,
-condition, and evidence. The user can save a draft or complete intake.
-
-After the first successful save, the system creates a human-readable,
-workspace-unique order code such as `RF-20260911-001`.
+Show a compact summary of customer, device, handover and repair information.
+The user can go back and edit local state. Only `Xác nhận tạo phiếu` submits the
+atomic intake command. A successful response creates a human-readable,
+workspace-unique order code such as `RF-20260911-001` and starts at `received`.
 
 ### 6.4. Record condition and evidence
 
@@ -644,7 +631,7 @@ UX must clearly handle:
 5. Technician My Work task queue.
 6. Repair-order list.
 7. Receptionist operational lookup (read-only).
-8. Create repair order wizard and draft resume.
+8. Repair intake workflow with customer search/create, device handover form and review/confirm.
 9. Repair-order detail.
 10. Condition and photo evidence.
 11. Diagnosis.
@@ -663,7 +650,8 @@ UX must clearly handle:
 - Manager, Receptionist, and Technician land on role-appropriate entry screens.
 - Receptionist can read the operational progress of any workspace order without
   receiving write access to that order.
-- The create-order flow can be saved and resumed as a draft.
+- The repair-intake flow lets the user search/create the customer, record the
+  handed-over device, review the complete data and confirm before saving.
 - Intake cannot be completed without at least one condition photo; additional
   photos remain unlimited.
 - Owner/Manager can create an order and attribute the Receptionist profile without leaving the flow.

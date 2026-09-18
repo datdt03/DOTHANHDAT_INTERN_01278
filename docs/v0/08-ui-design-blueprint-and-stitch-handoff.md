@@ -95,19 +95,24 @@ trách nhiệm đã được cấp như intake hoặc handover.
 
 ### 2.5. Tạo phiếu và hiện trạng
 
-Luồng tạo phiếu là wizard bốn bước:
+Luồng tạo phiếu là một workflow ba giai đoạn trong cùng màn hình:
 
-1. Tìm khách hàng bằng số điện thoại hoặc tạo khách hàng mới.
-2. Tìm/tạo thiết bị và nhập lỗi khách mô tả.
-3. Nhập thông tin tiếp nhận, checklist hiện trạng và ảnh.
-4. Review, lưu nháp hoặc hoàn tất intake.
+1. Thông tin khách hàng: tìm theo số điện thoại/email hoặc chủ động chuyển sang
+   form tạo khách hàng mới trong cùng khung.
+2. Thiết bị bàn giao và thông tin sửa chữa: luôn nhập thiết bị thực tế được
+   mang tới, cùng lỗi khách mô tả và thông tin tiếp nhận cơ bản.
+3. Tổng hợp và xác nhận: kiểm tra lại toàn bộ dữ liệu trước khi gọi command tạo
+   Customer/Device/RepairOrder atomic.
 
-Mỗi bước có `Lưu nháp` và `Tiếp tục sau`. Phiếu nháp có thể thiếu dữ liệu và
-được mở lại. Không được chuyển sang diagnosis khi chưa đủ điều kiện intake.
+Người dùng có thể quay lại sửa state local trước khi xác nhận. C2 không tạo
+server-side draft/resume semantics; checklist chi tiết, ảnh hiện trạng và
+intake completion vẫn thuộc C3. Không được chuyển sang diagnosis khi chưa đủ
+điều kiện intake.
 
-Intake cần tối thiểu một ảnh hiện trạng; không giới hạn số lượng ảnh thêm vào.
-Hệ thống không bắt buộc người dùng phải chụp đủ mọi góc, nhưng có thể gợi ý
-ảnh mặt trước, mặt sau, cạnh máy và vùng hư hỏng.
+C3 intake completion cần tối thiểu một ảnh hiện trạng; không giới hạn số lượng
+ảnh thêm vào. C2 chỉ thu thập thông tin bàn giao cơ bản trước khi xác nhận tạo
+phiếu. Hệ thống không bắt buộc người dùng phải chụp đủ mọi góc, nhưng có thể
+gợi ý ảnh mặt trước, mặt sau, cạnh máy và vùng hư hỏng.
 
 ### 2.6. Viewport chuẩn
 
@@ -146,12 +151,12 @@ chưa cần tạo frame riêng trong batch đầu.
 | UI-B01 | Danh sách phiếu và tìm kiếm/lọc | Desktop |
 | UI-B02 | Receptionist tra cứu tiến độ read-only | Desktop |
 | UI-B03 | Receptionist tra cứu tiến độ | Mobile |
-| UI-B04 | Wizard bước 1: tìm/tạo khách hàng | Desktop |
-| UI-B05 | Wizard bước 2: tìm/tạo thiết bị | Desktop |
-| UI-B06 | Wizard bước 3: lỗi, phụ kiện và thông tin tiếp nhận | Desktop |
-| UI-B07 | Wizard bước 3: checklist và ảnh hiện trạng | Mobile |
-| UI-B08 | Wizard bước 4: review và lưu nháp | Desktop |
-| UI-B09 | Mở lại phiếu nháp để tiếp tục | Mobile |
+| UI-B04 | Giai đoạn 1: tìm hoặc tạo khách hàng | Desktop |
+| UI-B05 | Giai đoạn 2: thiết bị bàn giao + lỗi/tiếp nhận | Desktop |
+| UI-B06 | Giai đoạn 3: tổng hợp và xác nhận | Desktop |
+| UI-B07 | Giai đoạn 2: thiết bị bàn giao + tiếp nhận | Mobile |
+| UI-B08 | Tạo thành công và mở order detail | Desktop |
+| UI-B09 | Intake error/unavailable và retry | Mobile |
 
 ### Batch C — Order detail, diagnosis, quotation và Customer
 
@@ -384,8 +389,10 @@ Nguyên tắc bắt buộc:
   Hàng chờ công việc; Customer dùng public link mobile.
 - Receptionist được tra cứu read-only operational progress của mọi order trong
   workspace, nhưng chỉ được ghi trên task/order được phân công.
-- Tạo phiếu là wizard nhiều bước, có lưu nháp và tiếp tục sau.
-- Intake cần tối thiểu một ảnh, không giới hạn ảnh bổ sung.
+- Tạo phiếu là một workflow ba giai đoạn trong cùng màn hình: customer
+  search/create, device handover + repair intake, rồi review/confirm.
+- C3 intake evidence cần tối thiểu một ảnh, không giới hạn ảnh bổ sung; đây không
+  phải điều kiện để C2 submit phiếu lõi.
 - Không thêm Google Login, OAuth, thanh toán, inventory, AI diagnosis hoặc
   multi-branch.
 - Không sửa API, database hoặc business rule khi task chỉ yêu cầu UI.
@@ -436,10 +443,12 @@ trước Notification/Avatar. Mobile hiển thị cùng control trong vùng acco
 toolbar. Control chỉ xuất hiện khi có từ hai role, hỗ trợ keyboard/ARIA và đổi
 role qua API.
 
-C2 tách UI theo business area: Customer records, Device và Repair Order. Mỗi
-area có mount boundary, shell, route, local state và acceptance riêng; shared
-chỉ cung cấp design token, icon, API client/type và primitive. Không yêu cầu
-shared UI flow xuyên cả ba area để nghiệm thu C2.
+C2 dùng task-first UI cho workflow `repair-intake-workflow`; backend vẫn
+feature-first với Customer, Device và RepairOrder. Repair-order list/detail là
+view phụ trợ sau khi tạo phiếu. Không bắt người dùng đi qua Customer page rồi
+Device page rồi RepairOrder page để hoàn tất intake. Shared chỉ cung cấp design
+token, icon, API client/type và primitive; workflow chính có mount, state và
+acceptance riêng.
 
 ## 6. Tiêu chí nghiệm thu visual/handoff
 
@@ -451,8 +460,10 @@ shared UI flow xuyên cả ba area để nghiệm thu C2.
 - Receptionist operational lookup không có quyền sửa và hiển thị đủ tiến độ để
   trả lời khách.
 - Technician dùng danh sách hàng chờ, không dùng Kanban làm luồng chính.
-- Wizard tạo phiếu có save draft/resume.
-- Intake yêu cầu tối thiểu một ảnh và cho phép thêm ảnh không giới hạn.
+- Workflow tạo phiếu có ba giai đoạn, customer search/create trong cùng khung,
+  device handover form, review/confirm và error/retry state.
+- C3 intake evidence yêu cầu tối thiểu một ảnh và cho phép thêm ảnh không giới
+  hạn; C2 chỉ review/confirm thông tin bàn giao cơ bản.
 - Customer mobile page có đủ xem tiến độ, báo giá, approve, reject/discuss và
   link expired/revoked.
 - Customer link phải có bước OTP trước khi hiển thị dữ liệu; cùng link dùng để
