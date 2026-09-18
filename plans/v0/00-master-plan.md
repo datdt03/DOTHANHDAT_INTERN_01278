@@ -6,7 +6,7 @@
 >
 > Revision: 6
 >
-> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration accepted on 2026-09-17. C1 is complete; c1-001 through c1-007 are complete; the C2 area-first plan is READY under `plans/c2/`.
+> Baseline: Gate D0 closed on 2026-09-16; C0 target-stack migration accepted on 2026-09-17. C1 is complete; c1-001 through c1-007 are complete; C2 is in progress with c2-000 complete and c2-001 next under `plans/v0/c2/`.
 
 ## Goal
 

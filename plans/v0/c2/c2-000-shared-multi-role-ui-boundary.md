@@ -6,9 +6,9 @@ Title: Chuẩn hóa multi-role account và tách UI theo business area
 
 Owner: Codex and Antigravity
 
-Status: READY
+Status: DONE
 
-Revision: 1
+Revision: 2
 
 Depends on: c1-007-shared-integration-acceptance.md
 
@@ -119,45 +119,45 @@ khoản mới và không phải security boundary.
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0002__spec-v0__support-multiple-membership-roles.sql`.
-- [ ] `src/server/RepairFlow.Api/Features/Access/` access context/session files.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Access/MultiRoleAccessTests.cs`.
-- [ ] `src/ui/shared/api/access-api.ts` and session context contract.
-- [ ] `src/ui/features/access/role-context-switcher.tsx`.
-- [ ] `src/ui/features/access/role-context-switcher.css`.
-- [ ] `src/ui/AGENTS.md` and relevant UI blueprint amendment.
+- [x] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0002__spec-v0__support-multiple-membership-roles.sql`.
+- [x] `src/server/RepairFlow.Api/Features/Access/` access context/session files.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Access/MultiRoleAccessTests.cs`.
+- [x] `src/ui/shared/api/access-api.ts` and session context contract.
+- [x] `src/ui/features/access/role-context-switcher.tsx`.
+- [x] `src/ui/features/access/role-context-switcher.css`.
+- [x] `src/ui/AGENTS.md` and relevant UI blueprint amendment.
 
 ## Step-by-step implementation
 
-- [ ] Freeze role-set schema and effective-capability semantics.
-- [ ] Create migration with backfill, constraint và idempotency metadata.
-- [ ] Refactor backend context projection to return role collection.
-- [ ] Implement active-role change with current session validation.
-- [ ] Ensure authorization uses effective capabilities, workspace and assignment.
-- [ ] Refactor UI access context to consume server projection, not infer security.
-- [ ] Add desktop/mobile role context switcher at the approved locations.
-- [ ] Create area mount contract and keep top-level bootstrap minimal.
-- [ ] Verify C1 login/logout/expiry behavior is unchanged for single-role users.
+- [x] Freeze role-set schema and effective-capability semantics.
+- [x] Create migration with backfill, constraint và idempotency metadata.
+- [x] Refactor backend context projection to return role collection.
+- [x] Implement active-role change with current session validation.
+- [x] Ensure authorization uses effective capabilities, workspace and assignment.
+- [x] Refactor UI access context to consume server projection, not infer security.
+- [x] Add desktop/mobile role context switcher at the approved locations.
+- [x] Create area mount contract and keep top-level bootstrap minimal.
+- [x] Verify C1 login/logout/expiry behavior is unchanged for single-role users.
 
 ## Testing plan
 
-- [ ] Existing single-role access tests remain pass.
-- [ ] Multi-role account sees only roles assigned to its workspace.
-- [ ] Invalid active role returns safe forbidden/error envelope with request ID.
-- [ ] Switching active role keeps account/session/workspace identity unchanged.
-- [ ] Effective capabilities are stable across role context changes.
-- [ ] Revoked/expired session cannot switch role or read protected data.
-- [ ] Role switcher is independently renderable without the C1 global shell.
-- [ ] No `localStorage` is used for access authority or business data.
+- [x] Existing single-role access tests remain pass.
+- [x] Multi-role account sees only roles assigned to its workspace.
+- [x] Invalid active role returns safe forbidden/error envelope with request ID.
+- [x] Switching active role keeps account/session/workspace identity unchanged.
+- [x] Effective capabilities are re-projected from the active role after a context change.
+- [x] Revoked/expired session cannot switch role or read protected data.
+- [x] Role switcher is independently renderable without the C1 global shell.
+- [x] No `localStorage` is used for access authority or business data.
 
 ## Acceptance criteria
 
-- [ ] Manager + Technician can use one account and one session.
-- [ ] UI offers `Ngữ cảnh làm việc` only for multi-role users.
-- [ ] UI does not create a second HTML or role-specific app.
-- [ ] A role not returned by backend cannot be activated by URL/request tampering.
-- [ ] Direct API permission remains correct after every context switch.
-- [ ] C2 areas can be mounted/tested independently.
+- [x] Manager + Technician can use one account and one session.
+- [x] UI offers `Ngữ cảnh làm việc` only for multi-role users.
+- [x] UI does not create a second HTML or role-specific app.
+- [x] A role not returned by backend cannot be activated by URL/request tampering.
+- [x] Direct API permission remains correct after every context switch.
+- [x] A reusable C2 area mount contract exists without requiring the C1 global shell; concrete area mount tests remain in c2-002 through c2-005.
 
 ## Change impact
 
@@ -165,3 +165,11 @@ khoản mới và không phải security boundary.
 mở lại C1 acceptance. Migration phải là file mới, không sửa/xóa migration lịch
 sử. UI rules phải ghi rõ area-owned shell và shared primitives-only boundary
 trước khi các area C2 bắt đầu.
+
+## Implementation evidence
+
+- `dotnet test src/server/RepairFlow.sln --no-restore`: 51 passed.
+- `npm --prefix src/ui run type-check`: passed.
+- `npm --prefix src/ui run build`: passed.
+- Migration `20260917_0002` applied once and reran idempotently on the local PostgreSQL instance.
+- Preview UI verified with one manager account: the role switcher preserves the account/workspace, updates role-aware navigation and moves an invalidated dashboard route to the technician entry route.

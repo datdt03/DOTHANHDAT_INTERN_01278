@@ -19,9 +19,10 @@ plans/
 │   │   └── c0-003-shared-stack-migration-acceptance.md
 │   └── c1-access-and-application-shell/
 │       └── ...
-└── c2/
-    ├── README.md
-    └── c2-... area-first implementation plans
+└── v0/
+    └── c2/
+        ├── README.md
+        └── c2-... area-first implementation plans
 ```
 
 Chỉ tạo plan chi tiết cho cluster kế tiếp khi output của cluster trước đã được
@@ -29,7 +30,7 @@ kiểm chứng và đủ thông tin. `00-master-plan.md` là bản đồ ổn đ
 `cX-...` mới chứa hướng triển khai chi tiết.
 
 Theo quyết định triển khai C2, bộ plan chi tiết hiện hành được đặt tại
-`plans/c2/`; `plans/v0/README.md` giữ vai trò index và trỏ tới bộ plan này.
+`plans/v0/c2/`; `plans/v0/README.md` giữ vai trò index và trỏ tới bộ plan này.
 
 ## Đánh số và thứ tự
 

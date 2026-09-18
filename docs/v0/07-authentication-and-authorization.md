@@ -29,7 +29,7 @@ hợp, không được dùng việc ẩn menu hoặc ẩn nút làm cơ chế b�
 | AUTH-002 | Tài khoản đăng nhập (`access principal`) tách biệt với hồ sơ nhân sự (`staff profile`). Một staff profile có thể chưa có tài khoản và khi đó không được đăng nhập. | `DECIDED` |
 | AUTH-003 | Không dùng tài khoản chung cho nhiều người. Mỗi tài khoản phải gắn với một người và membership hợp lệ trong workspace. | `DECIDED` |
 | AUTH-004 | Customer không có tài khoản dài hạn; dùng public link có token, expiry, revoke và bắt buộc xác thực OTP trước khi xem hoặc thực hiện bất kỳ hành động nào. | `DECIDED` |
-| AUTH-005 | Phân quyền tối thiểu dùng role cố định kết hợp `workspace_id` và assignment của repair order. | `DECIDED` |
+| AUTH-005 | Phân quyền tối thiểu dùng role-set cố định kết hợp `workspace_id`, `active_role` và assignment của repair order. | `DECIDED` |
 | AUTH-006 | Mặc định từ chối truy cập (`deny by default`); mọi quyền đọc/ghi phải được Backend/API kiểm tra. | `DECIDED` |
 | AUTH-007 | Technician chỉ được xem order được giao hoặc dữ liệu trực tiếp cần cho trách nhiệm; Receptionist được tra cứu operational projection read-only của toàn bộ order trong workspace. | `DECIDED` |
 | AUTH-008 | Owner có toàn quyền quản trị workspace và access. Manager có toàn quyền vận hành nhưng không mặc định quản lý credential của Owner. | `DECIDED` |
@@ -38,13 +38,14 @@ hợp, không được dùng việc ẩn menu hoặc ẩn nút làm cơ chế b�
 | AUTH-011 | MVP đăng nhập bằng email của access principal do Owner/Manager tạo; không dùng Google Login hoặc OAuth. | `DECIDED` |
 | AUTH-012 | Receptionist được tra cứu read-only toàn bộ order trong cùng workspace qua operational projection để trả lời khách; quyền ghi vẫn giới hạn ở order/tác vụ được phân công. | `DECIDED` |
 | AUTH-013 | Customer hoặc người được ủy quyền chỉ được mở customer link sau khi nhập OTP gửi tới số điện thoại hoặc email đã được ghi nhận; link không được chia sẻ tự do. | `DECIDED` |
+| AUTH-014 | Một membership có thể có nhiều role trong cùng workspace. Session giữ một `active_role`; role này phải thuộc role-set và đổi role không tạo account/session/workspace mới. | `DECIDED` |
 
 ## 3. Mô hình actor và account
 
 ### 3.1. Access principal
 
 Access principal là người có credential và session để gọi giao diện/API nội bộ.
-Các role có thể được cấp account trong MVP:
+Các role có thể được cấp trong role-set của membership trong MVP:
 
 - `owner`
 - `manager`
@@ -52,6 +53,10 @@ Các role có thể được cấp account trong MVP:
 - `technician`
 
 `admin` chưa phải role được cấp credential trong MVP.
+
+`active_role` là ngữ cảnh quyền hiện tại của session, không phải một access
+principal mới. Backend phải kiểm tra `active_role` thuộc role-set của
+membership trước khi đánh giá capability hoặc assignment.
 
 ### 3.2. Staff profile
 
@@ -177,7 +182,7 @@ Backend/API phải kiểm tra tối thiểu theo thứ tự:
 
 1. Session còn hợp lệ và access principal đang active.
 2. Membership thuộc workspace hiện tại và chưa bị suspend/removed.
-3. Role có quyền thực hiện action.
+3. `active_role` thuộc role-set của membership và có quyền thực hiện action.
 4. Với thao tác ghi của Receptionist/Technician, order có
    assignment/responsibility phù hợp. Receptionist được phép dùng operational
    read projection trên toàn workspace cho các thao tác đọc đã giới hạn field.

@@ -83,7 +83,8 @@ public sealed class SessionService
                 snapshot.WorkspaceMembership.Membership,
                 snapshot.Account.StaffProfile,
                 attributedStaff: null,
-                out var context))
+                out var context,
+                activeRole: snapshot.Session.ActiveRole))
         {
             await RevokeStoredSessionAsync(snapshot, now, "invalid_access_context", cancellationToken);
             return null;
@@ -94,6 +95,51 @@ public sealed class SessionService
             context!,
             snapshot.Session.Id,
             snapshot.Session.AbsoluteExpiresAt);
+    }
+
+    public async Task<ResolvedAccessSession?> ChangeActiveRoleAsync(
+        ResolvedAccessSession current,
+        AccessRole activeRole,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        if (!current.Context.Membership.HasRole(activeRole))
+        {
+            return null;
+        }
+
+        if (current.Context.ActiveRole == activeRole)
+        {
+            return current;
+        }
+
+        var updated = await _repository.UpdateSessionActiveRoleAsync(
+            current.SessionId,
+            activeRole,
+            now,
+            cancellationToken);
+        if (!updated)
+        {
+            return null;
+        }
+
+        await _auditSink.RecordAsync(
+            new AccessAuditEvent(
+                "active_role_changed",
+                "employee",
+                current.Context.Workspace.Id,
+                current.Context.StaffProfile.Id,
+                current.SessionId,
+                $"{AccessRoleCodec.ToWireValue(current.Context.ActiveRole)}->{AccessRoleCodec.ToWireValue(activeRole)}",
+                null,
+                null,
+                now),
+            cancellationToken);
+
+        return current with
+        {
+            Context = current.Context with { ActiveRole = activeRole }
+        };
     }
 
     public async Task<bool> RevokeAsync(

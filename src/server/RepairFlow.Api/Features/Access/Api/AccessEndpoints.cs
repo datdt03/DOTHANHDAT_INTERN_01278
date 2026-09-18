@@ -1,6 +1,7 @@
 using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Application;
+using RepairFlow.Api.Features.Access.Domain;
 
 namespace RepairFlow.Api.Features.Access.Api;
 
@@ -21,6 +22,15 @@ public static class AccessEndpoints
             .WithName("GetAccessContext")
             .Produces<ApiResponse<CurrentSessionResponse>>(StatusCodes.Status200OK)
             .Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+            .RequireAuthorization(AccessPolicies.Authenticated)
+            .WithOpenApi();
+
+        endpoints.MapPost("/api/access/active-role", ChangeActiveRoleAsync)
+            .WithName("ChangeActiveRole")
+            .Produces<ApiResponse<CurrentSessionResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
             .RequireAuthorization(AccessPolicies.Authenticated)
             .WithOpenApi();
 
@@ -71,7 +81,11 @@ public static class AccessEndpoints
                         workspaces = result.AvailableWorkspaces!.Select(item => new WorkspaceChoice(
                             item.Workspace.Id,
                             item.Workspace.Name,
-                            item.Membership.Role.ToString().ToLowerInvariant()))
+                            AccessRoleCodec.ToWireValue(item.Membership.Role),
+                            item.Membership.Roles
+                                .Distinct()
+                                .Select(AccessRoleCodec.ToWireValue)
+                                .ToArray()))
                     });
             case AuthenticationResultKind.Success:
                 sessionService.WriteCookie(
@@ -87,6 +101,54 @@ public static class AccessEndpoints
             default:
                 throw new InvalidOperationException("Unknown authentication result.");
         }
+    }
+
+    private static async Task<IResult> ChangeActiveRoleAsync(
+        HttpContext httpContext,
+        ActiveRoleRequest request,
+        IAccessContextAccessor contextAccessor,
+        IAccessContextWriter contextWriter,
+        SessionService sessionService,
+        AccessService accessService,
+        CancellationToken cancellationToken)
+    {
+        if (!AccessRoleCodec.TryParse(request.Role, out var requestedRole))
+        {
+            throw new ApiValidationException(
+                "Active role is invalid.",
+                new Dictionary<string, string[]> { ["role"] = ["A valid assigned role is required."] });
+        }
+
+        var current = SessionService.GetResolved(httpContext);
+        if (current is null || contextAccessor.Current is null)
+        {
+            throw new ApiException(
+                StatusCodes.Status401Unauthorized,
+                "authentication_required",
+                "Authentication is required.");
+        }
+
+        var changed = await sessionService.ChangeActiveRoleAsync(
+            current,
+            requestedRole,
+            DateTimeOffset.UtcNow,
+            cancellationToken);
+        if (changed is null)
+        {
+            throw new ApiException(
+                StatusCodes.Status403Forbidden,
+                "role_not_assigned",
+                "The requested role is not assigned in the current workspace.");
+        }
+
+        contextWriter.SetCurrent(changed.Context);
+        httpContext.Items[SessionService.ResolvedSessionItemKey] = changed;
+
+        return Results.Ok(ApiResponse<CurrentSessionResponse>.Create(
+            new CurrentSessionResponse(
+                accessService.ToSafeResponse(changed.Context),
+                changed.ExpiresAt),
+            RequestIdMiddleware.GetRequestId(httpContext)));
     }
 
     private static IResult GetCurrentContext(

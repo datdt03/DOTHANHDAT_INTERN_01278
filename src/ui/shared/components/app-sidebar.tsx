@@ -1,4 +1,4 @@
-import { getRoleCapabilities, type UserRole } from '../api/access-api';
+import { getRoleCapabilities, type RoleCapabilities, type UserRole } from '../api/access-api';
 import {
   IconClose,
   IconCustomers,
@@ -36,6 +36,7 @@ export interface AppSidebarProps {
   userRole?: string;
   userInitials?: string;
   currentRole?: UserRole;
+  capabilities?: RoleCapabilities | null;
   onLogout?: () => void;
 }
 
@@ -81,9 +82,10 @@ export function AppSidebar({
   userRole = 'Quản lý vận hành',
   userInitials = 'MT',
   currentRole = 'manager',
+  capabilities: projectedCapabilities,
   onLogout,
 }: AppSidebarProps) {
-  const capabilities = getRoleCapabilities(currentRole);
+  const capabilities = projectedCapabilities || getRoleCapabilities(currentRole);
   const navItems = capabilities.navigationItems;
 
   return (
@@ -176,17 +178,6 @@ export function AppSidebar({
         </div>
 
         <div className="sidebar-footer">
-          {!isCollapsed && capacity && (
-            <div className="capacity-card">
-              <div className="capacity-card__heading">
-                <span>Trạng thái xưởng</span>
-                <span className="online-dot" aria-label="Đang hoạt động" />
-              </div>
-              <strong>{capacity.active}/{capacity.total} bàn đang hoạt động</strong>
-              <span>{capacity.devicesCount} thiết bị đang xử lý</span>
-            </div>
-          )}
-
           <div className="sidebar-user">
             {isCollapsed ? (
               <div

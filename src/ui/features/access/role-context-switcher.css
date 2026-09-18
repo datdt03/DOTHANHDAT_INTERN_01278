@@ -1,0 +1,123 @@
+.rf-role-context {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.rf-role-context__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 5px 10px;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background: var(--rf-surface, #ffffff);
+  color: var(--rf-text-body, #334155);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rf-role-context__trigger:hover,
+.rf-role-context__trigger:focus-visible {
+  border-color: var(--rf-primary, #0284c7);
+  color: var(--rf-primary, #0284c7);
+  outline: none;
+}
+
+.rf-role-context__trigger:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.rf-role-context__trigger-copy,
+.rf-role-context__option-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.rf-role-context__trigger-copy strong {
+  color: var(--rf-text-main, #0f172a);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rf-role-context__label {
+  color: var(--rf-text-muted, #64748b);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.rf-role-context__menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background: var(--rf-surface, #ffffff);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.rf-role-context__menu-heading {
+  padding: 6px 8px 8px;
+  color: var(--rf-text-muted, #64748b);
+  font-size: 11px;
+}
+
+.rf-role-context__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: var(--rf-radius-sm, 6px);
+  background: transparent;
+  color: var(--rf-text-body, #334155);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rf-role-context__option:hover,
+.rf-role-context__option:focus-visible,
+.rf-role-context__option--active {
+  background: var(--rf-bg-app, #f8fafc);
+  color: var(--rf-primary, #0284c7);
+  outline: none;
+}
+
+.rf-role-context__option-copy strong {
+  color: var(--rf-text-main, #0f172a);
+  font-size: 12px;
+}
+
+.rf-role-context__option-copy span {
+  color: var(--rf-text-muted, #64748b);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.rf-role-context__error {
+  margin: 8px 8px 2px;
+  color: #b42318;
+  font-size: 11px;
+}
+
+@media (max-width: 768px) {
+  .rf-role-context__trigger-copy {
+    display: none;
+  }
+
+  .rf-role-context__trigger {
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .rf-role-context__menu {
+    right: -8px;
+  }
+}

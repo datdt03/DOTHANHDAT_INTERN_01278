@@ -245,9 +245,10 @@ mapping tới staff profile khi nhân sự cần đăng nhập.
 
 ### 5.3. `workspace_memberships`
 
-Liên kết hồ sơ nhân sự với workspace và lưu vai trò vận hành.
+Liên kết hồ sơ nhân sự với workspace và lưu default role tương thích của thành
+viên. Role được cấp thực tế nằm ở bảng role-set bên dưới.
 
-Membership xác định workspace, role và trạng thái của nhân sự. Membership không
+Membership xác định workspace và trạng thái của nhân sự. Membership không
 tự động tạo account; account chỉ được cấp khi có nhu cầu truy cập trực tiếp.
 
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
@@ -255,7 +256,7 @@ tự động tạo account; account chỉ được cấp khi có nhu cầu truy 
 | `id` | `uuid` | Không | — | PK |
 | `workspace_id` | `uuid` | Không | — | FK → `workspaces.id` |
 | `user_id` | `uuid` | Không | — | FK → `users.id` |
-| `role` | `varchar(24)` | Không | — | `owner`, `admin`, `manager`, `receptionist`, `technician` |
+| `role` | `varchar(24)` | Không | — | Default role tương thích: `owner`, `manager`, `receptionist`, `technician`; `admin` chỉ giữ cho dữ liệu legacy |
 | `status` | `varchar(16)` | Không | `'invited'` | Trạng thái thành viên |
 | `invited_at` | `timestamptz` | Có | `NULL` | Thời điểm gửi lời mời |
 | `joined_at` | `timestamptz` | Có | `NULL` | Thời điểm tham gia |
@@ -263,6 +264,23 @@ tự động tạo account; account chỉ được cấp khi có nhu cầu truy 
 | `updated_at` | `timestamptz` | Không | `now()` | Thời điểm cập nhật |
 
 Ràng buộc: `unique(workspace_id, user_id)`.
+
+### 5.3.1. `workspace_membership_roles`
+
+Bảng role-set chuẩn hóa cho một membership. Một user vẫn chỉ có một
+membership trong một workspace, nhưng membership có thể có nhiều role được
+cấp.
+
+| Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | Không | — | PK |
+| `membership_id` | `uuid` | Không | — | FK → `workspace_memberships.id` |
+| `role` | `varchar(24)` | Không | — | `owner`, `manager`, `receptionist`, `technician` |
+| `is_default` | `boolean` | Không | `false` | Tối đa một role mặc định trong mỗi membership |
+| `created_at` | `timestamptz` | Không | `now()` | Thời điểm cấp role |
+
+Ràng buộc: `unique(membership_id, role)` và partial unique index trên
+`(membership_id)` khi `is_default = true`.
 
 ### 5.4. `customers`
 

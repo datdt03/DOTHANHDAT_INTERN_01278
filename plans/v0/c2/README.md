@@ -6,9 +6,9 @@
 >
 > Owner: Codex and Antigravity
 >
-> Status: READY
+> Status: IN PROGRESS
 >
-> Revision: 1
+> Revision: 2
 >
 > Depends on: c1-007-shared-integration-acceptance.md
 >
@@ -24,7 +24,7 @@ Feature: C2 customer-device-repair-order
 Read first: docs/v0/02-use-cases.md, docs/v0/03-business-and-domain-requirements.md,
             docs/v0/05-database-requirements.md, docs/v0/06-ui-requirements.md,
             src/ui/AGENTS.md
-Allowed to change: plans/c2, C2 backend/API/database/test và các UI area C2.
+Allowed to change: plans/v0/c2, C2 backend/API/database/test và các UI area C2.
 Do not change: C3 intake/evidence, C4 diagnosis/quote, C5 customer link,
                business rule chưa được quyết định trong docs/v0.
 Completion criteria: API, migration, multi-role context và ba business area
@@ -78,7 +78,7 @@ Role không quyết định cấu trúc HTML. Backend trả về `roles[]`, `act
 
 | Sequence | Plan | Owner | Nội dung | Status |
 | ---: | --- | --- | --- | --- |
-| 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area-owned shell | READY |
+| 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area-owned shell | DONE |
 | 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | Schema, migration, API và permission | READY |
 | 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Customer records area | READY |
 | 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Device area | READY |

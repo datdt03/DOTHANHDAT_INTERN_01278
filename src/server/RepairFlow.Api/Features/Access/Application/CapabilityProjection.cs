@@ -25,7 +25,7 @@ public static class CapabilityProjection
 {
     public static AccessCapabilities For(AccessContext context)
     {
-        var role = context.Membership.Role;
+        var role = context.ActiveRole;
         var isOwner = role == AccessRole.Owner;
         var isManager = role == AccessRole.Manager;
         var isManagement = isOwner || isManager;

@@ -9,7 +9,6 @@ import {
 } from 'react';
 import {
   getAccessAdapter,
-  getRoleCapabilities,
   type RoleCapabilities,
   type UserProfile,
   type UserRole,
@@ -18,6 +17,8 @@ import {
   type LoginResult,
   DEMO_ACCOUNTS,
 } from '../shared/api/access-api';
+import { ApiClientError } from '../shared/api/api-client';
+import { canAccessRoute, getRoleEntryRoute } from './role-entry';
 
 export type { UserRole, DevelopmentRole, UserProfile, RoleCapabilities, WorkspaceChoice, LoginResult };
 export type StaffProfile = UserProfile;
@@ -61,6 +62,7 @@ export interface SessionProviderProps {
 export function SessionProvider({ children, previewMode = false }: SessionProviderProps) {
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('session-checking');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [capabilities, setCapabilities] = useState<RoleCapabilities | null>(null);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [workspaceChoices, setWorkspaceChoices] = useState<WorkspaceChoice[] | null>(null);
@@ -76,9 +78,11 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
       const session = await adapter.getCurrentSession();
       if (session && session.user) {
         setCurrentUser(session.user);
+        setCapabilities(session.capabilities);
         setSessionStatus('authenticated');
       } else {
         setCurrentUser(null);
+        setCapabilities(null);
         setSessionStatus('unauthenticated');
       }
     } catch (err) {
@@ -93,7 +97,6 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
   }, [checkSession]);
 
   const isAuthenticated = sessionStatus === 'authenticated' && currentUser !== null;
-  const capabilities = currentUser ? getRoleCapabilities(currentUser.role) : null;
 
   const clearSessionNotice = () => setSessionNotice(null);
   const clearWorkspaceChoices = () => setWorkspaceChoices(null);
@@ -110,6 +113,7 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
 
       if (result.success && result.session) {
         setCurrentUser(result.session.user);
+        setCapabilities(result.session.capabilities);
         setWorkspaceChoices(null);
         setSessionStatus('authenticated');
         // Navigate to the role's default entry route
@@ -142,6 +146,7 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
       const result = await adapter.quickLogin(role);
       if (result.success && result.session) {
         setCurrentUser(result.session.user);
+        setCapabilities(result.session.capabilities);
         setWorkspaceChoices(null);
         setSessionStatus('authenticated');
         window.location.hash = result.session.capabilities.defaultRoute;
@@ -160,6 +165,7 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
       await adapter.logout();
     } finally {
       setCurrentUser(null);
+      setCapabilities(null);
       setSessionNotice(null);
       setWorkspaceChoices(null);
       setSessionStatus('unauthenticated');
@@ -168,7 +174,34 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
   };
 
   const switchRole = async (role: UserRole): Promise<void> => {
-    await quickLogin(role);
+    if (!currentUser || !currentUser.roles.includes(role) || role === currentUser.activeRole) {
+      return;
+    }
+
+    setSessionStatus('submitting');
+    setErrorMessage(null);
+    try {
+      const currentRoute = window.location.hash;
+      const session = await adapter.switchActiveRole(role);
+      setCurrentUser(session.user);
+      setCapabilities(session.capabilities);
+      setSessionStatus('authenticated');
+
+      if (!canAccessRoute(currentRoute, session.user.activeRole, session.capabilities)) {
+        window.location.hash = session.capabilities.defaultRoute || getRoleEntryRoute(session.user.activeRole);
+      }
+    } catch (err) {
+      if (err instanceof ApiClientError && err.status === 401) {
+        setCurrentUser(null);
+        setCapabilities(null);
+        setSessionStatus('expired');
+        window.location.hash = '#/login';
+        return;
+      }
+
+      setSessionStatus('authenticated');
+      setErrorMessage(err instanceof Error ? err.message : 'Không thể đổi ngữ cảnh làm việc.');
+    }
   };
 
   const simulateSessionExpired = (
@@ -176,6 +209,7 @@ export function SessionProvider({ children, previewMode = false }: SessionProvid
   ) => {
     adapter.simulateTimeout();
     setCurrentUser(null);
+    setCapabilities(null);
     setWorkspaceChoices(null);
     setSessionNotice(customMessage);
     setSessionStatus('expired');

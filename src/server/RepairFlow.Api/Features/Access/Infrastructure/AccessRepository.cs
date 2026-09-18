@@ -29,6 +29,12 @@ public interface IAccessRepository
         DateTimeOffset accessedAt,
         CancellationToken cancellationToken = default);
 
+    Task<bool> UpdateSessionActiveRoleAsync(
+        Guid sessionId,
+        AccessRole activeRole,
+        DateTimeOffset changedAt,
+        CancellationToken cancellationToken = default);
+
     Task<bool> RevokeSessionAsync(
         string tokenHash,
         DateTimeOffset revokedAt,

@@ -35,7 +35,7 @@ export function AppHeader({
   searchPlaceholder = 'Tìm mã phiếu, SĐT khách, tên khách, thiết bị... (Ctrl + K)',
   searchValue,
   onSearchChange,
-  storeName = 'Minh Tâm Store • TT Điều hành',
+  storeName,
   storeStatus = 'Đang hoạt động',
   notificationCount = 3,
   userName = 'Minh Tâm',
@@ -73,13 +73,6 @@ export function AppHeader({
 
       <div className="topbar-left">
         <h1 className="topbar-page-title">{displayTitle}</h1>
-
-        {storeName && (
-          <span className="topbar-store" title="Chi nhánh / Không gian làm việc">
-            <span className="online-dot" aria-hidden="true" />
-            <span>{storeName}</span>
-          </span>
-        )}
       </div>
 
       <label className="global-search">
@@ -112,13 +105,11 @@ export function AppHeader({
           )}
         </IconButton>
 
-        <div className="topbar-user" title={`${userName} (${userRole})`}>
-          <div className="avatar" aria-label={userName}>{userInitials}</div>
-          <div className="topbar-user__info">
-            <strong>{userName}</strong>
-            <span>{userRole}</span>
+        {userInitials && (
+          <div className="topbar-user" title={userName ? `${userName} (${userRole})` : undefined}>
+            <div className="avatar" aria-label={userName}>{userInitials}</div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

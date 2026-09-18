@@ -59,10 +59,18 @@ public sealed class AccessSessionRepository : IAccessRepository
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT wm.id, wm.workspace_id, wm.user_id, wm.role, wm.status,
-                   w.id, w.name, w.timezone
+                   w.id, w.name, w.timezone,
+                   COALESCE(
+                       array_agg(wmr.role ORDER BY wmr.is_default DESC, wmr.created_at)
+                           FILTER (WHERE wmr.role IS NOT NULL),
+                       ARRAY[wm.role]::varchar[]
+                   ) AS roles
             FROM workspace_memberships wm
             INNER JOIN workspaces w ON w.id = wm.workspace_id
+            LEFT JOIN workspace_membership_roles wmr ON wmr.membership_id = wm.id
             WHERE wm.user_id = @staff_profile_id
+            GROUP BY wm.id, wm.workspace_id, wm.user_id, wm.role, wm.status,
+                     w.id, w.name, w.timezone
             ORDER BY w.name;
             """;
         AddParameter(command, "staff_profile_id", staffProfileId);
@@ -77,6 +85,12 @@ public sealed class AccessSessionRepository : IAccessRepository
                 continue;
             }
 
+            var roles = ParseRoles(reader.GetFieldValue<string[]>(8));
+            if (roles.Count == 0 && TryParseRole(reader.GetString(3), out var fallbackRole))
+            {
+                roles = [fallbackRole];
+            }
+
             memberships.Add(new AccessWorkspaceMembership(
                 new Workspace(reader.GetGuid(5), reader.GetString(6), reader.GetString(7)),
                 new WorkspaceMembership(
@@ -84,7 +98,10 @@ public sealed class AccessSessionRepository : IAccessRepository
                     reader.GetGuid(1),
                     reader.GetGuid(2),
                     role,
-                    status)));
+                    status)
+                {
+                    Roles = roles
+                }));
         }
 
         return memberships;
@@ -100,10 +117,16 @@ public sealed class AccessSessionRepository : IAccessRepository
             SELECT s.id, s.principal_id, s.staff_profile_id, s.workspace_id, s.token_hash,
                    s.issued_at, s.last_accessed_at, s.absolute_expires_at, s.revoked_at,
                    s.revoke_reason, s.ip_hash, s.user_agent,
+                   s.active_role,
                    ap.email, ap.credential_hash, ap.status,
                    u.name, u.phone, u.status,
                    w.name, w.timezone,
-                   wm.id, wm.role, wm.status
+                   wm.id, wm.role, wm.status,
+                   COALESCE(
+                       array_agg(wmr.role ORDER BY wmr.is_default DESC, wmr.created_at)
+                           FILTER (WHERE wmr.role IS NOT NULL),
+                       ARRAY[wm.role]::varchar[]
+                   ) AS roles
             FROM access_sessions s
             INNER JOIN access_principals ap ON ap.id = s.principal_id
             INNER JOIN users u ON u.id = s.staff_profile_id
@@ -111,15 +134,24 @@ public sealed class AccessSessionRepository : IAccessRepository
             INNER JOIN workspace_memberships wm
                 ON wm.workspace_id = s.workspace_id
                AND wm.user_id = s.staff_profile_id
+            LEFT JOIN workspace_membership_roles wmr ON wmr.membership_id = wm.id
             WHERE s.token_hash = @token_hash
+            GROUP BY s.id, s.principal_id, s.staff_profile_id, s.workspace_id, s.token_hash,
+                     s.issued_at, s.last_accessed_at, s.absolute_expires_at, s.revoked_at,
+                     s.revoke_reason, s.ip_hash, s.user_agent, s.active_role,
+                     ap.email, ap.credential_hash, ap.status,
+                     u.name, u.phone, u.status,
+                     w.name, w.timezone,
+                     wm.id, wm.role, wm.status
             LIMIT 1;
             """;
         AddParameter(command, "token_hash", tokenHash);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken) ||
-            !TryParseRole(reader.GetString(21), out var role) ||
-            !TryParseMembershipStatus(reader.GetString(22), out var membershipStatus))
+            !TryParseRole(reader.GetString(22), out var role) ||
+            !TryParseMembershipStatus(reader.GetString(23), out var membershipStatus) ||
+            !TryParseRole(reader.GetString(12), out var activeRole))
         {
             return null;
         }
@@ -136,27 +168,36 @@ public sealed class AccessSessionRepository : IAccessRepository
             ReadNullableTimestamp(reader, 8),
             reader.IsDBNull(9) ? null : reader.GetString(9),
             reader.IsDBNull(10) ? null : reader.GetString(10),
-            reader.IsDBNull(11) ? null : reader.GetString(11));
+            reader.IsDBNull(11) ? null : reader.GetString(11),
+            activeRole);
         var principal = new AccessPrincipal(
             session.PrincipalId,
-            reader.GetString(12),
+            reader.GetString(13),
             session.StaffProfileId,
-            ParseAccountStatus(reader.GetString(14)));
+            ParseAccountStatus(reader.GetString(15)));
         var staffProfile = new StaffProfile(
             session.StaffProfileId,
-            reader.GetString(15),
-            reader.IsDBNull(16) ? null : reader.GetString(16),
-            ParseStaffStatus(reader.GetString(17)));
+            reader.GetString(16),
+            reader.IsDBNull(17) ? null : reader.GetString(17),
+            ParseStaffStatus(reader.GetString(18)));
         var workspace = new Workspace(
             session.WorkspaceId,
-            reader.GetString(18),
-            reader.GetString(19));
+            reader.GetString(19),
+            reader.GetString(20));
+        var roles = ParseRoles(reader.GetFieldValue<string[]>(24));
+        if (roles.Count == 0)
+        {
+            roles = [role];
+        }
         var membership = new WorkspaceMembership(
-            reader.GetGuid(20),
+            reader.GetGuid(21),
             session.WorkspaceId,
             session.StaffProfileId,
             role,
-            membershipStatus);
+            membershipStatus)
+        {
+            Roles = roles
+        };
 
         return new AccessSessionSnapshot(
             session,
@@ -178,11 +219,11 @@ public sealed class AccessSessionRepository : IAccessRepository
                 INSERT INTO access_sessions
                     (id, principal_id, staff_profile_id, workspace_id, token_hash,
                      issued_at, last_accessed_at, absolute_expires_at, revoked_at,
-                     revoke_reason, ip_hash, user_agent)
+                     revoke_reason, ip_hash, user_agent, active_role)
                 VALUES
                     (@id, @principal_id, @staff_profile_id, @workspace_id, @token_hash,
                      @issued_at, @last_accessed_at, @absolute_expires_at, @revoked_at,
-                     @revoke_reason, @ip_hash, @user_agent);
+                     @revoke_reason, @ip_hash, @user_agent, @active_role);
                 """;
             AddParameter(command, "id", session.Id);
             AddParameter(command, "principal_id", session.PrincipalId);
@@ -196,6 +237,7 @@ public sealed class AccessSessionRepository : IAccessRepository
             AddParameter(command, "revoke_reason", session.RevokeReason);
             AddParameter(command, "ip_hash", session.IpHash);
             AddParameter(command, "user_agent", session.UserAgent);
+            AddParameter(command, "active_role", AccessRoleCodec.ToWireValue(session.ActiveRole));
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -235,6 +277,26 @@ public sealed class AccessSessionRepository : IAccessRepository
         AddParameter(command, "last_accessed_at", accessedAt);
         AddParameter(command, "id", sessionId);
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<bool> UpdateSessionActiveRoleAsync(
+        Guid sessionId,
+        AccessRole activeRole,
+        DateTimeOffset changedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE access_sessions
+            SET active_role = @active_role,
+                last_accessed_at = @changed_at
+            WHERE id = @id AND revoked_at IS NULL;
+            """;
+        AddParameter(command, "active_role", AccessRoleCodec.ToWireValue(activeRole));
+        AddParameter(command, "changed_at", changedAt);
+        AddParameter(command, "id", sessionId);
+        return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
     }
 
     public async Task<bool> RevokeSessionAsync(
@@ -298,14 +360,18 @@ public sealed class AccessSessionRepository : IAccessRepository
     };
 
     private static bool TryParseRole(string value, out AccessRole role) =>
-        value switch
-        {
-            "owner" => SetRole(AccessRole.Owner, out role),
-            "manager" => SetRole(AccessRole.Manager, out role),
-            "receptionist" => SetRole(AccessRole.Receptionist, out role),
-            "technician" => SetRole(AccessRole.Technician, out role),
-            _ => SetRole(default, out role, false)
-        };
+        AccessRoleCodec.TryParse(value, out role);
+
+    private static List<AccessRole> ParseRoles(IEnumerable<string> values) =>
+        values
+            .Where(value => AccessRoleCodec.TryParse(value, out _))
+            .Select(value =>
+            {
+                AccessRoleCodec.TryParse(value, out var role);
+                return role;
+            })
+            .Distinct()
+            .ToList();
 
     private static bool TryParseMembershipStatus(string value, out MembershipStatus status) =>
         value switch

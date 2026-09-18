@@ -597,7 +597,7 @@ blockers. The closure record is maintained in
 | --- | --- | --- |
 | C0 | Target runtime, migration runner, adapter boundary, and test harness | `DONE — ACCEPTED` |
 | C1 | Owner/Manager access and application shell | `DONE — c1-007 ACCEPTED` |
-| C2 | Customer, device, and order creation | `READY — area-first plan in plans/c2` |
+| C2 | Customer, device, and order creation | `IN PROGRESS — c2-000 done; area-first plan in plans/v0/c2` |
 | C3 | Intake checklist and evidence | `OPEN FOR IMPLEMENTATION` |
 | C4 | Diagnosis and quotation draft | `OPEN FOR IMPLEMENTATION` |
 | C5 | Quotation publishing and customer decision | `OPEN FOR IMPLEMENTATION` |

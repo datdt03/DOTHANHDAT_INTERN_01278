@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Application;
+using RepairFlow.Api.Features.Access.Domain;
 
 namespace RepairFlow.Api.Features.Access.Api;
 
@@ -61,7 +62,7 @@ public sealed class AccessAuthenticationHandler : AuthenticationHandler<Authenti
                 new Claim(ClaimTypes.Email, resolvedSession.Context.Principal.Email),
                 new Claim("workspace_id", resolvedSession.Context.Workspace.Id.ToString()),
                 new Claim("staff_profile_id", resolvedSession.Context.StaffProfile.Id.ToString()),
-                new Claim(ClaimTypes.Role, resolvedSession.Context.Membership.Role.ToString().ToLowerInvariant())
+                new Claim(ClaimTypes.Role, AccessRoleCodec.ToWireValue(resolvedSession.Context.ActiveRole))
             ],
             Scheme.Name);
 

@@ -97,7 +97,6 @@ export function InternalShell({}: InternalShellProps) {
           onOpenMobileMenu={() => setMobileNavOpen(true)}
           isSidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={handleToggleSidebar}
-          storeName="Minh Tâm Store • TT Điều hành"
           userName={currentUser?.name}
           userRole={currentUser?.roleTitle}
           userInitials={currentUser?.initials}

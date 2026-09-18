@@ -424,6 +424,23 @@ Không gửi riêng một ảnh cho Antigravity mà thiếu screen ID, persona, 
 primary action, quyền và trạng thái. Những thông tin đó là phần bắt buộc của
 handoff.
 
+### 5.4. C2 amendment — multi-role context và area-first boundary
+
+Từ C2, một account có thể có nhiều role trong cùng workspace nhưng vẫn dùng
+một account, một session và một `index.html`. Backend trả `roles[]`,
+`activeRole` và `effectiveCapabilities`; UI không tự suy luận role hoặc quyền
+từ URL/localStorage.
+
+Desktop đặt bộ chọn `Ngữ cảnh làm việc` trong header, sau Workspace context và
+trước Notification/Avatar. Mobile hiển thị cùng control trong vùng account
+toolbar. Control chỉ xuất hiện khi có từ hai role, hỗ trợ keyboard/ARIA và đổi
+role qua API.
+
+C2 tách UI theo business area: Customer records, Device và Repair Order. Mỗi
+area có mount boundary, shell, route, local state và acceptance riêng; shared
+chỉ cung cấp design token, icon, API client/type và primitive. Không yêu cầu
+shared UI flow xuyên cả ba area để nghiệm thu C2.
+
 ## 6. Tiêu chí nghiệm thu visual/handoff
 
 - Mọi frame có ID duy nhất, persona, viewport và trạng thái rõ ràng.

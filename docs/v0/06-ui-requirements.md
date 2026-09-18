@@ -27,7 +27,7 @@ Each repair order is the central workspace. Customer, device, condition, quotati
   active account has been provisioned for them.
 - Staff profiles without accounts have no session; the Manager can still
   operate the UI and select the correct staff profile for each step.
-- Staff write operations are limited by fixed role permissions and assigned
+- Staff write operations are limited by the active role in the assigned role-set and assigned
   repair orders or tasks.
 - Receptionist has a workspace-wide, read-only operational lookup projection so
   they can answer customer calls. This projection does not grant access to

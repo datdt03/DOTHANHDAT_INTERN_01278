@@ -21,7 +21,7 @@ Consumed by: C3 intake/evidence và C2 completion record
 ```text
 Goal: Chứng minh từng C2 business area có thể build/test/verify độc lập.
 Feature: c2-area-acceptance
-Read first: plans/c2/README.md, c2-001, c2-002, c2-003, c2-004,
+Read first: plans/v0/c2/README.md, c2-001, c2-002, c2-003, c2-004,
             plans/v0/c1-access-and-application-shell/c1-007-shared-integration-acceptance.md
 Allowed to change: tests/ui/c2, tests/server C2 acceptance và evidence/docs pointer.
 Do not change: tạo shared UI integration flow hoặc gộp role thành nhiều HTML.

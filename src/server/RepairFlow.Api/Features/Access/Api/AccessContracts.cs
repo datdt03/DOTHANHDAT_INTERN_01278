@@ -15,10 +15,13 @@ public sealed record CurrentSessionResponse(
 
 public sealed record LogoutResponse(bool Revoked);
 
+public sealed record ActiveRoleRequest(string Role);
+
 public sealed record WorkspaceChoice(
     Guid WorkspaceId,
     string WorkspaceName,
-    string Role);
+    string Role,
+    IReadOnlyList<string>? Roles = null);
 
 public sealed record AccessCapabilitiesResponse(
     bool CanViewWorkspace,
@@ -47,4 +50,7 @@ public sealed record AccessContextResponse(
     string Role,
     Guid StaffProfileId,
     string StaffProfileName,
-    AccessCapabilitiesResponse Capabilities);
+    AccessCapabilitiesResponse Capabilities,
+    IReadOnlyList<string> Roles,
+    string ActiveRole,
+    AccessCapabilitiesResponse EffectiveCapabilities);

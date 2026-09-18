@@ -15,6 +15,8 @@ export interface UserProfile {
   id: string;
   name: string;
   role: UserRole;
+  activeRole: UserRole;
+  roles: UserRole[];
   roleTitle: string;
   email: string;
   initials: string;
@@ -50,6 +52,8 @@ export interface SessionContext {
   user: UserProfile;
   expiresAt: string;
   capabilities: RoleCapabilities;
+  activeRole: UserRole;
+  roles: UserRole[];
 }
 
 export interface LoginCredentials {
@@ -62,6 +66,7 @@ export interface WorkspaceChoice {
   workspaceId: string;
   workspaceName: string;
   role: string;
+  roles?: string[];
 }
 
 export interface LoginResult {
@@ -78,17 +83,44 @@ export interface ServerAccessContext {
   workspaceId: string;
   workspaceName: string;
   role: string;
+  activeRole?: string;
+  roles?: string[];
   staffProfileId: string;
   staffProfileName: string;
+  capabilities?: ServerAccessCapabilities;
+  effectiveCapabilities?: ServerAccessCapabilities;
 }
 
-// Development/demo accounts mirror the development database seed. The product still
-// supports the owner role, but owner is intentionally not provisioned in this test set.
+export interface ServerAccessCapabilities {
+  canViewWorkspace: boolean;
+  canManageWorkspace: boolean;
+  canManageStaff: boolean;
+  canManageCredentials: boolean;
+  canManageAssignments: boolean;
+  canViewWorkspaceOperations: boolean;
+  canViewOperationalProjection: boolean;
+  canViewAssignedWork: boolean;
+  canViewTechnicalDetails: boolean;
+  canViewAudit: boolean;
+  canWriteIntake: boolean;
+  canWriteDiagnosis: boolean;
+  canWriteQuoteDraft: boolean;
+  canWriteRepair: boolean;
+  canWriteQualityCheck: boolean;
+  canWriteHandover: boolean;
+  writesRequireAssignment: boolean;
+}
+
+// Preview accounts mirror the development access shape. The manager preview account
+// intentionally includes two roles so the active-role boundary can be exercised
+// without creating a second browser session.
 export const DEMO_ACCOUNTS: Record<DevelopmentRole, UserProfile> = {
   manager: {
     id: 'staff-001',
     name: 'Quản lý RepairFlow',
     role: 'manager',
+    activeRole: 'manager',
+    roles: ['manager', 'technician'],
     roleTitle: 'Quản lý vận hành',
     email: 'manager@repairflow.vn',
     initials: 'QL',
@@ -99,6 +131,8 @@ export const DEMO_ACCOUNTS: Record<DevelopmentRole, UserProfile> = {
     id: 'staff-002',
     name: 'Lễ tân RepairFlow',
     role: 'receptionist',
+    activeRole: 'receptionist',
+    roles: ['receptionist'],
     roleTitle: 'Lễ tân tiếp nhận',
     email: 'receptionist@repairflow.vn',
     initials: 'LT',
@@ -109,6 +143,8 @@ export const DEMO_ACCOUNTS: Record<DevelopmentRole, UserProfile> = {
     id: 'staff-003',
     name: 'Kỹ thuật viên RepairFlow',
     role: 'technician',
+    activeRole: 'technician',
+    roles: ['technician'],
     roleTitle: 'Kỹ thuật viên',
     email: 'technician@repairflow.vn',
     initials: 'KT',
@@ -139,16 +175,81 @@ export function getInitials(name: string): string {
 }
 
 export function mapServerAccessContextToUserProfile(context: ServerAccessContext): UserProfile {
-  const normalizedRole = (context.role?.toLowerCase() || 'manager') as UserRole;
+  const activeRole = normalizeRole(context.activeRole || context.role);
+  const roles = normalizeRoles(context.roles, activeRole);
   return {
     id: context.staffProfileId || context.accountId,
     name: context.staffProfileName || context.email,
-    role: normalizedRole,
-    roleTitle: getRoleTitle(normalizedRole),
+    role: activeRole,
+    activeRole,
+    roles,
+    roleTitle: getRoleTitle(activeRole),
     email: context.email,
     initials: getInitials(context.staffProfileName || context.email),
     storeName: context.workspaceName || 'Minh Tâm Store',
     workspaceId: context.workspaceId,
+  };
+}
+
+function normalizeRole(value?: string): UserRole {
+  switch (value?.toLowerCase()) {
+    case 'owner':
+    case 'manager':
+    case 'receptionist':
+    case 'technician':
+      return value.toLowerCase() as UserRole;
+    default:
+      return 'manager';
+  }
+}
+
+function normalizeRoles(values: string[] | undefined, fallback: UserRole): UserRole[] {
+  const roles = (values || [])
+    .map((value) => normalizeRole(value))
+    .filter((value, index, collection) => collection.indexOf(value) === index);
+  return roles.length > 0 ? roles : [fallback];
+}
+
+function mapServerCapabilities(
+  role: UserRole,
+  serverCapabilities?: ServerAccessCapabilities,
+): RoleCapabilities {
+  const presentationDefaults = getRoleCapabilities(role);
+  if (!serverCapabilities) {
+    return presentationDefaults;
+  }
+
+  return {
+    ...presentationDefaults,
+    canManageSettings: serverCapabilities.canManageWorkspace,
+    canAssignStaff: serverCapabilities.canManageAssignments,
+    canViewAllOrders:
+      serverCapabilities.canViewWorkspaceOperations ||
+      serverCapabilities.canViewOperationalProjection,
+    canEditDiagnosis: serverCapabilities.canWriteDiagnosis,
+    canEditQuote: serverCapabilities.canWriteQuoteDraft,
+    canPerformRepair: serverCapabilities.canWriteRepair,
+    canPerformQC: serverCapabilities.canWriteQualityCheck,
+    canHandover: serverCapabilities.canWriteHandover,
+    isReadOnlyLookup:
+      serverCapabilities.canViewOperationalProjection &&
+      !serverCapabilities.canWriteIntake &&
+      !serverCapabilities.canWriteHandover,
+    isAssignedOnly: serverCapabilities.writesRequireAssignment,
+  };
+}
+
+function mapServerSession(context: ServerAccessContext, expiresAt: string): SessionContext {
+  const user = mapServerAccessContextToUserProfile(context);
+  return {
+    user,
+    expiresAt,
+    capabilities: mapServerCapabilities(
+      user.activeRole,
+      context.effectiveCapabilities || context.capabilities,
+    ),
+    activeRole: user.activeRole,
+    roles: user.roles,
   };
 }
 
@@ -226,6 +327,7 @@ const DEVELOPMENT_PASSWORD = 'dat123456';
 export interface AccessApi {
   login(credentials: LoginCredentials): Promise<LoginResult>;
   quickLogin(role: UserRole): Promise<LoginResult>;
+  switchActiveRole(role: UserRole): Promise<SessionContext>;
   logout(): Promise<void>;
   getCurrentSession(): Promise<SessionContext | null>;
   simulateTimeout(): void;
@@ -251,12 +353,7 @@ export class RealAccessAdapter implements AccessApi {
         }),
       });
 
-      const user = mapServerAccessContextToUserProfile(response.data.context);
-      const session: SessionContext = {
-        user,
-        expiresAt: response.data.expiresAt,
-        capabilities: getRoleCapabilities(user.role),
-      };
+      const session = mapServerSession(response.data.context, response.data.expiresAt);
 
       return {
         success: true,
@@ -327,12 +424,7 @@ export class RealAccessAdapter implements AccessApi {
         method: 'GET',
       });
 
-      const user = mapServerAccessContextToUserProfile(response.data.context);
-      return {
-        user,
-        expiresAt: response.data.expiresAt,
-        capabilities: getRoleCapabilities(user.role),
-      };
+      return mapServerSession(response.data.context, response.data.expiresAt);
     } catch (err) {
       if (err instanceof ApiClientError) {
         // 401 with authentication_required means no active session
@@ -363,6 +455,21 @@ export class RealAccessAdapter implements AccessApi {
     });
   }
 
+  async switchActiveRole(role: UserRole): Promise<SessionContext> {
+    const response = await this.client.request<{
+      data: {
+        context: ServerAccessContext;
+        expiresAt: string;
+      };
+      meta: { requestId: string };
+    }>('/api/access/active-role', {
+      method: 'POST',
+      body: JSON.stringify({ role }),
+    });
+
+    return mapServerSession(response.data.context, response.data.expiresAt);
+  }
+
   simulateTimeout(): void {
     // Session timeout is enforced by server cookie and backend expiry
   }
@@ -389,6 +496,8 @@ export class MockAccessAdapter implements AccessApi {
       user: matched,
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS).toISOString(),
       capabilities: getRoleCapabilities(matched.role),
+      activeRole: matched.activeRole,
+      roles: matched.roles,
     };
 
     try {
@@ -410,6 +519,8 @@ export class MockAccessAdapter implements AccessApi {
       user,
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS).toISOString(),
       capabilities: getRoleCapabilities(user.role),
+      activeRole: user.activeRole,
+      roles: user.roles,
     };
 
     try {
@@ -422,6 +533,28 @@ export class MockAccessAdapter implements AccessApi {
       success: true,
       session,
     };
+  }
+
+  async switchActiveRole(role: UserRole): Promise<SessionContext> {
+    const current = await this.getCurrentSession();
+    if (!current || !current.user.roles.includes(role)) {
+      throw new Error('Vai trò này chưa được cấp trong không gian làm việc hiện tại.');
+    }
+
+    const user = {
+      ...current.user,
+      role,
+      activeRole: role,
+      roleTitle: getRoleTitle(role),
+    };
+    const session: SessionContext = {
+      ...current,
+      user,
+      activeRole: role,
+      capabilities: getRoleCapabilities(role),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    return session;
   }
 
   async logout(): Promise<void> {
@@ -452,8 +585,18 @@ export class MockAccessAdapter implements AccessApi {
         return null;
       }
 
-      // Ensure fresh capabilities mapping
-      parsed.capabilities = getRoleCapabilities(parsed.user.role);
+      const activeRole = parsed.user.activeRole || parsed.user.role;
+      const roles = parsed.user.roles?.length ? parsed.user.roles : [activeRole];
+      parsed.user = {
+        ...parsed.user,
+        role: activeRole,
+        activeRole,
+        roles,
+        roleTitle: getRoleTitle(activeRole),
+      };
+      parsed.activeRole = activeRole;
+      parsed.roles = roles;
+      parsed.capabilities = getRoleCapabilities(activeRole);
       return parsed;
     } catch {
       return null;

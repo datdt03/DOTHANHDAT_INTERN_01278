@@ -70,8 +70,10 @@ health endpoint, migration runner và test baseline bằng ASP.NET Core/.NET t�
 
 ### Mô hình truy cập MVP
 
-RepairFlow phục vụ một cửa hàng nhỏ nên hỗ trợ account theo nhu cầu, với phân
-quyền cố định và giới hạn theo workspace/assignment:
+RepairFlow phục vụ một cửa hàng nhỏ nên hỗ trợ account theo nhu cầu, với tập
+role cố định và giới hạn theo workspace/assignment. Một membership có thể được
+cấp nhiều role trong cùng workspace; session luôn có một `active_role` để xác
+định ngữ cảnh nghiệp vụ hiện tại.
 
 - **Owner**, **Manager**, **Receptionist** và **Technician** có thể được cấp
   account để mở giao diện nội bộ và gọi API trong phạm vi được phép.
@@ -142,7 +144,8 @@ Chi tiết scope account và permission tối thiểu nằm trong
 - Mọi truy vấn dữ liệu nghiệp vụ phải lọc theo `workspace_id`.
 - Hồ sơ nhân sự bị vô hiệu hóa không được nhận phiếu mới; lịch sử thao tác cũ vẫn phải giữ lại.
 - Không ghi đè `user_id` của người đã thực hiện một hành động.
-- Chỉ access principal active có role và membership hợp lệ được gọi API nội bộ.
+- Chỉ access principal active có role-set và membership hợp lệ được gọi API nội
+  bộ. `active_role` phải thuộc role-set của membership hiện tại.
 - Owner/Manager có thể xem dữ liệu vận hành trong workspace theo quyền;
   Receptionist được xem operational projection toàn workspace nhưng thao tác
   ghi và dữ liệu kỹ thuật chi tiết vẫn bị giới hạn bởi role/assignment.
@@ -231,13 +234,25 @@ workspace_memberships
     id
     workspace_id
     user_id           # ID hồ sơ nhân sự
-    role
+    role              # default role để tương thích/backfill
     status
     invited_at
     joined_at
+
+workspace_membership_roles
+    id
+    membership_id
+    role
+    is_default
+    created_at
 ```
 
-Giữ `workspace_memberships` để xác định hồ sơ nhân sự thuộc workspace và vai trò vận hành. Membership không tự động tạo account; access principal và credential/session được quản lý bởi access module riêng và có thể mapping tới staff profile khi cần; không lưu password trong `users`.
+Giữ `workspace_memberships` để xác định hồ sơ nhân sự thuộc workspace và
+trạng thái membership. `workspace_memberships.role` là default role dùng cho
+backfill/tương thích; quyền được cấp chính thức nằm trong
+`workspace_membership_roles`, unique theo `(membership_id, role)` và tối đa một
+role mặc định. Access principal/session được quản lý bởi access module riêng;
+session lưu `active_role` nhưng không tạo identity mới khi đổi role.
 
 ### Khách hàng và thiết bị
 

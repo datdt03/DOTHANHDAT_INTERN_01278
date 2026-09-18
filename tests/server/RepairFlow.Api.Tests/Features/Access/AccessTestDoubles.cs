@@ -116,6 +116,27 @@ public sealed class TestAccessRepository : IAccessRepository
             (_, item) => item with
             {
                 Membership = item.Membership with { Status = status }
+        });
+    }
+
+    public void SetMembershipRoles(Guid membershipId, params AccessRole[] roles)
+    {
+        if (roles.Length == 0)
+        {
+            throw new ArgumentException("At least one role is required.", nameof(roles));
+        }
+
+        var distinctRoles = roles.Distinct().ToArray();
+        _memberships.AddOrUpdate(
+            membershipId,
+            _ => throw new InvalidOperationException("The test membership does not exist."),
+            (_, item) => item with
+            {
+                Membership = item.Membership with
+                {
+                    Role = distinctRoles[0],
+                    Roles = distinctRoles
+                }
             });
     }
 
@@ -189,6 +210,26 @@ public sealed class TestAccessRepository : IAccessRepository
             _ => throw new InvalidOperationException("The test session does not exist."),
             (_, session) => session with { LastAccessedAt = accessedAt });
         return Task.CompletedTask;
+    }
+
+    public Task<bool> UpdateSessionActiveRoleAsync(
+        Guid sessionId,
+        AccessRole activeRole,
+        DateTimeOffset changedAt,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_sessions.TryGetValue(sessionId, out var session) || session.RevokedAt is not null)
+        {
+            return Task.FromResult(false);
+        }
+
+        _sessions[sessionId] = session with
+        {
+            ActiveRole = activeRole,
+            LastAccessedAt = changedAt
+        };
+        return Task.FromResult(true);
     }
 
     public Task<bool> RevokeSessionAsync(

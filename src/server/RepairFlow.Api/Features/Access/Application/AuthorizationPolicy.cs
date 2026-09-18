@@ -39,7 +39,7 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
                 hideResource: true);
         }
 
-        var role = context.Membership.Role;
+        var role = context.ActiveRole;
         var isOwner = role == AccessRole.Owner;
         var isManager = role == AccessRole.Manager;
         var isManagement = isOwner || isManager;

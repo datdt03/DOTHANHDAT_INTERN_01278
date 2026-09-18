@@ -22,6 +22,32 @@ public enum AccessRole
     Technician
 }
 
+public static class AccessRoleCodec
+{
+    public static string ToWireValue(AccessRole role) => role switch
+    {
+        AccessRole.Owner => "owner",
+        AccessRole.Manager => "manager",
+        AccessRole.Receptionist => "receptionist",
+        AccessRole.Technician => "technician",
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unknown access role.")
+    };
+
+    public static bool TryParse(string? value, out AccessRole role)
+    {
+        role = value?.Trim().ToLowerInvariant() switch
+        {
+            "owner" => AccessRole.Owner,
+            "manager" => AccessRole.Manager,
+            "receptionist" => AccessRole.Receptionist,
+            "technician" => AccessRole.Technician,
+            _ => default
+        };
+
+        return value?.Trim().ToLowerInvariant() is "owner" or "manager" or "receptionist" or "technician";
+    }
+}
+
 public enum MembershipStatus
 {
     Invited,
@@ -49,7 +75,12 @@ public sealed record WorkspaceMembership(
     Guid WorkspaceId,
     Guid StaffProfileId,
     AccessRole Role,
-    MembershipStatus Status);
+    MembershipStatus Status)
+{
+    public IReadOnlyList<AccessRole> Roles { get; init; } = [Role];
+
+    public bool HasRole(AccessRole role) => Roles.Contains(role);
+}
 
 public sealed record AccessAccount(
     AccessPrincipal Principal,
@@ -72,7 +103,8 @@ public sealed record AccessSession(
     DateTimeOffset? RevokedAt,
     string? RevokeReason,
     string? IpHash,
-    string? UserAgent);
+    string? UserAgent,
+    AccessRole ActiveRole);
 
 public sealed record AccessSessionSnapshot(
     AccessSession Session,
@@ -92,6 +124,8 @@ public sealed record AccessContext(
     StaffProfile StaffProfile,
     AttributedStaffContext? AttributedStaff)
 {
+    public AccessRole ActiveRole { get; init; } = Membership.Role;
+
     public bool IsAuthenticated => true;
 
     public static bool TryCreate(
@@ -100,20 +134,25 @@ public sealed record AccessContext(
         WorkspaceMembership? membership,
         StaffProfile? staffProfile,
         AttributedStaffContext? attributedStaff,
-        out AccessContext? context)
+        out AccessContext? context,
+        AccessRole? activeRole = null)
     {
         context = null;
+
+        var resolvedActiveRole = activeRole ?? membership?.Role;
 
         if (principal is null ||
             workspace is null ||
             membership is null ||
             staffProfile is null ||
+            resolvedActiveRole is null ||
             principal.Status != AccountStatus.Active ||
             staffProfile.Status != StaffProfileStatus.Active ||
             membership.Status != MembershipStatus.Active ||
             principal.StaffProfileId != staffProfile.Id ||
             membership.StaffProfileId != staffProfile.Id ||
-            membership.WorkspaceId != workspace.Id)
+            membership.WorkspaceId != workspace.Id ||
+            !membership.HasRole(resolvedActiveRole.Value))
         {
             return false;
         }
@@ -123,7 +162,10 @@ public sealed record AccessContext(
             workspace,
             membership,
             staffProfile,
-            attributedStaff);
+            attributedStaff)
+        {
+            ActiveRole = resolvedActiveRole.Value
+        };
         return true;
     }
 }

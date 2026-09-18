@@ -38,6 +38,10 @@ generated bundle manually.
 - Permission enforcement, workflow transitions, diagnosis, price calculation,
   and database access belong to the ASP.NET Core API, not the browser.
 - Keep internal shell and customer-link shell as separate route boundaries.
+- C1 keeps the shared internal shell as a compatibility boundary. Starting with
+  C2, each business area owns its mount boundary, local shell, route and state;
+  C2 areas may compose shared primitives but must not import
+  `RoleAwareNavigationShell` or depend on another business area's state.
 - A network-driven screen MUST represent 5 mandatory states: loading (Skeleton),
   empty (icon + Vietnamese copy + CTA), error (user-friendly + retry), unavailable (preview fallback),
   and ready/success.
@@ -59,11 +63,13 @@ generated bundle manually.
   - Giao diện chính: `Montserrat`, sans-serif.
   - Mã phiếu (`RF-2026-XXXX`), Serial máy, số tiền VNĐ: bắt buộc dùng `JetBrains Mono` (`.rf-font-mono` hoặc component `<OrderCode />`).
 - **Thành phần khung & Component Suite dùng chung (Unified Shared Components)**:
-  - Mọi màn hình nội bộ **PHẢI** dùng chung bộ khung từ `src/ui/shared/components`:
+  - C1 shell dùng bộ khung từ `src/ui/shared/components`:
     - `<AppHeader />`: Headerbar đồng bộ (Breadcrumb, Search, Store Status, Notification, Avatar).
     - `<AppSidebar />`: Sidebar điều hướng chuẩn (Role-aware tabs, Workspace switcher, Workshop capacity).
     - `<AppFooter />`: Chân trang hệ thống thống nhất.
-    - **Bộ Component SB Admin 2 style**: `<StatCard />`, `<CardPanel />`, `<PageHeader />`, `<DataTable />`, `<FormGroup />`, `<FormInput />`, `<FormSelect />`, `<Alert />`, `<Modal />`, `<ProgressStepper />`, `<EmptyState />`.
+  - C2 business area sở hữu shell riêng và chỉ tái sử dụng primitive, token,
+    icon, API client/type; không dùng shared shell làm business state boundary.
+  - **Bộ Component SB Admin 2 style**: `<StatCard />`, `<CardPanel />`, `<PageHeader />`, `<DataTable />`, `<FormGroup />`, `<FormInput />`, `<FormSelect />`, `<Alert />`, `<Modal />`, `<ProgressStepper />`, `<EmptyState />`.
   - Mọi màn hình khách hàng dùng chung `<CustomerHeader />` và `<CustomerFooter />`.
 - **Quy tắc đàn hồi Zoom (Zoom Resilience - 110% Baseline, 125% - 150% Reflow)**:
   - Mặc định lấy giao diện web tại **110% zoom** làm tiêu chuẩn nhìn đẹp mắt, cân đối.
@@ -95,6 +101,9 @@ generated bundle manually.
 - A feature owns its local render, event handlers, and presentation state.
 - Prefer small named components and one-way dependencies: feature → shared,
   never shared → feature.
+- C2 areas implement the `C2AreaMountProps` contract from
+  `app/area-boundary.ts`; access context is passed in, not inferred from the
+  URL or local storage.
 - Use semantic HTML and accessible labels. Use `<button>` for actions and links
   for navigation; do not make a `<div>` interactive.
 - Do not put secrets, tokens, or real customer data in the UI repository.

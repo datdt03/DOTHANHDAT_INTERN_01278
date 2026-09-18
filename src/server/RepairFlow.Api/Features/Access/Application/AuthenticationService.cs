@@ -192,7 +192,8 @@ public sealed class AuthenticationService
             RevokedAt: null,
             RevokeReason: null,
             AccessSecurity.HashIdentifier(ipAddress),
-            AccessSecurity.NormalizeUserAgent(userAgent, _options.UserAgentMaxLength));
+            AccessSecurity.NormalizeUserAgent(userAgent, _options.UserAgentMaxLength),
+            selectedMembership.Membership.Role);
 
         await _repository.CreateSessionAsync(session, cancellationToken);
         _rateLimiter.RecordSuccess(rateLimitKey);

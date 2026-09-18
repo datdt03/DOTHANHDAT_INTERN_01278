@@ -11,6 +11,7 @@ import { ReceptionistTodayLookupPlaceholder } from '../features/receptionist/tod
 import { TechnicianMyWorkPlaceholder } from '../features/technician/my-work-placeholder';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
 import { RoleNavigationBanner } from '../features/access/role-navigation';
+import { RoleContextSwitcher } from '../features/access/role-context-switcher';
 import {
   canAccessRoute,
   getRoleEntryRoute,
@@ -158,6 +159,7 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
         userRole={currentUser?.roleTitle}
         userInitials={currentUser?.initials}
         currentRole={currentRole}
+        capabilities={capabilities}
         onLogout={logout}
       />
 
@@ -168,10 +170,10 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
           onOpenMobileMenu={() => setMobileNavOpen(true)}
           isSidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={handleToggleSidebar}
-          storeName="Minh Tâm Store • TT Điều hành"
           userName={currentUser?.name}
           userRole={currentUser?.roleTitle}
           userInitials={currentUser?.initials}
+          actions={<RoleContextSwitcher />}
         />
 
         {/* Main Content Outlet with Notification/Feedback Slot */}
@@ -185,7 +187,7 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
           )}
 
           {/* Role Context & Capability Indicator */}
-          <RoleNavigationBanner showDevSwitcher={previewMode} />
+          <RoleNavigationBanner />
 
           {/* Dynamic View by Route & Role Permission */}
           {renderRouteContent()}

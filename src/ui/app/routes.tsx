@@ -87,8 +87,15 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     );
   }
 
-  // 3c. Unauthenticated / Expired / Submitting State -> Render Access Shell (Login boundary for C1-004)
-  if (!isAuthenticated || sessionStatus === 'unauthenticated' || sessionStatus === 'expired' || sessionStatus === 'submitting') {
+  // 3c. Unauthenticated / Expired / Login Submitting State -> Render Access Shell.
+  // Keep the application shell mounted while an existing session changes role;
+  // active-role switching is not a logout/login transition.
+  const isRoleSwitching = sessionStatus === 'submitting' && currentUser !== null;
+  if (
+    (!isAuthenticated && !isRoleSwitching) ||
+    sessionStatus === 'unauthenticated' ||
+    sessionStatus === 'expired'
+  ) {
     return <AccessShell />;
   }
 

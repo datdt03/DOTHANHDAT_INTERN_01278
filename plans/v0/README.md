@@ -2,7 +2,7 @@
 
 > Status: ACTIVE
 >
-> Current execution: C1 complete; c1-001 through c1-007 are complete; C2 plan is READY and implementation is next.
+> Current execution: C1 complete; c1-001 through c1-007 are complete; c2-000 is DONE and c2-001 is next.
 >
 > Requirements baseline: Gate D0 closed on 2026-09-16.
 
@@ -26,7 +26,7 @@ Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và da
 | --- | --- | --- | --- |
 | C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
 | C1 | Access, authentication, authorization và application shell | DONE | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) |
-| C2 | Customer, device và repair order | READY | [C2 area-first implementation plan](../c2/README.md) |
+| C2 | Customer, device và repair order | IN PROGRESS — c2-000 DONE; c2-001 next | [C2 area-first implementation plan](./c2/README.md) |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
 | C5 | Quotation publishing và customer decision | PLANNED | Chưa tạo task chi tiết |

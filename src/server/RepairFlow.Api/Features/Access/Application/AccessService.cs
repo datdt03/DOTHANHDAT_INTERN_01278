@@ -5,16 +5,28 @@ namespace RepairFlow.Api.Features.Access.Application;
 
 public sealed class AccessService
 {
-    public AccessContextResponse ToSafeResponse(AccessContext context) =>
-        new(
+    public AccessContextResponse ToSafeResponse(AccessContext context)
+    {
+        var capabilities = ToCapabilitiesResponse(CapabilityProjection.For(context));
+        var roles = context.Membership.Roles
+            .Distinct()
+            .Select(AccessRoleCodec.ToWireValue)
+            .ToArray();
+        var activeRole = AccessRoleCodec.ToWireValue(context.ActiveRole);
+
+        return new(
             context.Principal.Id,
             context.Principal.Email,
             context.Workspace.Id,
             context.Workspace.Name,
-            context.Membership.Role.ToString().ToLowerInvariant(),
+            activeRole,
             context.StaffProfile.Id,
             context.StaffProfile.Name,
-            ToCapabilitiesResponse(CapabilityProjection.For(context)));
+            capabilities,
+            roles,
+            activeRole,
+            capabilities);
+    }
 
     private static AccessCapabilitiesResponse ToCapabilitiesResponse(AccessCapabilities capabilities) =>
         new(

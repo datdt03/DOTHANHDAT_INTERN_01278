@@ -13,6 +13,7 @@ namespace RepairFlow.Api.Tests;
 public sealed class ApiTestFactory : WebApplicationFactory<Program>
 {
     public AccessFixtureSet Fixture { get; } = AccessFixture.Create();
+    public TestAccessRepository Repository { get; private set; } = null!;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -26,6 +27,7 @@ public sealed class ApiTestFactory : WebApplicationFactory<Program>
             };
             var credentialHasher = new CredentialHasher(Options.Create(testOptions));
             var repository = TestAccessRepository.Create(Fixture, credentialHasher);
+            Repository = repository;
 
             services.RemoveAll<IAccessRepository>();
             services.AddSingleton<IAccessRepository>(repository);
