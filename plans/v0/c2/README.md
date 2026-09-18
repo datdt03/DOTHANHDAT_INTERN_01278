@@ -72,8 +72,9 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
   tin bàn giao cơ bản cần để xác nhận phiếu.
 - C2 giữ customer-reported issue, device identity, phụ kiện/tình trạng bàn giao
   dạng thông tin ban đầu nếu contract đã có.
-- C3 sở hữu checklist hiện trạng chi tiết, ảnh/evidence, intake completion và
-  điều kiện chuyển sang `diagnosing`.
+- C2-007/C2-008 cung cấp điểm thu và handoff ảnh hiện trạng ban đầu trong
+  workflow. C3 sở hữu evidence persistence/validation, checklist chi tiết,
+  intake completion và điều kiện chuyển sang `diagnosing`.
 - C2 không tự tạo server-side draft hoặc chuyển trạng thái sang diagnosis.
 
 ## Work sequence
@@ -83,12 +84,22 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
 | 000 | [c2-000-shared-multi-role-ui-boundary.md](./c2-000-shared-multi-role-ui-boundary.md) | Codex + Antigravity | Multi-role context và area boundary | DONE |
 | 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | API nền và atomic `CreateRepairIntake` | DONE — implementation verified |
 | 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Một `repair-intake-workflow` ba giai đoạn | READY — replan |
-| 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Supporting device/customer history views | DEFERRED, không block intake |
+| 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Historical supporting device/customer history views | SUPERSEDED - không triển khai |
 | 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và mở lại intake workflow | READY — replan |
 | 005 | [c2-005-shared-area-acceptance.md](./c2-005-shared-area-acceptance.md) | Codex + Antigravity | Acceptance workflow + API | READY — replan |
+| 006 | [c2-006-antigravity-receptionist-customer-directory.md](./c2-006-antigravity-receptionist-customer-directory.md) | Antigravity | Danh sách/hồ sơ khách hàng read-only cho Lễ tân | READY |
+| 007 | [c2-007-codex-intake-evidence-foundation.md](./c2-007-codex-intake-evidence-foundation.md) | Codex | Evidence API/storage boundary cho ảnh hiện trạng | READY |
+| 008 | [c2-008-antigravity-intake-evidence-ui.md](./c2-008-antigravity-intake-evidence-ui.md) | Antigravity | Thu ảnh hiện trạng trong Giai đoạn 2 và handoff C3 | READY |
+| 009 | [c2-009-shared-intake-evidence-acceptance.md](./c2-009-shared-intake-evidence-acceptance.md) | Codex + Antigravity | Acceptance ảnh hiện trạng và boundary C2/C3 | READY |
 
-C2-003 chỉ được kích hoạt khi có nhu cầu tra cứu/quản trị riêng. Nó không được
-đưa lại mô hình bắt người dùng đi qua Customer page rồi Device page để tạo order.
+C2-003 là historical plan đã bị supersede, không được kích hoạt hoặc viết đè.
+Nhu cầu danh sách khách hàng của Lễ tân được thực hiện riêng trong c2-006.
+c2-006 không được đưa lại mô hình bắt người dùng đi qua Customer page rồi Device
+page để tạo order; intake chính vẫn thuộc c2-002.
+
+c2-007 phải hoàn tất contract/API trước c2-008. c2-008 là amendment UI cho
+c2-002, chỉ thu ảnh trong memory và handoff sau khi order đã tồn tại; C3 vẫn là
+owner của evidence completion và status transition.
 
 ## Scope
 
@@ -110,7 +121,8 @@ C2-003 chỉ được kích hoạt khi có nhu cầu tra cứu/quản trị riê
 ## Out of scope
 
 - Customer/Device CRUD page là đường đi chính của intake.
-- C3 intake checklist chi tiết, ảnh/evidence và intake completion.
+- C3 checklist chi tiết, evidence persistence/completion và intake transition;
+  initial photo capture/handoff được định nghĩa trong c2-007/c2-008.
 - C4 diagnosis, quotation và calculation.
 - C5 customer public link, OTP và customer decision.
 - C9 dashboard KPI và operational reporting đầy đủ.

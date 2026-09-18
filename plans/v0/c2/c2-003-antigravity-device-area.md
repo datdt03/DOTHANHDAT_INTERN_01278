@@ -6,7 +6,7 @@ Title: Antigravity supporting lookup, profile và history views
 
 Owner: Antigravity
 
-Status: DEFERRED
+Status: SUPERSEDED
 
 Revision: 2
 
@@ -14,14 +14,24 @@ Depends on: c2-001-codex-customer-device-order-api.md, c2-002-antigravity-custom
 
 Produces: Các view tra cứu/profile/history phụ trợ khi có nhu cầu quản trị
 
-Consumed by: c2-004, C3/C9 khi cần history projection
+Consumed by: none (historical; replaced by c2-006)
 
-## Quyết định
+Superseded by: c2-006-antigravity-receptionist-customer-directory.md
+
+## Historical note
+
+Plan này không còn là active execution plan. Không triển khai bằng cách đổi
+scope hoặc đánh dấu lại nội dung trong file này. Nhu cầu hiện tại của Lễ tân
+được tách thành c2-006 với phạm vi hẹp hơn: danh sách và hồ sơ khách hàng
+read-only, không mở lại mô hình Customer → Device → Order cho intake.
+
+## Quyết định lịch sử
 
 Không triển khai Device area độc lập như một bước bắt buộc của intake. Tại luồng
 chính, nhân viên luôn nhập thiết bị được bàn giao trong `repair-intake-workflow`.
-Plan này chỉ được kích hoạt khi có yêu cầu rõ ràng về tra cứu, profile hoặc lịch
-sử; nó không block C2 và không được tạo lại navigation Customer → Device → Order.
+Đây là quyết định của plan cũ; plan đã được supersede bởi c2-006 cho nhu cầu
+customer directory read-only của Lễ tân. Không dùng file này để tạo task mới,
+không block C2 và không tạo lại navigation Customer → Device → Order.
 
 ## Task context
 
@@ -30,13 +40,13 @@ Goal: Cung cấp view tra cứu/profile/history phụ trợ mà không làm phì
 Feature: customer-device-supporting-views
 Read first: src/ui/AGENTS.md, plans/v0/c2/README.md, c2-001, c2-002,
             docs/v0/06-ui-requirements.md
-Allowed to change: supporting feature components và tests riêng khi plan được activate.
+Allowed to change: none; historical reference only.
 Do not change: repair-intake workflow, C3 evidence, role-specific shell hoặc backend
                business rule.
-Completion criteria: chỉ có view phụ trợ cần thiết, không biến thành bắt buộc cho intake.
+Completion criteria: not applicable; execution is replaced by c2-006.
 ```
 
-## Future scope khi activate
+## Historical future scope (not active)
 
 - Customer profile/history với order links an toàn.
 - Device profile/history theo serial/identifier.
@@ -51,7 +61,7 @@ Completion criteria: chỉ có view phụ trợ cần thiết, không biến th�
 - Intake checklist/photo/evidence.
 - Diagnosis/quote/repair.
 
-## Acceptance khi activate
+## Historical acceptance (not active)
 
 - [ ] View phụ trợ mount độc lập và không được import vào primary intake để quản lý
       business state.

@@ -413,8 +413,11 @@ The form includes the fields frozen by the API/domain contract, such as:
 - Handover condition, received accessories and handover notes.
 - Customer-reported issue and intake notes.
 
-Detailed condition checklist, photos/evidence and intake completion remain in
-the C3 boundary.
+Detailed condition checklist, evidence persistence/validation and intake
+completion remain in the C3 boundary. The intake surface may collect initial
+condition photos during Stage 2 as local evidence candidates; c2-007/c2-008
+hand them to the C3 evidence boundary after the order exists. Stage 2 must not
+complete evidence or transition the order to `diagnosing`.
 
 #### Stage 3: Review and confirm
 
@@ -444,6 +447,11 @@ The MVP requires at least one condition photo before intake can be completed.
 There is no upper limit on the number of photos. Photos display as thumbnails,
 support captions, and can be marked important. The UI may guide the user to
 capture the front, back, edges, and damaged area without requiring every angle.
+
+The initial photo capture entry point may be shown in Stage 2 for the person
+receiving the device. C3 remains responsible for persisting and validating the
+evidence, enforcing the minimum-photo rule, and deciding when the order may
+move to diagnosis.
 
 If the minimum checklist or evidence is incomplete, show:
 

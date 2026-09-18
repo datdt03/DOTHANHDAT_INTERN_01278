@@ -91,7 +91,7 @@ export function AppHeader({
 
         <PrimaryButton
           className="topbar-create-btn"
-          onClick={onCreateOrder || (() => { window.location.hash = '#/orders'; })}
+          onClick={onCreateOrder || (() => { window.location.hash = '#/repair-intake/new'; })}
           title="Tạo phiếu sửa chữa mới"
         >
           <IconPlus size={15} aria-hidden="true" />

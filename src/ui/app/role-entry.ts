@@ -21,6 +21,8 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
   owner: [
     '#/dashboard',
     '#/orders',
+    '#/repair-intake',
+    '#/repair-intake/new',
     '#/my-work',
     '#/customers',
     '#/devices',
@@ -34,6 +36,8 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
   manager: [
     '#/dashboard',
     '#/orders',
+    '#/repair-intake',
+    '#/repair-intake/new',
     '#/my-work',
     '#/customers',
     '#/devices',
@@ -48,6 +52,8 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
     '#/today',
     '#/lookup',
     '#/orders',
+    '#/repair-intake',
+    '#/repair-intake/new',
     '#/customers',
     '#/reception-queue',
     '#/showcase',
@@ -125,7 +131,12 @@ export function canAccessRoute(
   const allowedList = ROLE_ALLOWED_ROUTES[normalizedRole];
   if (!allowedList) return false;
 
-  const baseRoute = cleanRoute.startsWith('#/customers/') ? '#/customers' : cleanRoute;
+  let baseRoute = cleanRoute;
+  if (cleanRoute.startsWith('#/customers/')) {
+    baseRoute = '#/customers';
+  } else if (cleanRoute.startsWith('#/repair-intake')) {
+    baseRoute = '#/repair-intake/new';
+  }
   return allowedList.includes(baseRoute);
 }
 
@@ -136,6 +147,9 @@ export function getRouteTitle(rawHash: string, role?: UserRole): string {
   const clean = normalizeRouteHash(rawHash);
   if (clean.startsWith('#/customers')) {
     return 'Khách hàng';
+  }
+  if (clean.startsWith('#/repair-intake')) {
+    return 'Tiếp nhận sửa chữa';
   }
   switch (clean) {
     case '#/dashboard':

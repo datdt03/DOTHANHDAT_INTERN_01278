@@ -1,0 +1,687 @@
+/* ==========================================================================
+   Repair Intake Workflow Styles
+   Adheres to Design System: 85% Slate / 15% Sky Blue
+   Supports Zoom Elasticity: 110% Baseline, 125% - 150% Zoom Reflow
+   ========================================================================== */
+
+.rf-intake-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Header & Stepper Area */
+.rf-intake-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rf-intake-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.rf-intake-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rf-intake-breadcrumb {
+  font-size: 0.8125rem;
+  color: var(--rf-text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.rf-intake-breadcrumb-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.rf-intake-breadcrumb-link:hover {
+  color: var(--rf-primary, #0284c7);
+  text-decoration: underline;
+}
+
+.rf-intake-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+  font-weight: 700;
+  color: var(--rf-text-main, #0f172a);
+  letter-spacing: -0.02em;
+}
+
+.rf-intake-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--rf-text-muted, #64748b);
+}
+
+/* Stepper styling wrapper */
+.rf-intake-stepper-wrap {
+  background: var(--rf-surface, #ffffff);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Mode Segmented Controls */
+.rf-intake-mode-toggle {
+  display: inline-flex;
+  background-color: var(--rf-bg-app, #f8fafc);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 1.25rem;
+}
+
+.rf-intake-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--rf-text-muted, #64748b);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--rf-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rf-intake-mode-btn--active {
+  background: var(--rf-surface, #ffffff);
+  color: var(--rf-primary, #0284c7);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.rf-intake-mode-btn:focus-visible {
+  outline: 2px solid var(--rf-primary, #0284c7);
+  outline-offset: 2px;
+}
+
+/* Customer Search Results & Candidates */
+.rf-intake-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.rf-intake-customer-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background: var(--rf-surface, #ffffff);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rf-intake-customer-card:hover {
+  border-color: var(--rf-primary, #0284c7);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+}
+
+.rf-intake-customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rf-intake-customer-name {
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+  font-size: 0.9375rem;
+}
+
+.rf-intake-customer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--rf-text-muted, #64748b);
+}
+
+/* Selected Customer Banner */
+.rf-intake-selected-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: rgba(2, 132, 199, 0.04);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: var(--rf-radius-md, 8px);
+  margin-bottom: 1.5rem;
+}
+
+/* Device Intake List */
+.rf-intake-devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rf-intake-device-item {
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background: var(--rf-surface, #ffffff);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.rf-intake-device-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+  background: var(--rf-bg-app, #f8fafc);
+  border-bottom: 1px solid var(--rf-border, #e2e8f0);
+}
+
+.rf-intake-device-item-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-intake-device-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Responsive Form Grids */
+.rf-form-grid-2,
+.rf-form-grid-3,
+.rf-form-grid-4,
+.rf-form-grid-3-spec,
+.rf-form-grid-2-bottom,
+.rf-customer-grid {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rf-form-grid-2 > *,
+.rf-form-grid-3 > *,
+.rf-form-grid-4 > *,
+.rf-form-grid-3-spec > *,
+.rf-form-grid-2-bottom > *,
+.rf-customer-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.rf-form-grid-2 > .rf-form-group,
+.rf-form-grid-3 > .rf-form-group,
+.rf-form-grid-4 > .rf-form-group,
+.rf-form-grid-3-spec > .rf-form-group,
+.rf-form-grid-2-bottom > .rf-form-group,
+.rf-customer-grid > .rf-form-group {
+  margin-bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rf-customer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .rf-customer-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.rf-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .rf-form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .rf-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 960px) {
+  .rf-form-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .rf-form-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-form-grid-3-spec {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 840px) {
+  .rf-form-grid-3-spec {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-form-grid-2-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  .rf-form-grid-2-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-textarea,
+textarea.rf-input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 68px;
+  padding: 10px 12px !important;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Credential Section */
+.rf-intake-credential-box {
+  background: var(--rf-bg-app, #f8fafc);
+  border: 1px solid var(--rf-border, #cbd5e1);
+  border-radius: var(--rf-radius-md, 8px);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rf-intake-credential-notice {
+  font-size: 0.8125rem;
+  color: var(--rf-text-muted, #64748b);
+  line-height: 1.4;
+}
+
+/* Step Action Bar */
+.rf-intake-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+}
+
+.rf-intake-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+/* Review Section */
+.rf-intake-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rf-intake-review-block {
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  background: var(--rf-surface, #ffffff);
+  overflow: hidden;
+}
+
+.rf-intake-review-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--rf-bg-app, #f8fafc);
+  border-bottom: 1px solid var(--rf-border, #e2e8f0);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.rf-intake-review-block-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rf-intake-review-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rf-intake-review-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rf-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rf-intake-review-value {
+  font-size: 0.9375rem;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-intake-review-device-item {
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-sm, 6px);
+  padding: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.rf-intake-review-device-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Success View */
+.rf-intake-success-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  gap: 1.25rem;
+}
+
+.rf-intake-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.rf-intake-success-code {
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--rf-bg-app, #f8fafc);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+}
+
+.rf-intake-success-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+/* Responsive Breakpoints & Zoom Elasticity */
+@media (max-width: 768px) {
+  .rf-intake-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .rf-intake-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rf-intake-actions-right {
+    margin-left: 0;
+    flex-direction: column;
+  }
+
+  .rf-intake-mode-toggle {
+    width: 100%;
+    display: flex;
+  }
+
+  .rf-intake-mode-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   Printable Receipt Ticket & Print Media Styles
+   ========================================================================== */
+.rf-printable-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 680px;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid var(--rf-border, #cbd5e1);
+  border-radius: var(--rf-radius-md, 8px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.rf-ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.rf-ticket-brand {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-ticket-sub {
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+  margin-top: 2px;
+}
+
+.rf-ticket-meta {
+  text-align: right;
+  font-size: 0.8125rem;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-ticket-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--rf-primary, #0284c7);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.rf-ticket-code {
+  font-size: 0.875rem;
+}
+
+.rf-ticket-date {
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+  margin-top: 2px;
+}
+
+.rf-ticket-divider {
+  height: 1px;
+  background-color: var(--rf-border, #cbd5e1);
+  width: 100%;
+}
+
+.rf-ticket-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--rf-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.rf-ticket-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}
+
+.rf-ticket-table th,
+.rf-ticket-table td {
+  border: 1px solid var(--rf-border, #cbd5e1);
+  padding: 6px 10px;
+  vertical-align: top;
+}
+
+.rf-ticket-table th {
+  background-color: var(--rf-surface-subtle, #f1f5f9);
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+  text-align: left;
+}
+
+.rf-ticket-terms {
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.rf-ticket-signatures {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+.rf-ticket-signature-col {
+  text-align: center;
+  font-size: 0.8125rem;
+  min-width: 160px;
+}
+
+.rf-ticket-signature-hint {
+  font-size: 0.6875rem;
+  color: var(--rf-text-muted, #64748b);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.rf-ticket-signature-space {
+  height: 48px;
+}
+
+/* Print Media Styles */
+@media print {
+  .app-sidebar,
+  .app-header,
+  .app-footer,
+  .rf-intake-header,
+  .rf-intake-success-badge,
+  .rf-intake-success-actions,
+  .rf-intake-success-code,
+  .rf-intake-success-container > div:first-of-type,
+  .rf-card-panel__header,
+  .rf-card-panel__footer {
+    display: none !important;
+  }
+
+  body,
+  #root,
+  .app-layout,
+  .app-main,
+  .page-content,
+  .rf-intake-container,
+  .rf-card-panel,
+  .rf-card-panel__body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .rf-intake-success-container {
+    padding: 0 !important;
+  }
+
+  .rf-printable-ticket {
+    max-width: 100% !important;
+    border: 1px solid #94a3b8 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+
+  .rf-ticket-table th,
+  .rf-ticket-table td {
+    border-color: #94a3b8 !important;
+  }
+}

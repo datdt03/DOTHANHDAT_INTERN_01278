@@ -268,7 +268,7 @@ export function CustomerCreatePanel({
                 >
                   <textarea
                     id="customer-note"
-                    className="rf-input"
+                    className="rf-input rf-textarea"
                     rows={3}
                     placeholder="Ghi chú thêm về yêu cầu đặc biệt của khách hàng..."
                     value={note}

@@ -23,6 +23,10 @@
   --rf-shadow: var(--rf-shadow-sm);
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html {
   min-height: 100%;
   margin: 0;

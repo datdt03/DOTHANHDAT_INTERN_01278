@@ -10,6 +10,7 @@ import { getRoleEntryRoute } from './role-entry';
 export type AppRoute =
   | { kind: 'customer-link'; orderId: string }
   | { kind: 'customer-records'; customerId?: string }
+  | { kind: 'repair-intake' }
   | { kind: 'showcase' }
   | { kind: 'internal' };
 
@@ -23,6 +24,10 @@ export function resolveRoute(hash: string): AppRoute {
   const customerRecordsMatch = hash.match(/^#\/customers(?:\/([A-Za-z0-9-]+))?$/);
   if (customerRecordsMatch) {
     return { kind: 'customer-records', customerId: customerRecordsMatch[1] };
+  }
+
+  if (hash.startsWith('#/repair-intake')) {
+    return { kind: 'repair-intake' };
   }
 
   if (hash === '#/showcase' || hash === '#showcase') {
@@ -68,6 +73,17 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     }
   }, [isAuthenticated, currentHash, capabilities, currentUser?.role]);
 
+  // Sanitize pathname to ensure SPA root stays at '/' and prevents nested hash URLs
+  useEffect(() => {
+    if (window.location.pathname && window.location.pathname !== '/') {
+      const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      const existingHash = window.location.hash || '';
+      const targetHash = existingHash || (cleanPath ? `#/${cleanPath}` : '#/dashboard');
+      window.history.replaceState(null, '', `/${targetHash}`);
+      setCurrentHash(targetHash);
+    }
+  }, []);
+
   const route = resolveRoute(currentHash);
 
   // 1. Customer Public Route (Independent boundary, no auth required, no internal shell)
@@ -111,17 +127,6 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
   ) {
     return <AccessShell />;
   }
-
-  // Sanitize pathname to ensure SPA root stays at '/' and prevents nested hash URLs
-  useEffect(() => {
-    if (window.location.pathname && window.location.pathname !== '/') {
-      const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-      const existingHash = window.location.hash || '';
-      const targetHash = existingHash || (cleanPath ? `#/${cleanPath}` : '#/dashboard');
-      window.history.replaceState(null, '', `/${targetHash}`);
-      setCurrentHash(targetHash);
-    }
-  }, []);
 
   // 3d. Authenticated State -> Render Role-Aware Application Shell (which hosts sidebar, header, footer, and active area)
   return <RoleAwareNavigationShell previewMode={previewMode} onRetry={onRetry} />;

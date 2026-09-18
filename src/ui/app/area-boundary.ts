@@ -5,6 +5,7 @@ export const C2_AREA_IDS = [
   'customer-records-area',
   'device-area',
   'repair-order-area',
+  'repair-intake-workflow',
 ] as const;
 
 export type C2AreaId = (typeof C2_AREA_IDS)[number];

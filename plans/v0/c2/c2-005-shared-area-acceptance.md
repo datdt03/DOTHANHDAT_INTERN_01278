@@ -74,8 +74,9 @@ một lần. Backend phải tạo Customer/Device/RepairOrder atomic.
 - Primary action mở intake workflow, không có form create thứ hai.
 - Customer/device/order safe projection và assignment/read-only behavior.
 
-Supporting customer/device history views trong c2-003 đang DEFERRED và không phải
-điều kiện block C2.
+Supporting customer/device history views trong c2-003 đã SUPERSEDED và không
+được triển khai từ plan cũ. Customer directory read-only của Lễ tân thuộc
+c2-006; đây là acceptance slice riêng và không block intake workflow.
 
 ## Out of scope
 

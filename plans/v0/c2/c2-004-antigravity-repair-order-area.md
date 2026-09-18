@@ -98,5 +98,6 @@ hoặc tạo order bằng chuỗi API thủ công.
 
 ## Change impact
 
-C2-004 không còn phụ thuộc vào hai page Customer/Device độc lập. Dependency tới
-c2-003 là optional và chỉ dùng khi supporting history views được activate.
+C2-004 không phụ thuộc vào Customer/Device page độc lập. Supporting customer
+directory của Lễ tân thuộc c2-006 và không phải dependency của order area; các
+view device/history khác vẫn nằm ngoài active C2 scope.

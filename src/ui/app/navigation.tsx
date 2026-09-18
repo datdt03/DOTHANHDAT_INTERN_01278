@@ -8,10 +8,10 @@ import {
 import { ForbiddenState } from '../shared/components/forbidden-state';
 import { CenteredPlaceholderPage } from '../shared/components/centered-placeholder-page';
 import { CustomerRecordsArea } from '../features/customer-records-area/customer-records-area';
+import { RepairIntakeWorkflow } from '../features/repair-intake-workflow/repair-intake-workflow';
 import type { AreaMountContext, C2AreaId } from './area-boundary';
 import { getRoleCapabilities } from '../shared/api/access-api';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
-import { RoleNavigationBanner } from '../features/access/role-navigation';
 import { RoleContextSwitcher } from '../features/access/role-context-switcher';
 import {
   canAccessRoute,
@@ -106,6 +106,8 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
           window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
         } else if (area === 'customer-records-area') {
           window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
+        } else if (area === 'repair-intake-workflow') {
+          window.location.hash = '#/repair-intake/new';
         }
       };
 
@@ -120,7 +122,38 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       );
     }
 
-    // 4. All other routes not yet developed -> Minimalist Centered Placeholder
+    // 4. Repair Intake Workflow (C2-002 Revision 3 Primary Task-First Flow)
+    if (cleanHash.startsWith('#/repair-intake')) {
+      const areaContext: AreaMountContext = {
+        workspaceId: currentUser?.workspaceId || 'ws-main',
+        activeRole: currentRole,
+        roles: currentUser?.roles || [currentRole],
+        capabilities: capabilities || getRoleCapabilities(currentRole),
+      };
+
+      const handleNavigate = (area: C2AreaId, resourceId?: string) => {
+        if (area === 'device-area') {
+          window.location.hash = resourceId ? `#/devices/${resourceId}` : '#/devices';
+        } else if (area === 'repair-order-area') {
+          window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
+        } else if (area === 'customer-records-area') {
+          window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
+        } else if (area === 'repair-intake-workflow') {
+          window.location.hash = '#/repair-intake/new';
+        }
+      };
+
+      return (
+        <RepairIntakeWorkflow
+          context={areaContext}
+          onNavigate={handleNavigate}
+          previewMode={previewMode}
+          standalone={false}
+        />
+      );
+    }
+
+    // 5. All other routes not yet developed -> Minimalist Centered Placeholder
     return (
       <CenteredPlaceholderPage
         title={activeNav || 'Trang đang phát triển'}
@@ -168,9 +201,6 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
               </div>
             </div>
           )}
-
-          {/* Role Context & Capability Indicator */}
-          <RoleNavigationBanner />
 
           {/* Dynamic View by Route & Role Permission */}
           {renderRouteContent()}

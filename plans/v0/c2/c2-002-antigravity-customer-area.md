@@ -8,7 +8,7 @@ Owner: Antigravity
 
 Status: READY — replan
 
-Revision: 3
+Revision: 4
 
 Depends on: c2-001-codex-customer-device-order-api.md
 
@@ -16,6 +16,9 @@ Produces: Một workflow UI ba giai đoạn, hỗ trợ một Customer với m�
            thiết bị trong cùng một RepairOrder, API adapter và test/evidence riêng
 
 Consumed by: c2-004, C3 intake/evidence và C9 khi mở order detail
+
+Amended by: c2-007-codex-intake-evidence-foundation.md,
+            c2-008-antigravity-intake-evidence-ui.md
 
 ## Task context
 
@@ -76,8 +79,10 @@ Phải có tối thiểu một thiết bị. Có thể sửa, xóa một item tr
 không được để danh sách rỗng. Thứ tự các thiết bị phải ổn định trong review và
 request submit để nhân viên đối chiếu với vật lý đã nhận.
 
-Checklist chi tiết, ảnh hiện trạng và intake completion thuộc C3; C2 chỉ gửi
-phần thông tin cơ bản mà API c2-001 đã chốt.
+Checklist chi tiết, evidence persistence/validation và intake completion thuộc
+C3. Amendment c2-008 bổ sung điểm thu ảnh hiện trạng ban đầu trong Giai đoạn 2;
+C2 chỉ giữ file tạm trong workflow và chuyển sang C3 evidence boundary sau khi
+order tồn tại, không tự hoàn tất evidence hoặc chuyển trạng thái.
 
 ### Giai đoạn 3 — Tổng hợp và xác nhận
 
@@ -113,7 +118,8 @@ Sau thành công, hiển thị order code/trạng thái `received` và mở orde
 
 - Customer records page hoặc Device records page là primary intake path.
 - Device search/select theo customer.
-- C3 checklist chi tiết, ảnh/evidence, server draft/resume và transition.
+- C3 checklist chi tiết, evidence persistence/completion, server draft/resume và
+  transition; điểm thu ảnh ban đầu được bổ sung riêng bởi c2-008.
 - Diagnosis, quote, repair, QC, handover.
 - Customer public link/OTP.
 - Sửa/xóa lịch sử ngoài contract.

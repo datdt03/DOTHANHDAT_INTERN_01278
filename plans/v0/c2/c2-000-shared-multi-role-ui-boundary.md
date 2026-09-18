@@ -14,7 +14,8 @@ Depends on: c1-007-shared-integration-acceptance.md
 
 Produces: Multi-role access contract, area-owned UI boundary và implementation rules cho C2
 
-Consumed by: c2-001-codex-customer-device-order-api.md, c2-002, c2-003, c2-004
+Consumed by: c2-001-codex-customer-device-order-api.md, c2-002, c2-004, c2-006,
+             c2-007, c2-008
 
 ## Task context
 

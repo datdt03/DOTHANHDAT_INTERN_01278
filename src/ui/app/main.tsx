@@ -6,6 +6,8 @@ import { ApiUnavailableScreen, BootScreen } from './app-shell';
 import { RouteBoundary } from './routes';
 import { SessionProvider } from './session-context';
 import '../features/access/access.css';
+import '../shared/styles/tokens.css';
+import '../shared/styles/utilities.css';
 import '../shared/styles/target.css';
 import '../shared/styles/app-shell.css';
 
