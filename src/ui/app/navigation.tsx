@@ -6,9 +6,10 @@ import {
   AppSidebar,
 } from '../shared/components';
 import { ForbiddenState } from '../shared/components/forbidden-state';
-import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
-import { ReceptionistTodayLookupPlaceholder } from '../features/receptionist/today-lookup-placeholder';
-import { TechnicianMyWorkPlaceholder } from '../features/technician/my-work-placeholder';
+import { CenteredPlaceholderPage } from '../shared/components/centered-placeholder-page';
+import { CustomerRecordsArea } from '../features/customer-records-area/customer-records-area';
+import type { AreaMountContext, C2AreaId } from './area-boundary';
+import { getRoleCapabilities } from '../shared/api/access-api';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
 import { RoleNavigationBanner } from '../features/access/role-navigation';
 import { RoleContextSwitcher } from '../features/access/role-context-switcher';
@@ -86,61 +87,43 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       return <ComponentShowcaseView />;
     }
 
-    // 3. Receptionist specific routes
-    if (cleanHash === '#/today') {
+    // 3. Customer Records Area (Fully developed in C2-002)
+    if (cleanHash.startsWith('#/customers')) {
+      const customerMatch = cleanHash.match(/^#\/customers\/([A-Za-z0-9-]+)$/);
+      const customerId = customerMatch ? customerMatch[1] : undefined;
+
+      const areaContext: AreaMountContext = {
+        workspaceId: currentUser?.workspaceId || 'ws-main',
+        activeRole: currentRole,
+        roles: currentUser?.roles || [currentRole],
+        capabilities: capabilities || getRoleCapabilities(currentRole),
+      };
+
+      const handleNavigate = (area: C2AreaId, resourceId?: string) => {
+        if (area === 'device-area') {
+          window.location.hash = resourceId ? `#/devices/${resourceId}` : '#/devices';
+        } else if (area === 'repair-order-area') {
+          window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
+        } else if (area === 'customer-records-area') {
+          window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
+        }
+      };
+
       return (
-        <ReceptionistTodayLookupPlaceholder
-          initialTab="today"
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
+        <CustomerRecordsArea
+          context={areaContext}
+          onNavigate={handleNavigate}
+          initialCustomerId={customerId}
+          previewMode={previewMode}
+          standalone={false}
         />
       );
     }
 
-    if (cleanHash === '#/lookup') {
-      return (
-        <ReceptionistTodayLookupPlaceholder
-          initialTab="lookup"
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
-        />
-      );
-    }
-
-    // 4. Technician specific routes
-    if (cleanHash === '#/my-work' || cleanHash === '#/assigned-orders') {
-      return (
-        <TechnicianMyWorkPlaceholder
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
-        />
-      );
-    }
-
-    // 5. Manager / Owner operational routes (or fallback to role-based placeholder)
-    if (currentRole === 'receptionist') {
-      return (
-        <ReceptionistTodayLookupPlaceholder
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
-        />
-      );
-    }
-
-    if (currentRole === 'technician') {
-      return (
-        <TechnicianMyWorkPlaceholder
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
-        />
-      );
-    }
-
+    // 4. All other routes not yet developed -> Minimalist Centered Placeholder
     return (
-      <DashboardPlaceholder
-        role={currentRole}
-        userName={currentUser?.name}
-        roleTitle={currentUser?.roleTitle}
+      <CenteredPlaceholderPage
+        title={activeNav || 'Trang đang phát triển'}
       />
     );
   };

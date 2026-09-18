@@ -9,6 +9,7 @@ import { getRoleEntryRoute } from './role-entry';
 
 export type AppRoute =
   | { kind: 'customer-link'; orderId: string }
+  | { kind: 'customer-records'; customerId?: string }
   | { kind: 'showcase' }
   | { kind: 'internal' };
 
@@ -17,6 +18,11 @@ export function resolveRoute(hash: string): AppRoute {
 
   if (customerMatch) {
     return { kind: 'customer-link', orderId: customerMatch[1] };
+  }
+
+  const customerRecordsMatch = hash.match(/^#\/customers(?:\/([A-Za-z0-9-]+))?$/);
+  if (customerRecordsMatch) {
+    return { kind: 'customer-records', customerId: customerRecordsMatch[1] };
   }
 
   if (hash === '#/showcase' || hash === '#showcase') {
@@ -33,8 +39,15 @@ interface RouteBoundaryProps {
 
 export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): ReactNode {
   const [currentHash, setCurrentHash] = useState(() => window.location.hash);
-  const { sessionStatus, isAuthenticated, currentUser, capabilities, errorMessage, retrySessionCheck } =
-    useSession();
+  const {
+    sessionStatus,
+    isAuthenticated,
+    currentUser,
+    capabilities,
+    errorMessage,
+    retrySessionCheck,
+    logout,
+  } = useSession();
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -99,6 +112,17 @@ export function RouteBoundary({ previewMode, onRetry }: RouteBoundaryProps): Rea
     return <AccessShell />;
   }
 
-  // 3d. Authenticated State -> Render Role-Aware Application Shell with Route Guarding
+  // Sanitize pathname to ensure SPA root stays at '/' and prevents nested hash URLs
+  useEffect(() => {
+    if (window.location.pathname && window.location.pathname !== '/') {
+      const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      const existingHash = window.location.hash || '';
+      const targetHash = existingHash || (cleanPath ? `#/${cleanPath}` : '#/dashboard');
+      window.history.replaceState(null, '', `/${targetHash}`);
+      setCurrentHash(targetHash);
+    }
+  }, []);
+
+  // 3d. Authenticated State -> Render Role-Aware Application Shell (which hosts sidebar, header, footer, and active area)
   return <RoleAwareNavigationShell previewMode={previewMode} onRetry={onRetry} />;
 }

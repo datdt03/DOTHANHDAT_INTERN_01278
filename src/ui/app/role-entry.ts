@@ -48,6 +48,7 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
     '#/today',
     '#/lookup',
     '#/orders',
+    '#/customers',
     '#/reception-queue',
     '#/showcase',
   ],
@@ -124,7 +125,8 @@ export function canAccessRoute(
   const allowedList = ROLE_ALLOWED_ROUTES[normalizedRole];
   if (!allowedList) return false;
 
-  return allowedList.includes(cleanRoute);
+  const baseRoute = cleanRoute.startsWith('#/customers/') ? '#/customers' : cleanRoute;
+  return allowedList.includes(baseRoute);
 }
 
 /**
@@ -132,6 +134,9 @@ export function canAccessRoute(
  */
 export function getRouteTitle(rawHash: string, role?: UserRole): string {
   const clean = normalizeRouteHash(rawHash);
+  if (clean.startsWith('#/customers')) {
+    return 'Khách hàng';
+  }
   switch (clean) {
     case '#/dashboard':
       return 'Tổng quan vận hành';
