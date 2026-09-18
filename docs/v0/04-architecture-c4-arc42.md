@@ -169,6 +169,58 @@ giai đoạn chuyển đổi, cần phân biệt target layout với C0 compatib
 
 Không cần vẽ toàn bộ class/module ở giai đoạn v0.
 
+### 5.4. Backend code organization — feature-first
+
+`C2`, `C3` và các mã tương tự là implementation cluster trong roadmap, không
+phải business feature. Không tạo thư mục hoặc namespace backend theo cluster,
+ví dụ `Features/C2`.
+
+Target backend tổ chức theo business capability:
+
+```text
+src/server/RepairFlow.Api/Features/
+├── Access/
+├── Customer/
+├── Device/
+└── RepairOrder/
+```
+
+Mỗi feature có thể chia tiếp theo trách nhiệm kỹ thuật:
+
+```text
+Customer/
+├── Api/
+├── Application/
+├── Domain/
+└── Infrastructure/
+```
+
+Ranh giới bắt buộc:
+
+- `Api/` chỉ chứa HTTP endpoint, request/response DTO, status mapping và
+  OpenAPI metadata; không query database trực tiếp và không chứa business rule.
+- `Application/` chứa use case, orchestration, transaction boundary,
+  authorization orchestration và repository port/interface; không chứa SQL cụ
+  thể.
+- `Domain/` chứa entity, value object và business invariant; không phụ thuộc
+  ASP.NET Core, EF Core, Npgsql hoặc HTTP.
+- `Infrastructure/` chứa repository implementation, SQL/Npgsql/EF mapping và
+  external I/O; không tự quyết định business permission hoặc workflow.
+
+Dependency direction:
+
+```text
+Api -> Application -> Domain
+Infrastructure -> Application ports
+Infrastructure -> Domain
+```
+
+Không tạo các abstraction chung theo cluster như `C2Models`, `C2Contracts` hoặc
+`IC2Repository`. Customer, Device và Repair Order phải có model, contract và
+repository boundary riêng. Migration vẫn đặt tại
+`Infrastructure/Database/Migrations/` vì đây là persistence boundary dùng chung,
+không đặt trong `Features/C2`.
+
 ## 6. Runtime View
 
 Các runtime scenario chính cần được giữ nhất quán giữa use case, state machine,

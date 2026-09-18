@@ -100,6 +100,21 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
                 (role == AccessRole.Receptionist &&
                  HasResponsibility(AssignmentResponsibility.Handover)),
             AccessAction.CustomerLinkManage => isManagement,
+            AccessAction.CustomerRead =>
+                isManagement ||
+                role == AccessRole.Receptionist ||
+                (role == AccessRole.Technician && hasAssignment),
+            AccessAction.CustomerWrite => isManagement || role == AccessRole.Receptionist,
+            AccessAction.DeviceRead =>
+                isManagement ||
+                role == AccessRole.Receptionist ||
+                (role == AccessRole.Technician && hasAssignment),
+            AccessAction.DeviceWrite => isManagement || role == AccessRole.Receptionist,
+            AccessAction.RepairOrderRead =>
+                isManagement ||
+                role == AccessRole.Receptionist ||
+                (role == AccessRole.Technician && hasAssignment),
+            AccessAction.RepairOrderCreate => isManagement || role == AccessRole.Receptionist,
             _ => false
         };
 
@@ -111,7 +126,10 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
             AccessAction.QuoteWrite or
             AccessAction.RepairWrite or
             AccessAction.QualityCheckWrite or
-            AccessAction.HandoverWrite;
+            AccessAction.HandoverWrite or
+            AccessAction.CustomerRead or
+            AccessAction.DeviceRead or
+            AccessAction.RepairOrderRead;
         var assignmentRequired = role switch
         {
             AccessRole.Receptionist => request.Action is

@@ -17,12 +17,11 @@ plans/
 │   │   ├── c0-001-codex-dotnet-api-foundation.md
 │   │   ├── c0-002-antigravity-react-vite-foundation.md
 │   │   └── c0-003-shared-stack-migration-acceptance.md
-│   └── c1-access-and-application-shell/
-│       └── ...
-└── v0/
-    └── c2/
-        ├── README.md
-        └── c2-... area-first implementation plans
+│   ├── c1-access-and-application-shell/
+│   │   └── ...
+│   └── c2/
+│       ├── README.md
+│       └── c2-... area-first implementation plans
 ```
 
 Chỉ tạo plan chi tiết cho cluster kế tiếp khi output của cluster trước đã được
@@ -65,6 +64,33 @@ Target đã chốt trong `docs/v0/`:
   là static assets.
 - Boundary: React gọi ASP.NET Core API qua adapter; business rule, permission,
   transaction và response contract nằm ở backend.
+
+## Backend feature-first planning rule
+
+Mỗi backend plan phải xác định một hoặc nhiều business feature cụ thể, không chỉ
+ghi tên cluster roadmap.
+
+Valid:
+
+```text
+Feature: customer-device-repair-order
+Allowed to change:
+- src/server/RepairFlow.Api/Features/Customer/
+- src/server/RepairFlow.Api/Features/Device/
+- src/server/RepairFlow.Api/Features/RepairOrder/
+```
+
+Invalid:
+
+```text
+Feature: C2
+Allowed to change: src/server/RepairFlow.Api/Features/C2/
+```
+
+Backend plan không được yêu cầu tạo `Features/C2`, `C2Models.cs`,
+`C2Contracts.cs` hoặc `IC2Repository.cs`. Mỗi plan phải ghi rõ file map theo
+feature, dependency direction, các file không được sửa và các bước kiểm tra
+architecture sau implementation.
 
 ## Database migration file standard
 

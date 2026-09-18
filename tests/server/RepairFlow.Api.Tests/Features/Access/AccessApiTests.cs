@@ -30,10 +30,14 @@ public sealed class AccessApiTests : IClassFixture<ApiTestFactory>
     }
 
     [Fact]
-    public async Task Access_foundation_does_not_expose_business_endpoints()
+    public async Task Business_endpoints_require_authentication()
     {
         using var response = await _client.GetAsync("/api/customers");
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var requestId = response.Headers.GetValues(RequestIdMiddleware.HeaderName).Single();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("authentication_required", document.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(requestId, document.RootElement.GetProperty("requestId").GetString());
     }
 }

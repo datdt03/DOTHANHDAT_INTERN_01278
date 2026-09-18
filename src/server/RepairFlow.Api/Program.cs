@@ -7,6 +7,12 @@ using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Api;
 using RepairFlow.Api.Features.Access.Application;
 using RepairFlow.Api.Features.Access.Infrastructure;
+using RepairFlow.Api.Features.Customer.Api;
+using RepairFlow.Api.Features.Customer.Infrastructure;
+using RepairFlow.Api.Features.Device.Api;
+using RepairFlow.Api.Features.Device.Infrastructure;
+using RepairFlow.Api.Features.RepairOrder.Api;
+using RepairFlow.Api.Features.RepairOrder.Infrastructure;
 using RepairFlow.Api.Features.Health;
 using RepairFlow.Api.Infrastructure.Database;
 
@@ -29,6 +35,9 @@ var postgresConnection = builder.Configuration.GetConnectionString("Postgres")
 builder.Services.AddDbContext<RepairFlowDbContext>(options =>
     options.UseNpgsql(postgresConnection));
 builder.Services.AddAccessFoundation();
+builder.Services.AddCustomerFeature();
+builder.Services.AddDeviceFeature();
+builder.Services.AddRepairOrderFeature();
 builder.Services
     .AddAuthentication(AccessAuthenticationDefaults.Scheme)
     .AddScheme<AuthenticationSchemeOptions, AccessAuthenticationHandler>(
@@ -100,6 +109,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthEndpoints();
 app.MapAccessEndpoints();
+app.MapCustomerEndpoints();
+app.MapDeviceEndpoints();
+app.MapRepairOrderEndpoints();
 
 if (app.Environment.IsEnvironment("Testing"))
 {

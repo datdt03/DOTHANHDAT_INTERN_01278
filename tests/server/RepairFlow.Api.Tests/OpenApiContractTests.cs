@@ -27,12 +27,28 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
         Assert.True(document.RootElement.GetProperty("paths").TryGetProperty(
             "/api/access/context",
             out _));
+        var paths = document.RootElement.GetProperty("paths");
+        foreach (var path in new[]
+                 {
+                     "/api/customers",
+                     "/api/customers/{customerId}",
+                     "/api/customers/{customerId}/devices",
+                     "/api/devices",
+                     "/api/devices/{deviceId}",
+                     "/api/repair-orders",
+                     "/api/repair-orders/{orderId}"
+                 })
+        {
+            Assert.True(paths.TryGetProperty(path, out _), $"Missing OpenAPI path: {path}");
+        }
 
         var schemas = document.RootElement
             .GetProperty("components")
             .GetProperty("schemas");
         var loginRequest = schemas.GetProperty("LoginRequest");
         Assert.True(loginRequest.GetProperty("properties").TryGetProperty("password", out _));
+        var repairOrderResponse = schemas.GetProperty("RepairOrderResponse");
+        Assert.False(repairOrderResponse.GetProperty("properties").TryGetProperty("internalNote", out _));
 
         foreach (var schemaName in new[]
                  {

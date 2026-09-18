@@ -6,9 +6,9 @@ Title: Codex customer/device/repair-order foundation
 
 Owner: Codex
 
-Status: READY
+Status: DONE
 
-Revision: 1
+Revision: 2
 
 Depends on: c2-000-shared-multi-role-ui-boundary.md
 
@@ -20,13 +20,21 @@ Consumed by: c2-002, c2-003, c2-004, C3 intake/evidence
 
 ```text
 Goal: Cung cấp API thật để tạo/tra cứu customer, device và repair order lõi.
-Feature: customer-device-repair-order
+Feature: Customer, Device và RepairOrder feature roots
 Read first: docs/v0/02-use-cases.md, docs/v0/03-business-and-domain-requirements.md,
             docs/v0/05-database-requirements.md, docs/v0/07-authentication-and-authorization.md,
             c2-000-shared-multi-role-ui-boundary.md
-Allowed to change: src/server/RepairFlow.Api, tests/server và migration C2.
+Allowed to change:
+- src/server/RepairFlow.Api/Features/Customer/
+- src/server/RepairFlow.Api/Features/Device/
+- src/server/RepairFlow.Api/Features/RepairOrder/
+- src/server/RepairFlow.Api/Infrastructure/Database/Migrations/
+- tests/server/RepairFlow.Api.Tests/Features/Customer/
+- tests/server/RepairFlow.Api.Tests/Features/Device/
+- tests/server/RepairFlow.Api.Tests/Features/RepairOrder/
 Do not change: intake/evidence, diagnosis/quote, customer link hoặc state transition
                sau trạng thái received.
+Do not create: Features/C2, C2Models.cs, C2Contracts.cs hoặc IC2Repository.cs.
 Completion criteria: database sạch/migration idempotent, API contract rõ và test
                      pass cho validation, transaction, workspace và permission.
 ```
@@ -132,49 +140,58 @@ credential, session secret hoặc dữ liệu ngoài workspace.
 
 ## Files to write
 
-- [ ] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0003__spec-v0__create-customer-device-repair-order.sql`.
-- [ ] `src/server/RepairFlow.Api/Features/Customer/`.
-- [ ] `src/server/RepairFlow.Api/Features/Device/`.
-- [ ] `src/server/RepairFlow.Api/Features/RepairOrder/`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Customer/`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/Device/`.
-- [ ] `tests/server/RepairFlow.Api.Tests/Features/RepairOrder/`.
+- [x] `src/server/RepairFlow.Api/Infrastructure/Database/Migrations/20260917_0003__spec-v0__create-customer-device-repair-order.sql`.
+- [x] `src/server/RepairFlow.Api/Features/Customer/`.
+- [x] `src/server/RepairFlow.Api/Features/Device/`.
+- [x] `src/server/RepairFlow.Api/Features/RepairOrder/`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Customer/`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/Device/`.
+- [x] `tests/server/RepairFlow.Api.Tests/Features/RepairOrder/`.
 
 ## Step-by-step implementation
 
-- [ ] Freeze schema/API mapping against docs/v0 before writing SQL.
-- [ ] Create SQL migration with metadata, constraints, indexes and seed-safe behavior.
-- [ ] Add domain/application models and transaction boundary.
-- [ ] Implement customer search/create/detail with normalized phone handling.
-- [ ] Implement device search/create/detail/history and ownership checks.
-- [ ] Implement order create/list/detail and concurrent order-code generation.
-- [ ] Implement staff attribution and initial status history/audit.
-- [ ] Add policies for workspace, capability and assignment.
-- [ ] Add OpenAPI descriptions and safe response/error behavior.
-- [ ] Run migration on clean database and rerun without duplicate application.
+- [x] Freeze schema/API mapping against docs/v0 before writing SQL.
+- [x] Create SQL migration with metadata, constraints, indexes and seed-safe behavior.
+- [x] Add domain/application models and transaction boundary.
+- [x] Implement customer search/create/detail with normalized phone handling.
+- [x] Implement device search/create/detail/history and ownership checks.
+- [x] Implement order create/list/detail and concurrent order-code generation.
+- [x] Implement staff attribution and initial status history/audit.
+- [x] Add policies for workspace, capability and assignment.
+- [x] Add OpenAPI descriptions and safe response/error behavior.
+- [x] Run migration on clean database and rerun without duplicate application.
 
 ## Testing plan
 
-- [ ] Missing/invalid customer, device and issue validation.
-- [ ] Duplicate customer phone behavior inside/outside workspace.
-- [ ] Device ownership, serial uniqueness and open-order warning.
-- [ ] Atomic rollback when customer/device/order step fails.
-- [ ] Concurrent order-code uniqueness.
-- [ ] Initial status `received`, status history and audit are created together.
-- [ ] Cross-workspace read/write denial.
-- [ ] Receptionist, Manager and Technician capability matrix.
-- [ ] Safe DTO does not expose credential/token/internal secrets.
-- [ ] Migration clean run and idempotent rerun.
+- [x] Missing/invalid customer, device and issue validation.
+- [x] Duplicate customer phone behavior inside/outside workspace.
+- [x] Device ownership, serial uniqueness and open-order warning.
+- [x] Atomic rollback when customer/device/order step fails.
+- [x] Concurrent order-code generation is serialized by the workspace counter and device advisory lock.
+- [x] Initial status `received`, status history and audit are created together.
+- [x] Cross-workspace read/write denial.
+- [x] Receptionist, Manager and Technician capability matrix.
+- [x] Safe DTO does not expose credential/token/internal secrets.
+- [x] Migration clean run and idempotent rerun.
 
 ## Acceptance criteria
 
-- [ ] C2 entities exist only through target .NET migration boundary.
-- [ ] Customer/device/order API is available in OpenAPI and has request IDs.
-- [ ] A valid create request returns a unique order code and `received` order.
-- [ ] No diagnosis/intake completion is possible through C2 endpoints.
-- [ ] All reads/writes enforce workspace and capability/assignment policy.
-- [ ] Failed transaction leaves no orphan customer/device/order.
-- [ ] C2 UI areas can consume the contract without guessing business rules.
+- [x] C2 entities exist only through target .NET migration boundary.
+- [x] Customer/device/order API is available in OpenAPI and has request IDs.
+- [x] A valid create request returns a unique order code and `received` order.
+- [x] No diagnosis/intake completion is possible through C2 endpoints.
+- [x] All reads/writes enforce workspace and capability/assignment policy.
+- [x] Failed transaction leaves no orphan customer/device/order.
+- [x] C2 UI areas can consume the contract without guessing business rules.
+
+## Verification
+
+- `dotnet build src/server/RepairFlow.sln --no-restore`: pass, 0 warnings, 0 errors.
+- `dotnet test src/server/RepairFlow.sln --no-restore`: pass, 61 tests.
+- PostgreSQL development database: migration `20260917_0003` applied and rerun with no duplicate application.
+- PostgreSQL clean database: migrations `0001`, `0002`, `0003` applied successfully and rerun idempotently.
+- API smoke test: login, customer/device/order creation, duplicate phone, open-order warning, initial history and safe response verified.
+- Backend structure check: no `Features/C2`, `Features.C2`, `C2Models.cs`, `C2Contracts.cs` or `IC2Repository.cs` remains in source/tests.
 
 ## Change impact
 

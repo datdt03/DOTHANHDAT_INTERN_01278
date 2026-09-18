@@ -19,7 +19,13 @@ public enum AccessAction
     RepairWrite,
     QualityCheckWrite,
     HandoverWrite,
-    CustomerLinkManage
+    CustomerLinkManage,
+    CustomerRead,
+    CustomerWrite,
+    DeviceRead,
+    DeviceWrite,
+    RepairOrderRead,
+    RepairOrderCreate
 }
 
 public enum AssignmentResponsibility
@@ -97,6 +103,12 @@ public static class AccessPolicies
     public const string QualityCheckWrite = "repairflow.access.quality-check-write";
     public const string HandoverWrite = "repairflow.access.handover-write";
     public const string CustomerLinkManage = "repairflow.access.customer-link-manage";
+    public const string CustomerRead = "repairflow.access.customer-read";
+    public const string CustomerWrite = "repairflow.access.customer-write";
+    public const string DeviceRead = "repairflow.access.device-read";
+    public const string DeviceWrite = "repairflow.access.device-write";
+    public const string RepairOrderRead = "repairflow.access.repair-order-read";
+    public const string RepairOrderCreate = "repairflow.access.repair-order-create";
 
     public static IReadOnlyDictionary<string, AccessAction> Definitions { get; } =
         new Dictionary<string, AccessAction>(StringComparer.Ordinal)
@@ -115,7 +127,13 @@ public static class AccessPolicies
             [RepairWrite] = AccessAction.RepairWrite,
             [QualityCheckWrite] = AccessAction.QualityCheckWrite,
             [HandoverWrite] = AccessAction.HandoverWrite,
-            [CustomerLinkManage] = AccessAction.CustomerLinkManage
+            [CustomerLinkManage] = AccessAction.CustomerLinkManage,
+            [CustomerRead] = AccessAction.CustomerRead,
+            [CustomerWrite] = AccessAction.CustomerWrite,
+            [DeviceRead] = AccessAction.DeviceRead,
+            [DeviceWrite] = AccessAction.DeviceWrite,
+            [RepairOrderRead] = AccessAction.RepairOrderRead,
+            [RepairOrderCreate] = AccessAction.RepairOrderCreate
         };
 }
 
