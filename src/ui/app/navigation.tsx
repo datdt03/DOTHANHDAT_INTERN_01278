@@ -12,6 +12,7 @@ import { RepairIntakeWorkflow } from '../features/repair-intake-workflow/repair-
 import type { AreaMountContext, C2AreaId } from './area-boundary';
 import { getRoleCapabilities } from '../shared/api/access-api';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
+import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
 import { RoleContextSwitcher } from '../features/access/role-context-switcher';
 import {
   canAccessRoute,
@@ -153,7 +154,18 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       );
     }
 
-    // 5. All other routes not yet developed -> Minimalist Centered Placeholder
+    // 5. Role-aware Dashboard Overview (Manager Overview, Receptionist Today, Technician My Work)
+    if (!cleanHash || cleanHash === '#/dashboard' || cleanHash === '#/today' || cleanHash === '#/my-work') {
+      return (
+        <DashboardPlaceholder
+          role={currentRole}
+          userName={currentUser?.name}
+          roleTitle={currentUser?.roleTitle}
+        />
+      );
+    }
+
+    // 6. All other routes not yet developed -> Minimalist Centered Placeholder
     return (
       <CenteredPlaceholderPage
         title={activeNav || 'Trang đang phát triển'}
@@ -166,6 +178,7 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       {/* Sidebar with role-aware tabs, workspace context, drawer support */}
       <AppSidebar
         activeItem={activeNav}
+        activeRoute={cleanHash || getRoleEntryRoute(currentRole)}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
         isCollapsed={sidebarCollapsed}

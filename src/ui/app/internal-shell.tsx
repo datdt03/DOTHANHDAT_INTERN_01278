@@ -78,6 +78,7 @@ export function InternalShell({}: InternalShellProps) {
       {/* Sidebar with workspace context, drawer support, and close button */}
       <AppSidebar
         activeItem={activeNav}
+        activeRoute={currentHash}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
         isCollapsed={sidebarCollapsed}

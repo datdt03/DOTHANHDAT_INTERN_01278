@@ -69,13 +69,380 @@
   color: var(--rf-text-muted, #64748b);
 }
 
-/* Stepper styling wrapper */
+/* Compact Header & Stepper Toolbar */
+.rf-intake-compact-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  background: var(--rf-surface, #ffffff);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.rf-intake-title-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rf-intake-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.rf-intake-phase-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--rf-primary, #0284c7);
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+/* Compact Stepper Strip */
+.rf-intake-stepper-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--rf-bg-app, #f8fafc);
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--rf-radius-md, 8px);
+  border: 1px solid var(--rf-border, #e2e8f0);
+}
+
+.rf-stepper-item-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--rf-text-muted, #64748b);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.rf-stepper-item-compact--done {
+  color: var(--rf-text-main, #0f172a);
+  cursor: pointer;
+}
+
+.rf-stepper-item-compact--done:hover .rf-stepper-label-compact {
+  color: var(--rf-primary, #0284c7);
+  text-decoration: underline;
+}
+
+.rf-stepper-item-compact--active {
+  color: var(--rf-primary, #0284c7);
+  font-weight: 600;
+  background: var(--rf-surface, #ffffff);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--rf-radius-sm, 6px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.rf-stepper-badge-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--rf-surface, #ffffff);
+  color: var(--rf-text-muted, #64748b);
+  border: 1px solid var(--rf-border, #cbd5e1);
+  flex-shrink: 0;
+}
+
+.rf-stepper-item-compact--done .rf-stepper-badge-compact {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.rf-stepper-item-compact--active .rf-stepper-badge-compact {
+  background: var(--rf-primary, #0284c7);
+  color: #ffffff;
+  border-color: var(--rf-primary, #0284c7);
+}
+
+.rf-stepper-label-compact {
+  white-space: nowrap;
+}
+
+.rf-stepper-sep-compact {
+  color: var(--rf-border, #cbd5e1);
+  margin: 0 0.125rem;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+/* Stepper styling wrapper (Legacy / Alternative) */
 .rf-intake-stepper-wrap {
   background: var(--rf-surface, #ffffff);
   border: 1px solid var(--rf-border, #e2e8f0);
   border-radius: var(--rf-radius-md, 8px);
   padding: 1rem 1.25rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Single Modern Surface for Intake Workflow */
+.rf-intake-surface {
+  background: var(--rf-surface, #ffffff);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Device Tabs Bar (Multi-Device Management) */
+.rf-device-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--rf-bg-app, #f8fafc);
+  border-bottom: 1px solid var(--rf-border, #e2e8f0);
+  padding: 0.375rem 1rem 0;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.rf-device-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  overflow-x: auto;
+  padding-bottom: 1px;
+}
+
+.rf-device-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--rf-text-muted, #64748b);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-top-left-radius: var(--rf-radius-sm, 6px);
+  border-top-right-radius: var(--rf-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.rf-device-tab:hover {
+  color: var(--rf-text-main, #0f172a);
+  background: rgba(226, 232, 240, 0.6);
+}
+
+.rf-device-tab--active {
+  background: var(--rf-surface, #ffffff);
+  color: var(--rf-text-main, #0f172a);
+  font-weight: 600;
+  border-color: var(--rf-border, #e2e8f0);
+  border-top: 2px solid var(--rf-primary, #0284c7);
+  margin-bottom: -1px;
+}
+
+.rf-device-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rf-border, #cbd5e1);
+}
+
+.rf-device-tab-badge--error {
+  background: #ef4444;
+}
+
+.rf-device-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--rf-text-muted, #64748b);
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  margin-left: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.rf-device-tab-close:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.rf-device-tab-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rf-primary, #0284c7);
+  background: rgba(2, 132, 199, 0.05);
+  border: 1px dashed rgba(2, 132, 199, 0.35);
+  border-radius: var(--rf-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  margin-bottom: 0.375rem;
+}
+
+.rf-device-tab-add-btn:hover {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: var(--rf-primary, #0284c7);
+}
+
+/* Single Device Minimal Header Bar */
+.rf-device-single-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+  background: var(--rf-bg-app, #f8fafc);
+  border-bottom: 1px solid var(--rf-border, #e2e8f0);
+}
+
+.rf-device-single-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+}
+
+/* Canvas Body & Form Sections */
+.rf-intake-canvas-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rf-intake-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rf-intake-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rf-intake-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rf-text-muted, #64748b);
+}
+
+.rf-intake-section-indicator {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--rf-primary, #0284c7);
+}
+
+.rf-intake-divider {
+  height: 1px;
+  background: var(--rf-border, #f1f5f9);
+  margin: 0.25rem 0;
+  border: none;
+}
+
+/* Quick Accessory Chips */
+.rf-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  align-items: center;
+  margin-top: 0.375rem;
+}
+
+.rf-quick-chips-label {
+  font-size: 0.6875rem;
+  color: var(--rf-text-muted, #64748b);
+  margin-right: 0.125rem;
+}
+
+.rf-quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--rf-text-muted, #475569);
+  background: var(--rf-bg-app, #f8fafc);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rf-quick-chip:hover {
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--rf-primary, #0284c7);
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+/* De-nested Balanced Bottom Security & Notes Panels */
+.rf-bottom-section-panel {
+  background: var(--rf-bg-app, #f8fafc);
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: var(--rf-radius-md, 8px);
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Footer Actions Bar */
+.rf-intake-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--rf-surface, #ffffff);
+  border-top: 1px solid var(--rf-border, #e2e8f0);
+}
+
+.rf-intake-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
 }
 
 /* Mode Segmented Controls */

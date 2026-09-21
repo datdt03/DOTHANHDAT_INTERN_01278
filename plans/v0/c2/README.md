@@ -85,21 +85,26 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
 | 001 | [c2-001-codex-customer-device-order-api.md](./c2-001-codex-customer-device-order-api.md) | Codex | API nền và atomic `CreateRepairIntake` | DONE — implementation verified |
 | 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Một `repair-intake-workflow` ba giai đoạn | READY — replan |
 | 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Historical supporting device/customer history views | SUPERSEDED - không triển khai |
-| 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và mở lại intake workflow | READY — replan |
-| 005 | [c2-005-shared-area-acceptance.md](./c2-005-shared-area-acceptance.md) | Codex + Antigravity | Acceptance workflow + API | READY — replan |
-| 006 | [c2-006-antigravity-receptionist-customer-directory.md](./c2-006-antigravity-receptionist-customer-directory.md) | Antigravity | Danh sách/hồ sơ khách hàng read-only cho Lễ tân | READY |
-| 007 | [c2-007-codex-intake-evidence-foundation.md](./c2-007-codex-intake-evidence-foundation.md) | Codex | Evidence API/storage boundary cho ảnh hiện trạng | READY |
-| 008 | [c2-008-antigravity-intake-evidence-ui.md](./c2-008-antigravity-intake-evidence-ui.md) | Antigravity | Thu ảnh hiện trạng trong Giai đoạn 2 và handoff C3 | READY |
-| 009 | [c2-009-shared-intake-evidence-acceptance.md](./c2-009-shared-intake-evidence-acceptance.md) | Codex + Antigravity | Acceptance ảnh hiện trạng và boundary C2/C3 | READY |
+| 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và entry point tiếp nhận | READY |
+| 005 | [c2-005-codex-workspace-tag-api.md](./c2-005-codex-workspace-tag-api.md) | Codex | Workspace tag catalog và item assignments | READY |
+| 006 | [c2-006-antigravity-tag-ui.md](./c2-006-antigravity-tag-ui.md) | Antigravity | Multi-tag picker và tag management UI | READY |
+| 007 | [c2-007-codex-intake-evidence-foundation.md](./c2-007-codex-intake-evidence-foundation.md) | Codex | Evidence API/private storage cho ảnh ngoại quan | READY |
+| 008 | [c2-008-antigravity-intake-evidence-ui.md](./c2-008-antigravity-intake-evidence-ui.md) | Antigravity | Capture/upload nhiều ảnh và mô tả tổng | READY |
+| 009 | [c2-009-c2-vertical-acceptance.md](./c2-009-c2-vertical-acceptance.md) | Codex + Antigravity | Final C2 vertical acceptance | READY |
 
 C2-003 là historical plan đã bị supersede, không được kích hoạt hoặc viết đè.
-Nhu cầu danh sách khách hàng của Lễ tân được thực hiện riêng trong c2-006.
-c2-006 không được đưa lại mô hình bắt người dùng đi qua Customer page rồi Device
-page để tạo order; intake chính vẫn thuộc c2-002.
+Nhu cầu danh sách khách hàng của Lễ tân không còn là active C2 slice; defer về
+C9 hoặc một plan operational-view riêng. Không đưa lại mô hình bắt người dùng đi
+qua Customer page rồi Device page để tạo order; intake chính vẫn thuộc c2-002.
 
-c2-007 phải hoàn tất contract/API trước c2-008. c2-008 là amendment UI cho
-c2-002, chỉ thu ảnh trong memory và handoff sau khi order đã tồn tại; C3 vẫn là
-owner của evidence completion và status transition.
+Chuỗi active mới được tách rõ theo owner: c2-004 là order UI; c2-005 là Codex
+tag API/database; c2-006 là tag UX/UI; c2-007 là Codex evidence API/storage;
+c2-008 là evidence UX/UI; c2-009 là acceptance duy nhất cho vertical slice.
+c2-010 bị loại vì nội dung đã được phân bổ vào các plan này.
+
+c2-007 phải hoàn tất contract/API trước c2-008. c2-008 chỉ thu ảnh trong memory
+và handoff sau khi order đã tồn tại; C3 vẫn là owner của evidence completion và
+status transition.
 
 ## Scope
 

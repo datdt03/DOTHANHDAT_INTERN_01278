@@ -14,22 +14,24 @@ Depends on: c2-001-codex-customer-device-order-api.md, c2-002-antigravity-custom
 
 Produces: Các view tra cứu/profile/history phụ trợ khi có nhu cầu quản trị
 
-Consumed by: none (historical; replaced by c2-006)
+Consumed by: none (historical; customer directory deferred beyond active C2)
 
-Superseded by: c2-006-antigravity-receptionist-customer-directory.md
+Superseded by: active C2 sequence; no replacement plan in C2
 
 ## Historical note
 
 Plan này không còn là active execution plan. Không triển khai bằng cách đổi
 scope hoặc đánh dấu lại nội dung trong file này. Nhu cầu hiện tại của Lễ tân
-được tách thành c2-006 với phạm vi hẹp hơn: danh sách và hồ sơ khách hàng
+không còn là dependency của active C2 sequence; customer directory được defer
+về C9 hoặc một operational-view plan riêng.
 read-only, không mở lại mô hình Customer → Device → Order cho intake.
 
 ## Quyết định lịch sử
 
 Không triển khai Device area độc lập như một bước bắt buộc của intake. Tại luồng
 chính, nhân viên luôn nhập thiết bị được bàn giao trong `repair-intake-workflow`.
-Đây là quyết định của plan cũ; plan đã được supersede bởi c2-006 cho nhu cầu
+Đây là quyết định của plan cũ; plan đã được supersede và không được kích hoạt
+trở lại cho nhu cầu
 customer directory read-only của Lễ tân. Không dùng file này để tạo task mới,
 không block C2 và không tạo lại navigation Customer → Device → Order.
 
@@ -43,7 +45,7 @@ Read first: src/ui/AGENTS.md, plans/v0/c2/README.md, c2-001, c2-002,
 Allowed to change: none; historical reference only.
 Do not change: repair-intake workflow, C3 evidence, role-specific shell hoặc backend
                business rule.
-Completion criteria: not applicable; execution is replaced by c2-006.
+Completion criteria: not applicable; execution is deferred beyond active C2.
 ```
 
 ## Historical future scope (not active)

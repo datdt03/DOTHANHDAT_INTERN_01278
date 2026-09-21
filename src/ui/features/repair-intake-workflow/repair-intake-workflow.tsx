@@ -23,9 +23,9 @@ import {
 import './repair-intake-workflow.css';
 
 const INTAKE_STEPS: StepItem[] = [
-  { key: 'customer', label: '1. Khách hàng' },
-  { key: 'devices', label: '2. Thiết bị & Lỗi' },
-  { key: 'review', label: '3. Tổng hợp & Xác nhận' },
+  { key: 'customer', label: 'Khách hàng' },
+  { key: 'devices', label: 'Thiết bị & Lỗi' },
+  { key: 'review', label: 'Tổng hợp & Xác nhận' },
 ];
 
 export interface RepairIntakeWorkflowProps extends C2AreaMountProps {
@@ -81,18 +81,36 @@ export function RepairIntakeWorkflow({
             <span aria-hidden="true">/</span>
             <span>Tiếp nhận sửa chữa mới</span>
           </nav>
-          <h1 className="rf-intake-title">Tiếp nhận sửa chữa mới</h1>
+          <div className="rf-intake-heading-row">
+            <h1 className="rf-intake-title">Tiếp nhận sửa chữa mới</h1>
+            <span className="rf-intake-phase-badge">
+              Bước {currentStep + 1}/3
+            </span>
+          </div>
         </div>
 
         {/* Compact Stepper Strip */}
-        <div className="rf-intake-stepper-compact">
+        <nav className="rf-intake-stepper-compact" aria-label="Tiến trình tiếp nhận">
           {INTAKE_STEPS.map((step, idx) => {
             const isComplete = idx < currentStep;
             const isActive = idx === currentStep;
             return (
               <div
                 key={step.key}
+                role={isComplete ? 'button' : undefined}
+                tabIndex={isComplete ? 0 : undefined}
+                onClick={() => {
+                  if (isComplete) {
+                    setCurrentStep(idx);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
+                    setCurrentStep(idx);
+                  }
+                }}
                 className={`rf-stepper-item-compact ${isActive ? 'rf-stepper-item-compact--active' : ''} ${isComplete ? 'rf-stepper-item-compact--done' : ''}`}
+                title={isComplete ? `Quay lại bước: ${step.label}` : step.label}
               >
                 <span className="rf-stepper-badge-compact">
                   {isComplete ? '✓' : idx + 1}
@@ -102,7 +120,7 @@ export function RepairIntakeWorkflow({
               </div>
             );
           })}
-        </div>
+        </nav>
       </header>
 
       {previewMode && (
@@ -123,11 +141,41 @@ export function RepairIntakeWorkflow({
         )}
 
         {currentStep === 1 && (
-          <RepairItemStep
-            initialItems={items}
-            onBack={() => setCurrentStep(0)}
-            onProceed={handleProceedFromItems}
-          />
+          <>
+            {customerSelection && (
+              <div className="rf-intake-selected-summary">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--rf-text-main, #0f172a)' }}>
+                    Khách hàng: {customerSelection.mode === 'existing' ? customerSelection.customer?.name : customerSelection.newDraft?.name}
+                  </span>
+                  <span style={{ color: 'var(--rf-text-muted, #64748b)' }}>•</span>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--rf-text-muted, #64748b)' }}>
+                    SĐT: <strong>{customerSelection.mode === 'existing' ? customerSelection.customer?.phone : customerSelection.newDraft?.phone}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(0)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--rf-primary, #0284c7)',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Thay đổi khách hàng
+                </button>
+              </div>
+            )}
+            <RepairItemStep
+              initialItems={items}
+              onBack={() => setCurrentStep(0)}
+              onProceed={handleProceedFromItems}
+            />
+          </>
         )}
 
         {currentStep === 2 && customerSelection && (

@@ -20,6 +20,7 @@ import { BrandMark, IconButton } from './ui-primitives';
 
 export interface AppSidebarProps {
   activeItem?: string;
+  activeRoute?: string;
   onSelect?: (label: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
@@ -38,6 +39,11 @@ export interface AppSidebarProps {
   currentRole?: UserRole;
   capabilities?: RoleCapabilities | null;
   onLogout?: () => void;
+}
+
+function normalizeHash(hash?: string): string {
+  if (!hash || hash === '#' || hash === '#/') return '';
+  return hash.split('?')[0].replace(/\/$/, '');
 }
 
 function renderNavIcon(iconId: string) {
@@ -71,6 +77,7 @@ function renderNavIcon(iconId: string) {
 
 export function AppSidebar({
   activeItem = 'Tổng quan',
+  activeRoute,
   onSelect,
   isOpen = false,
   onClose,
@@ -87,6 +94,41 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const capabilities = projectedCapabilities || getRoleCapabilities(currentRole);
   const navItems = capabilities.navigationItems;
+
+  const currentRoute = activeRoute !== undefined
+    ? normalizeHash(activeRoute)
+    : (typeof window !== 'undefined' ? normalizeHash(window.location.hash) : '');
+
+  const isItemActive = (item: { label: string; route: string }) => {
+    const itemRouteClean = normalizeHash(item.route);
+
+    // 1. Primary: Exact URL route match
+    if (currentRoute && itemRouteClean && currentRoute === itemRouteClean) {
+      return true;
+    }
+
+    // 2. Default route handling when hash is empty or root
+    if (!currentRoute) {
+      if ((currentRole === 'manager' || currentRole === 'owner') && item.route === '#/dashboard') return true;
+      if (currentRole === 'receptionist' && item.route === '#/today') return true;
+      if (currentRole === 'technician' && item.route === '#/my-work') return true;
+    }
+
+    // 3. Label matching with aliases fallback
+    if (activeItem) {
+      if (activeItem === item.label) return true;
+      if (item.label === 'Tổng quan' && (activeItem === 'Tổng quan vận hành' || activeItem === 'Tổng quan')) return true;
+      if (item.label === 'Hôm nay' && (activeItem === 'Tổng quan hôm nay' || activeItem === 'Hôm nay')) return true;
+      if (item.label.includes('Showcase') && activeItem.includes('Showcase')) return true;
+    }
+
+    return false;
+  };
+
+  const isShowcaseActive =
+    currentRoute === '#/showcase' ||
+    activeItem === 'Thư viện UI' ||
+    activeItem === 'Thư viện UI (Showcase)';
 
   return (
     <>
@@ -129,7 +171,7 @@ export function AppSidebar({
           <nav className="main-nav" aria-label="Điều hướng chính theo vai trò">
             {!isCollapsed && <span className="nav-section-label">Không gian làm việc</span>}
             {navItems.map((item) => {
-              const isActive = activeItem === item.label;
+              const isActive = isItemActive(item);
               return (
                 <button
                   key={item.label}
@@ -161,7 +203,7 @@ export function AppSidebar({
             {!isCollapsed && <span className="nav-section-label nav-section-label--spaced">Hệ thống</span>}
             <button
               type="button"
-              className={`nav-item${activeItem === 'Thư viện UI' ? ' nav-item--active' : ''}`}
+              className={`nav-item${isShowcaseActive ? ' nav-item--active' : ''}`}
               title={isCollapsed ? 'Thư viện UI (Showcase)' : undefined}
               onClick={() => {
                 window.location.hash = '#/showcase';

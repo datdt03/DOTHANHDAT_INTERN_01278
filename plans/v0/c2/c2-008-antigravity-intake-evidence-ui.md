@@ -1,129 +1,132 @@
-# C2-008 — Antigravity intake evidence UI
+# C2-008 — Antigravity capture/upload ảnh ngoại quan trong intake
 
 Plan ID: c2-008
 
-Title: Thu ảnh hiện trạng trong Giai đoạn 2 và handoff sang C3 evidence
+Title: UX/UI chụp nhiều ảnh, caption tùy chọn và mô tả tổng bắt buộc
 
 Owner: Antigravity
 
 Status: READY
 
-Revision: 1
+Revision: 2
 
 Depends on: c2-002-antigravity-customer-area.md,
              c2-007-codex-intake-evidence-foundation.md
 
-Produces: Vùng chụp/tải ảnh hiện trạng trong repair-intake-workflow, typed adapter,
-          local photo state và UI evidence cho handoff C3
+Produces: Vùng ảnh ngoại quan trong từng repair item, local photo state,
+          guided capture flow, evidence upload/retry và handoff C3.
 
-Consumed by: c2-009-shared-intake-evidence-acceptance.md và C3 intake/evidence
+Consumed by: c2-009 vertical acceptance và C3 intake/evidence
 
 ## Task context
 
 ```text
-Goal: Cho nhân viên chụp hoặc chọn ảnh hiện trạng ngay trong Giai đoạn 2 mà không biến C2 thành owner của evidence completion.
-Feature: repair-intake-workflow evidence capture
-Read first: src/ui/AGENTS.md, plans/v0/c2/README.md, c2-002, c2-007,
-            docs/v0/06-ui-requirements.md, docs/v0/08-ui-design-blueprint-and-stitch-handoff.md
-Allowed to change: src/ui/features/repair-intake-workflow, typed feature adapter,
-                   route/adapter tối thiểu và tests/ui/repair-intake
-Do not change: global shell, Customer/Device API, CreateRepairIntake JSON contract,
-               C3 status transition rule, direct fetch/database hoặc localStorage draft
-Completion criteria: Stage 2 có capture/upload area, preview/retry/accessibility states,
-                     order creation handoff đúng thứ tự và acceptance evidence pass.
+Goal: Cho nhân viên chụp/chọn một hoặc nhiều ảnh ngoại quan ngay tại bước tiếp
+      nhận, kèm caption tùy chọn và mô tả tổng tình trạng bắt buộc.
+Feature: repair-intake-workflow condition evidence
+Read first: src/ui/AGENTS.md, c2-002, c2-007, docs/v0/06-ui-requirements.md,
+            docs/v0/08-ui-design-blueprint-and-stitch-handoff.md.
+Allowed to change: repair-intake-workflow, typed evidence adapter, route tối thiểu
+                    và tests UI evidence.
+Do not change: CreateRepairIntake JSON semantics, server authorization, global
+               shell, tag catalog c2-005/c2-006, C3 transition hoặc localStorage.
+Completion criteria: mỗi item có capture/picker, multiple photo preview, caption
+                     optional, mô tả tổng required và upload retry đúng sequence.
 ```
 
-## Goal
+## UX contract
 
-Bổ sung điểm thu ảnh hiện trạng đúng nơi nhân viên đang ghi nhận thiết bị. File
-chỉ nằm trong memory của workflow trước khi submit; sau khi `CreateRepairIntake`
-trả về order ID, adapter gửi ảnh qua c2-007 evidence API. C3 vẫn kiểm tra
-evidence completion và cho phép chuyển sang `diagnosing`.
+Trong Giai đoạn 2, mỗi repair item hiển thị `Ảnh ngoại quan ban đầu`:
 
-## UX flow
+- mở camera trên thiết bị hỗ trợ;
+- chọn nhiều file ảnh trên desktop;
+- preview thumbnail, filename, size và shot type;
+- xóa ảnh trước khi tạo order;
+- caption/bình luận riêng cho từng ảnh là tùy chọn;
+- field `Mô tả tổng tình trạng ngoại quan *` là bắt buộc;
+- hiển thị upload state theo ảnh: pending, uploading, uploaded, failed/retry.
 
-1. Trong mỗi repair item ở Giai đoạn 2, hiển thị khu vực `Ảnh hiện trạng`.
-2. Cho phép mở camera trên thiết bị hỗ trợ hoặc chọn nhiều file ảnh trên desktop.
-3. Hiển thị thumbnail, tên/kích thước, caption tùy chọn, xóa ảnh và thêm ảnh.
-4. Validate sớm loại file/kích thước ở client để phản hồi nhanh; server vẫn là authority.
-5. Review hiển thị số lượng và thumbnail an toàn, không hiển thị object key hoặc URL private.
-6. Submit tạo order trước bằng command hiện tại; sau khi có order ID, upload các ảnh
-   `before_repair` qua typed evidence adapter.
-7. Nếu upload lỗi, hiển thị order đã tạo ở trạng thái `received`, danh sách ảnh lỗi
-   và nút retry; không báo hoàn tất evidence hoặc chuyển status giả.
+Gợi ý quy trình chụp:
 
-## Scope
+1. Mặt trước.
+2. Mặt sau.
+3. Các cạnh/cổng kết nối.
+4. Khu vực hư hỏng.
+5. Phụ kiện nếu cần.
 
-- Capture bằng camera/file picker với `image/*` và fallback desktop.
-- Nhiều ảnh cho mỗi repair item, giữ thứ tự local ổn định.
-- Preview thumbnail, remove, caption/description và important marker nếu contract hỗ trợ.
-- Client loading/progress, validation, empty, error/retry, unavailable, forbidden,
-  expired và success state.
-- Typed adapter chỉ gọi API qua shared/feature adapter; không gọi fetch trong JSX.
-- Không lưu File/blob/base64 vào localStorage, URL query hoặc log.
-- Responsive mobile-first cho receptionist và desktop zoom checks.
-- Evidence handoff map rõ `orderId`, `repairItemId` nếu backend contract yêu cầu.
+Đây là hướng dẫn, không bắt buộc đủ mọi góc. Điều kiện bắt buộc là mỗi item có
+ít nhất một ảnh hợp lệ và mô tả tổng không rỗng.
 
-## Out of scope
+## Upload sequence
 
-- Checklist hiện trạng chi tiết và minimum-photo completion.
-- Persist evidence trước khi order tồn tại.
-- Sửa `CreateRepairIntake` để nhận multipart nếu c2-007 không chốt hướng đó.
-- Chuyển `received` → `diagnosing`.
-- Evidence sau sửa, diagnosis, quote, repair, QC, handover hoặc customer link.
-- Camera permission management ngoài browser-native behavior.
-- Local draft/resume hoặc upload queue sau khi đóng tab.
+```text
+User nhập item + tag + mô tả tổng
+        ↓
+Ảnh giữ trong memory của workflow
+        ↓
+POST /api/repair-orders/intake
+        ↓
+Nhận repairOrderItemId
+        ↓
+Upload từng ảnh qua c2-007
+        ↓
+Hiển thị completed hoặc pending retry
+```
 
-## Dependencies
+Không đưa `File`, Base64 hoặc object URL vào JSON `CreateRepairIntakePayload`.
+Adapter phải có method upload riêng. Object URL phải được revoke khi xóa ảnh,
+reset workflow hoặc component unmount.
 
-- c2-002 cung cấp workflow ba giai đoạn và repair item local state.
-- c2-007 cung cấp endpoint, DTO, error codes và upload/access sequence.
-- C3 tiếp nhận evidence completion và status transition sau này.
+Nếu upload một ảnh lỗi:
 
-## Files to write or update
+- order đã tạo vẫn ở `received`;
+- ảnh thành công không upload lại;
+- ảnh lỗi có nút retry riêng;
+- không gọi lại CreateRepairIntake;
+- không hiển thị `Tiếp nhận hoàn tất` cho tới khi tất cả item đạt rule.
 
-- [ ] `src/ui/features/repair-intake-workflow/repair-item-step.tsx`.
-- [ ] `src/ui/features/repair-intake-workflow/intake-review-step.tsx`.
-- [ ] `src/ui/features/repair-intake-workflow/repair-intake-workflow.tsx`.
-- [ ] `src/ui/features/repair-intake-workflow/repair-intake-api.ts`.
-- [ ] `src/ui/features/repair-intake-workflow/repair-intake-workflow.css`.
-- [ ] `tests/ui/repair-intake/` checklist/evidence and test files.
+## Required states and accessibility
 
-## Step-by-step implementation
+- loading skeleton cho picker/upload;
+- empty state khi chưa có ảnh;
+- validation cho thiếu ảnh hoặc thiếu mô tả tổng;
+- upload error/retry với message tiếng Việt;
+- unavailable/preview read-only;
+- forbidden/session expired không giữ protected detail cũ;
+- accessible label, keyboard focus, camera permission fallback;
+- responsive 1440×1024, 1280×800, 768×1024 và mobile 390×844;
+- zoom 110–150% không tạo horizontal body overflow.
 
-- [ ] Map local photo state và error states vào từng repair item.
-- [ ] Implement accessible capture/file input, thumbnail list và remove/retry actions.
-- [ ] Giữ File object trong memory, không đưa vào review text, localStorage hoặc log.
-- [ ] Nối typed adapter với c2-007 và bảo đảm request theo đúng order/item mapping.
-- [ ] Tách submit sequence: create order → upload evidence → render handoff result.
-- [ ] Xử lý partial upload và retry không tạo success giả hoặc duplicate ngoài contract.
-- [ ] Cập nhật review summary bằng safe photo count/thumbnail, không expose private URL.
-- [ ] Kiểm tra mobile camera affordance, desktop picker, keyboard/focus và zoom.
-- [ ] Viết evidence cho API unavailable, session expired và forbidden upload.
+## Implementation sequence
+
+- [ ] Tách local photo draft khỏi API payload hiện tại.
+- [ ] Tạo component capture/picker theo từng repair item.
+- [ ] Thêm multiple selection, preview/remove và caption.
+- [ ] Thêm guided shot suggestions/shot type.
+- [ ] Bắt buộc mô tả tổng ở validation UI trước khi submit.
+- [ ] Nối create-order → upload-evidence adapter.
+- [ ] Implement partial success, per-photo retry và reset cleanup.
+- [ ] Không lưu photos/credential/business draft vào localStorage.
+- [ ] Viết checklist/evidence theo UI rules.
 
 ## Testing plan
 
-- [ ] Chọn một hoặc nhiều ảnh ở mobile/desktop và thấy thumbnail.
-- [ ] Xóa, thêm lại, đổi caption và giữ đúng repair item.
-- [ ] File không hợp lệ bị chặn trước khi submit; server denial hiển thị đúng.
-- [ ] Submit tạo order rồi upload ảnh đúng thứ tự.
-- [ ] Upload thất bại không làm mất order; retry chỉ gửi ảnh lỗi.
-- [ ] Review không hiển thị credential, object key hoặc signed URL lâu hạn.
-- [ ] Session expired/forbidden/unavailable không làm lộ ảnh đã chọn.
-- [ ] Không có localStorage/blob persistence hoặc direct fetch trong component.
-- [ ] Vietnamese copy, keyboard/focus, mobile viewport và zoom evidence.
+- [ ] Một ảnh hợp lệ + mô tả tổng hợp lệ.
+- [ ] Nhiều ảnh, caption có/không có.
+- [ ] Nhiều repair item, ảnh không bị gán nhầm item.
+- [ ] Thiếu ảnh và thiếu mô tả tổng đều chặn hoàn tất.
+- [ ] Upload lỗi không tạo success giả và retry không tạo order thứ hai.
+- [ ] Preview/unavailable là read-only.
+- [ ] Camera fallback desktop picker.
+- [ ] Keyboard/focus, mobile, zoom và responsive.
+- [ ] Không direct fetch/database/localStorage trong feature.
 
 ## Acceptance criteria
 
-- [ ] Giai đoạn 2 có vùng `Ảnh hiện trạng` dùng được trên mobile và desktop.
-- [ ] Người dùng có thể chụp/chọn nhiều ảnh, xem thumbnail, xóa và retry.
-- [ ] Ảnh được handoff qua typed adapter sau khi order tồn tại.
-- [ ] Lỗi upload không hiển thị thành công giả và không chuyển status.
-- [ ] UI không sở hữu evidence completion hoặc backend authorization.
-- [ ] Không thay đổi Customer/Device/CreateRepairIntake contract ngoài handoff đã chốt.
-- [ ] Có checklist/evidence độc lập cho capture, upload và failure states.
-
-## Change impact
-
-C2-008 là amendment UI cho c2-002. Nó giải quyết khoảng trống trải nghiệm tại
-Giai đoạn 2 nhưng giữ C3 là owner của evidence completion, checklist và transition.
+- [ ] Nhân viên thêm được một hoặc nhiều ảnh trên mỗi thiết bị.
+- [ ] Caption từng ảnh là tùy chọn.
+- [ ] Mô tả tổng tình trạng ngoại quan là bắt buộc.
+- [ ] UI có hướng dẫn chụp nhưng không ép đủ mọi góc.
+- [ ] Ảnh upload sau khi order tồn tại, có retry riêng.
+- [ ] Upload failure giữ order `received` và không tạo success giả.
+- [ ] Không chuyển order sang `diagnosing` trong C2.
