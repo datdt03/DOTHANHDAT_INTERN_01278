@@ -25,7 +25,11 @@ public enum AccessAction
     DeviceRead,
     DeviceWrite,
     RepairOrderRead,
-    RepairOrderCreate
+    RepairOrderCreate,
+    WorkspaceTagRead,
+    WorkspaceTagCreate,
+    WorkspaceTagManage,
+    RepairItemTagWrite
 }
 
 public enum AssignmentResponsibility
@@ -109,6 +113,10 @@ public static class AccessPolicies
     public const string DeviceWrite = "repairflow.access.device-write";
     public const string RepairOrderRead = "repairflow.access.repair-order-read";
     public const string RepairOrderCreate = "repairflow.access.repair-order-create";
+    public const string WorkspaceTagRead = "repairflow.access.workspace-tag-read";
+    public const string WorkspaceTagCreate = "repairflow.access.workspace-tag-create";
+    public const string WorkspaceTagManage = "repairflow.access.workspace-tag-manage";
+    public const string RepairItemTagWrite = "repairflow.access.repair-item-tag-write";
 
     public static IReadOnlyDictionary<string, AccessAction> Definitions { get; } =
         new Dictionary<string, AccessAction>(StringComparer.Ordinal)
@@ -133,7 +141,11 @@ public static class AccessPolicies
             [DeviceRead] = AccessAction.DeviceRead,
             [DeviceWrite] = AccessAction.DeviceWrite,
             [RepairOrderRead] = AccessAction.RepairOrderRead,
-            [RepairOrderCreate] = AccessAction.RepairOrderCreate
+            [RepairOrderCreate] = AccessAction.RepairOrderCreate,
+            [WorkspaceTagRead] = AccessAction.WorkspaceTagRead,
+            [WorkspaceTagCreate] = AccessAction.WorkspaceTagCreate,
+            [WorkspaceTagManage] = AccessAction.WorkspaceTagManage,
+            [RepairItemTagWrite] = AccessAction.RepairItemTagWrite
         };
 }
 

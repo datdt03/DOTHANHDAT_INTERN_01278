@@ -40,7 +40,11 @@ public sealed record AccessCapabilitiesResponse(
     bool CanWriteRepair,
     bool CanWriteQualityCheck,
     bool CanWriteHandover,
-    bool WritesRequireAssignment);
+    bool WritesRequireAssignment,
+    bool CanReadWorkspaceTags,
+    bool CanCreateWorkspaceTags,
+    bool CanManageWorkspaceTags,
+    bool CanAssignRepairItemTags);
 
 public sealed record AccessContextResponse(
     Guid AccountId,

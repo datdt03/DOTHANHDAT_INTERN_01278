@@ -39,7 +39,10 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
                      "/api/repair-orders/{orderId}",
                      "/api/repair-orders/intake",
                      "/api/repair-orders/{orderId}/items/{itemId}/credential/reveal",
-                     "/api/repair-orders/{orderId}/items/{itemId}/credential/destroy"
+                     "/api/repair-orders/{orderId}/items/{itemId}/credential/destroy",
+                     "/api/tags",
+                     "/api/tags/{tagId}",
+                     "/api/repair-orders/{orderId}/items/{itemId}/tags"
                  })
         {
             Assert.True(paths.TryGetProperty(path, out _), $"Missing OpenAPI path: {path}");

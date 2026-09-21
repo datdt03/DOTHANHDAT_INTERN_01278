@@ -14,6 +14,8 @@ using RepairFlow.Api.Features.Device.Api;
 using RepairFlow.Api.Features.Device.Infrastructure;
 using RepairFlow.Api.Features.RepairOrder.Api;
 using RepairFlow.Api.Features.RepairOrder.Infrastructure;
+using RepairFlow.Api.Features.RepairTag.Api;
+using RepairFlow.Api.Features.RepairTag.Infrastructure;
 using RepairFlow.Api.Features.Health;
 using RepairFlow.Api.Infrastructure.Database;
 
@@ -59,6 +61,7 @@ builder.Services.AddDbContext<RepairFlowDbContext>(options =>
 builder.Services.AddAccessFoundation();
 builder.Services.AddCustomerFeature();
 builder.Services.AddDeviceFeature();
+builder.Services.AddRepairTagFeature();
 builder.Services.AddRepairOrderFeature();
 builder.Services
     .AddAuthentication(AccessAuthenticationDefaults.Scheme)
@@ -134,6 +137,7 @@ app.MapAccessEndpoints();
 app.MapCustomerEndpoints();
 app.MapDeviceEndpoints();
 app.MapRepairOrderEndpoints();
+app.MapRepairTagEndpoints();
 
 if (app.Environment.IsEnvironment("Testing"))
 {

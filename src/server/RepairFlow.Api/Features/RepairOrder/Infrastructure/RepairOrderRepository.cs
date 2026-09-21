@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using RepairFlow.Api.Features.RepairOrder.Application;
 using RepairFlow.Api.Features.RepairOrder.Domain;
+using RepairFlow.Api.Features.RepairTag.Domain;
 using RepairFlow.Api.Infrastructure.Database;
+using RepairTagEntity = RepairFlow.Api.Features.RepairTag.Domain.RepairTag;
 using RepairOrderEntity = RepairFlow.Api.Features.RepairOrder.Domain.RepairOrder;
 
 namespace RepairFlow.Api.Features.RepairOrder.Infrastructure;
@@ -574,7 +576,53 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
                 reader.GetFieldValue<DateTimeOffset>(19)));
         }
 
+        for (var index = 0; index < items.Count; index++)
+        {
+            items[index] = items[index] with
+            {
+                Tags = await ReadItemTagsAsync(
+                    connection,
+                    workspaceId,
+                    items[index].Id,
+                    cancellationToken)
+            };
+        }
+
         return items;
+    }
+
+    private static async Task<IReadOnlyList<RepairTagEntity>> ReadItemTagsAsync(
+        DbConnection connection,
+        Guid workspaceId,
+        Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(connection, """
+            SELECT wt.id, wt.workspace_id, wt.name, wt.normalized_name,
+                   wt.created_by, wt.created_at, wt.updated_at
+            FROM repair_order_item_tags oit
+            INNER JOIN workspace_tags wt ON wt.id = oit.tag_id
+            WHERE wt.workspace_id = @workspace_id
+              AND oit.repair_order_item_id = @item_id
+            ORDER BY wt.normalized_name, wt.id;
+            """);
+        AddParameter(command, "workspace_id", workspaceId);
+        AddParameter(command, "item_id", itemId);
+        var tags = new List<RepairTagEntity>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            tags.Add(new RepairTagEntity(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetGuid(4),
+                reader.GetFieldValue<DateTimeOffset>(5),
+                reader.GetFieldValue<DateTimeOffset>(6)));
+        }
+
+        return tags;
     }
 
     private static RepairOrderStatus ParseStatus(string value) =>

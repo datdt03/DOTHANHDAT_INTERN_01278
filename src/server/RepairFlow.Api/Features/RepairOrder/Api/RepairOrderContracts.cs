@@ -1,4 +1,5 @@
 using RepairFlow.Api.Features.Customer.Api;
+using RepairFlow.Api.Features.RepairTag.Api;
 
 namespace RepairFlow.Api.Features.RepairOrder.Api;
 
@@ -33,7 +34,8 @@ public sealed record RepairItemIntakeRequest(
     string? HandoverCondition = null,
     string? Accessories = null,
     string? ItemNotes = null,
-    CredentialIntakeRequest? Credential = null);
+    CredentialIntakeRequest? Credential = null,
+    IReadOnlyList<Guid>? TagIds = null);
 
 public sealed record DeviceIntakeRequest(
     string Type,
@@ -111,7 +113,8 @@ public sealed record RepairItemResponse(
     bool CredentialConsent,
     DateTimeOffset? CredentialReceivedAt,
     DateTimeOffset? CredentialExpiresAt,
-    DateTimeOffset? CredentialDestroyedAt);
+    DateTimeOffset? CredentialDestroyedAt,
+    IReadOnlyList<RepairTagResponse>? Tags = null);
 
 public sealed record CredentialRevealResponse(
     Guid RepairOrderId,

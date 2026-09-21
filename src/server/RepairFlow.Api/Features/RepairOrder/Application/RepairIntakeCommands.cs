@@ -25,7 +25,8 @@ public sealed record RepairItemIntakeCommand(
     string? HandoverCondition,
     string? Accessories,
     string? ItemNotes,
-    CredentialIntakeCommand? Credential);
+    CredentialIntakeCommand? Credential,
+    IReadOnlyList<Guid>? TagIds = null);
 
 public sealed record DeviceIntakeCommand(
     string DeviceType,
@@ -55,7 +56,8 @@ public sealed record RepairItemIntakeData(
     string? HandoverCondition,
     string? Accessories,
     string? ItemNotes,
-    ProtectedCredentialData? Credential);
+    ProtectedCredentialData? Credential,
+    IReadOnlyList<Guid>? TagIds = null);
 
 public sealed record ProtectedCredentialData(
     string Status,

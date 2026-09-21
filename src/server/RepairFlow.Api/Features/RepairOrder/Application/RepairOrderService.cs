@@ -8,6 +8,7 @@ using RepairFlow.Api.Features.Customer.Api;
 using RepairFlow.Api.Features.Customer.Domain;
 using RepairFlow.Api.Features.RepairOrder.Api;
 using RepairFlow.Api.Features.RepairOrder.Domain;
+using RepairFlow.Api.Features.RepairTag.Api;
 using CustomerEntity = RepairFlow.Api.Features.Customer.Domain.Customer;
 using RepairOrderEntity = RepairFlow.Api.Features.RepairOrder.Domain.RepairOrder;
 
@@ -168,7 +169,8 @@ public sealed class RepairOrderService
                 item.HandoverCondition,
                 item.Accessories,
                 item.ItemNotes,
-                ProtectCredential(item.Credential, receivedAt)))
+                ProtectCredential(item.Credential, receivedAt),
+                item.TagIds ?? []))
             .ToArray();
 
         try
@@ -386,7 +388,8 @@ public sealed class RepairOrderService
                     HandoverCondition = Optional(item.HandoverCondition, $"{prefix}.handoverCondition", 4000, errors),
                     Accessories = Optional(item.Accessories, $"{prefix}.accessories", 4000, errors),
                     ItemNotes = Optional(item.ItemNotes, $"{prefix}.itemNotes", 4000, errors),
-                    Credential = credential
+                    Credential = credential,
+                    TagIds = NormalizeTagIds(item.TagIds, $"{prefix}.tagIds", errors)
                 });
             }
         }
@@ -441,6 +444,21 @@ public sealed class RepairOrderService
         }
 
         return new CredentialIntakeCommand(status, value, credential.Consent);
+    }
+
+    private static IReadOnlyList<Guid> NormalizeTagIds(
+        IReadOnlyList<Guid>? tagIds,
+        string field,
+        Dictionary<string, string[]> errors)
+    {
+        var values = (tagIds ?? []).Distinct().OrderBy(id => id).ToArray();
+        if (values.Any(id => id == Guid.Empty))
+        {
+            errors[field] = ["Every tag id must be a valid UUID."];
+            return [];
+        }
+
+        return values;
     }
 
     private ProtectedCredentialData? ProtectCredential(
@@ -569,7 +587,12 @@ public sealed class RepairOrderService
         item.CredentialConsent,
         item.CredentialReceivedAt,
         item.CredentialExpiresAt,
-        item.CredentialDestroyedAt);
+        item.CredentialDestroyedAt,
+        (item.Tags ?? []).Select(tag => new RepairTagResponse(
+            tag.Id,
+            tag.Name,
+            tag.CreatedAt,
+            tag.UpdatedAt)).ToArray());
 
     private static AssignmentScope ToAssignmentScope(
         Guid workspaceId,

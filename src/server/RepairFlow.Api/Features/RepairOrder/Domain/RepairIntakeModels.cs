@@ -1,5 +1,6 @@
 using RepairFlow.Api.Features.Customer.Domain;
 using CustomerEntity = RepairFlow.Api.Features.Customer.Domain.Customer;
+using RepairTagEntity = RepairFlow.Api.Features.RepairTag.Domain.RepairTag;
 
 namespace RepairFlow.Api.Features.RepairOrder.Domain;
 
@@ -23,7 +24,8 @@ public sealed record RepairOrderItem(
     DateTimeOffset? CredentialReceivedAt,
     DateTimeOffset? CredentialExpiresAt,
     DateTimeOffset? CredentialDestroyedAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    IReadOnlyList<RepairTagEntity>? Tags = null);
 
 public sealed record RepairIntakeResult(
     CustomerEntity Customer,

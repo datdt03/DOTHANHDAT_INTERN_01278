@@ -8,7 +8,7 @@ Owner: Codex + Antigravity
 
 Status: READY
 
-Revision: 1
+Revision: 2
 
 Depends on: c2-002-antigravity-customer-area.md,
              c2-004-antigravity-repair-order-area.md,
@@ -63,6 +63,11 @@ Completion criteria: backend/API, tag lifecycle, UI intake/order, photo upload,
 - Workspace A/B isolation.
 - Create/search/rename tag.
 - Một item có nhiều tag; nhiều item dùng chung tag.
+- Tạo nhãn ngay từ search miss trong intake và tự động chọn nhãn vừa tạo.
+- Duplicate create trả `409 TAG_NAME_EXISTS` nhưng UI nhận diện/chọn nhãn đã có.
+- Assignment của item có thể thêm/xóa khi order còn `received`.
+- Assignment bị khóa từ `diagnosing` trở đi, trả `409 TAG_ASSIGNMENT_LOCKED` và
+  không làm mất nhãn hiện có.
 - Duplicate normalized name và duplicate assignment.
 - Referenced tag trả `409 TAG_IN_USE` và không mất lịch sử.
 - Unreferenced tag hard-delete thành công.
@@ -94,6 +99,9 @@ Completion criteria: backend/API, tag lifecycle, UI intake/order, photo upload,
 - [ ] Chạy intake transaction/idempotency/regression tests.
 - [ ] Chạy order list/detail UI checklist.
 - [ ] Chạy tag picker/multi-item/rename/delete-guard UI checklist.
+- [ ] Chạy inline-create, duplicate-resolution và pre-repair assignment-edit
+      checklist.
+- [ ] Chạy lifecycle-lock checklist từ `diagnosing` trở đi.
 - [ ] Chạy photo capture/upload/retry/failure checklist trên target viewports.
 - [ ] Kiểm tra private access, signed URL expiry và no-leak conditions.
 - [ ] Ghi acceptance evidence và C2/C3 handoff.

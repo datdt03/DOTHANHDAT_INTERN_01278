@@ -6,7 +6,7 @@ Title: Antigravity order list/detail UI và kết nối workflow tiếp nhận
 
 Owner: Antigravity
 
-Status: READY
+Status: DONE
 
 Revision: 3
 

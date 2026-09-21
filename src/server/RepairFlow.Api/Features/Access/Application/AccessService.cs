@@ -46,5 +46,9 @@ public sealed class AccessService
             capabilities.CanWriteRepair,
             capabilities.CanWriteQualityCheck,
             capabilities.CanWriteHandover,
-            capabilities.WritesRequireAssignment);
+            capabilities.WritesRequireAssignment,
+            capabilities.CanReadWorkspaceTags,
+            capabilities.CanCreateWorkspaceTags,
+            capabilities.CanManageWorkspaceTags,
+            capabilities.CanAssignRepairItemTags);
 }

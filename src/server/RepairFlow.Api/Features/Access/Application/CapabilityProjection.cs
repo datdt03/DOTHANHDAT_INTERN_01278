@@ -19,7 +19,11 @@ public sealed record AccessCapabilities(
     bool CanWriteRepair,
     bool CanWriteQualityCheck,
     bool CanWriteHandover,
-    bool WritesRequireAssignment);
+    bool WritesRequireAssignment,
+    bool CanReadWorkspaceTags,
+    bool CanCreateWorkspaceTags,
+    bool CanManageWorkspaceTags,
+    bool CanAssignRepairItemTags);
 
 public static class CapabilityProjection
 {
@@ -49,6 +53,10 @@ public static class CapabilityProjection
             CanWriteRepair: isManagement || isTechnician,
             CanWriteQualityCheck: isManagement || isTechnician,
             CanWriteHandover: isManagement || isReceptionist,
-            WritesRequireAssignment: isReceptionist || isTechnician);
+            WritesRequireAssignment: isReceptionist || isTechnician,
+            CanReadWorkspaceTags: isManagement || isReceptionist,
+            CanCreateWorkspaceTags: isManagement || isReceptionist,
+            CanManageWorkspaceTags: isManagement,
+            CanAssignRepairItemTags: isManagement || isReceptionist);
     }
 }

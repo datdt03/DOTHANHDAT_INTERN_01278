@@ -115,6 +115,13 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
                 role == AccessRole.Receptionist ||
                 (role == AccessRole.Technician && hasAssignment),
             AccessAction.RepairOrderCreate => isManagement || role == AccessRole.Receptionist,
+            AccessAction.WorkspaceTagRead => isManagement || role == AccessRole.Receptionist,
+            AccessAction.WorkspaceTagCreate => isManagement || role == AccessRole.Receptionist,
+            AccessAction.WorkspaceTagManage => isManagement,
+            AccessAction.RepairItemTagWrite =>
+                isManagement ||
+                (role == AccessRole.Receptionist &&
+                 HasResponsibility(AssignmentResponsibility.Intake)),
             _ => false
         };
 
@@ -129,12 +136,14 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
             AccessAction.HandoverWrite or
             AccessAction.CustomerRead or
             AccessAction.DeviceRead or
-            AccessAction.RepairOrderRead;
+            AccessAction.RepairOrderRead or
+            AccessAction.RepairItemTagWrite;
         var assignmentRequired = role switch
         {
             AccessRole.Receptionist => request.Action is
                 AccessAction.IntakeWrite or
-                AccessAction.HandoverWrite,
+                AccessAction.HandoverWrite or
+                AccessAction.RepairItemTagWrite,
             AccessRole.Technician => assignmentScopedAction,
             _ => false
         };

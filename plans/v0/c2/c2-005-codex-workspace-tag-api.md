@@ -1,19 +1,21 @@
-# C2-005 — Codex workspace tag catalog và repair-item assignments
+# C2-005 — Codex workspace tag catalog, assignments và lifecycle lock
 
 Plan ID: c2-005
 
-Title: Backend/API cho tag dùng chung theo workspace và nhiều tag trên thiết bị
+Title: Backend/API cho nhãn dùng chung theo workspace, nhiều nhãn trên thiết bị
+       và khóa chỉnh sửa theo giai đoạn sửa chữa
 
 Owner: Codex
 
 Status: READY
 
-Revision: 1
+Revision: 2
 
 Depends on: c2-001-codex-customer-device-order-api.md
 
-Produces: Workspace tag catalog, tag lifecycle API, repair-item tag assignments
-          và intake contract mở rộng bằng `tagIds`.
+Produces: Workspace tag catalog, tag lifecycle API, repair-item tag assignments,
+          assignment mutation trước giai đoạn kỹ thuật và intake contract mở
+          rộng bằng `tagIds`.
 
 Consumed by: c2-006 tag UI, c2-009 vertical acceptance, C9 filtering
 
@@ -35,8 +37,9 @@ Allowed to change: new RepairTag feature, new SQL migration, RepairOrder intake
                     contract/application/repository projection, OpenAPI và tests.
 Do not change: completed c2-000/c2-001 plan files, customer/device rules,
                evidence storage, diagnosis/quote/repair behavior hoặc UI.
-Completion criteria: workspace-scoped tag CRUD, multi-tag assignment, hard-delete
-                     guard và API tests pass.
+Completion criteria: workspace-scoped tag CRUD, inline-create-compatible
+                     multi-tag assignment, pre-repair assignment mutation,
+                     hard-delete guard, lifecycle lock và API tests pass.
 ```
 
 ## Product rules
@@ -44,13 +47,22 @@ Completion criteria: workspace-scoped tag CRUD, multi-tag assignment, hard-delet
 - Tag gắn vào `RepairOrderItem`, là thiết bị/sản phẩm thực tế được tiếp nhận.
 - Một item có nhiều tag; một tag dùng được cho nhiều item.
 - Tag catalog dùng chung trong workspace, không phụ thuộc người tạo.
+- API catalog phải hỗ trợ UI tạo nhãn ngay trong ô tìm kiếm; UI không cần đi qua
+  một trang quản lý riêng để tạo nhãn.
 - Tag name trim và normalize; `Android`, `android` và ` android ` không tạo
   duplicate logic.
+- Tên nhãn là Unicode 1–64 ký tự sau khi trim; cho phép tiếng Việt, dấu, số,
+  khoảng trắng, gạch ngang và gạch dưới; không nhận control character hoặc
+  xuống dòng.
 - Đổi tên tag giữ nguyên tất cả assignment lịch sử.
 - Không có soft delete hoặc `deleted_at`.
 - Tag còn bất kỳ assignment nào không được xóa; trả `409 TAG_IN_USE`.
 - Tag không có assignment được hard-delete trong transaction.
 - Không tạo order-level tag trong plan này.
+- Assignment trên repair item được thêm/xóa khi order còn ở trạng thái
+  `received`. Khi order chuyển sang giai đoạn kỹ thuật (`diagnosing`) hoặc
+  bất kỳ trạng thái sau đó, assignment trở thành read-only; backend là nơi
+  quyết định và trả `409 TAG_ASSIGNMENT_LOCKED`.
 - Backend là authority cho workspace/capability; UI không được tự quyết định.
 
 ## Data model
@@ -88,16 +100,30 @@ GET    /api/tags?query=&includeUnused=
 POST   /api/tags                 { name }
 PATCH  /api/tags/{tagId}         { name }
 DELETE /api/tags/{tagId}
+PUT    /api/repair-orders/{orderId}/items/{itemId}/tags
+                                  { tagIds: [] }
 ```
 
 Rules:
 
 - Workspace lấy từ access context hiện tại, không tin workspace id do client gửi.
-- `POST` trim/normalize và xử lý duplicate theo error hoặc idempotent policy đã
-  được freeze trong OpenAPI; không tạo hai tag logic giống nhau.
-- `PATCH` re-check unique trong cùng workspace.
+- `POST` trim/normalize và duplicate theo normalized name trả `409 TAG_NAME_EXISTS`
+  kèm `existingTagId`/safe existing tag để UI có thể tự chọn nhãn đã tồn tại.
+- `PATCH` re-check unique trong cùng workspace và cũng trả `409 TAG_NAME_EXISTS`.
+- Tên nhãn hợp lệ dài 1–64 Unicode ký tự sau khi trim; validation lỗi dùng
+  `TAG_NAME_REQUIRED`, `TAG_NAME_TOO_LONG` hoặc `TAG_NAME_INVALID`.
 - `DELETE` lock/check assignment trong transaction; có reference trả conflict,
   không reference mới hard-delete.
+- `PUT .../tags` thay toàn bộ assignment của một repair item trong transaction;
+  tag IDs phải thuộc workspace, được loại duplicate và trả `tags[]` trong
+  projection. Operation chỉ thành công khi order còn `received`; trạng thái
+  khác trả `409 TAG_ASSIGNMENT_LOCKED`.
+- Quyền mặc định: Receptionist và Manager được đọc/tìm/tạo/gán nhãn khi còn
+  `received`; Manager được đổi tên và xóa catalog. Nếu sản phẩm cần Receptionist
+  đổi tên/xóa, phải cấp capability riêng và test rõ, không suy luận ở UI.
+- `GET /api/tags` tìm không phân biệt hoa thường; exact match đứng trước prefix,
+  prefix đứng trước contains; danh sách rỗng query sắp xếp theo
+  `normalized_name ASC` với thứ tự ổn định.
 - Tất cả response dùng envelope, request ID, safe DTO và error code hiện có.
 - Mọi endpoint enforce active session, workspace và capability server-side.
 
@@ -118,6 +144,10 @@ assignment cùng transaction với order và trả `tags[]` trong safe `RepairIt
 Tag được tạo qua catalog endpoint trước khi submit intake; không tự tạo tag từ
 chuỗi tùy ý bên trong command nếu chưa có policy riêng.
 
+Assignment sau intake dùng `PUT /api/repair-orders/{orderId}/items/{itemId}/tags`
+và phải kiểm tra lại workspace, item thuộc order, capability của actor và
+trạng thái khóa. Không dùng UI để quyết định nhãn đã bị khóa hay chưa.
+
 ## Implementation sequence
 
 - [ ] Audit schema/migration runner và freeze normalized-name policy.
@@ -125,7 +155,11 @@ chuỗi tùy ý bên trong command nếu chưa có policy riêng.
 - [ ] Tạo feature-local domain/application/infrastructure/API; không tạo
       `Features/C2`, `C2Models.cs`, `IC2Repository.cs`.
 - [ ] Implement list/create/rename/delete guard.
+- [ ] Freeze name validation, duplicate response và search/sort semantics trong
+      OpenAPI.
 - [ ] Mở rộng intake command, normalization và transaction assignment.
+- [ ] Implement assignment replacement cho repair item khi order còn `received`;
+      khóa từ `diagnosing` trở đi.
 - [ ] Thêm tags vào order/item safe projections.
 - [ ] Cập nhật OpenAPI examples và structured errors.
 - [ ] Chạy migration clean/idempotent rerun.
@@ -136,9 +170,14 @@ chuỗi tùy ý bên trong command nếu chưa có policy riêng.
 - [ ] Case/whitespace duplicate không tạo bản ghi thứ hai.
 - [ ] Một item có nhiều tag; assignment duplicate bị chặn.
 - [ ] Nhiều item dùng chung một tag.
+- [ ] Assignment có thể thêm/xóa trên item đã tạo khi order còn `received`.
+- [ ] Assignment bị khóa từ `diagnosing` trở đi và trả `409 TAG_ASSIGNMENT_LOCKED`.
 - [ ] Đổi tên giữ assignment.
 - [ ] Xóa tag đang được dùng trả `409 TAG_IN_USE`, dữ liệu vẫn còn.
 - [ ] Xóa tag không có reference hard-delete thành công.
+- [ ] Duplicate create/rename trả `409 TAG_NAME_EXISTS` và không tạo bản ghi thứ hai.
+- [ ] Tên dài hơn 64 ký tự, rỗng hoặc chứa control character bị từ chối.
+- [ ] Search exact/prefix/contains và sort theo normalized name ổn định.
 - [ ] Tag id workspace khác trong intake bị từ chối.
 - [ ] Permission/session/assignment denial và safe error envelope.
 - [ ] Existing c2-001 intake regression vẫn pass.
@@ -150,5 +189,6 @@ chuỗi tùy ý bên trong command nếu chưa có policy riêng.
 - [ ] Tag được dùng chung bởi các nhân viên cùng workspace.
 - [ ] Tag đang có reference không thể xóa.
 - [ ] Tag không có reference được xóa cứng.
+- [ ] Assignment của item chỉ sửa được trước giai đoạn kỹ thuật.
 - [ ] API trả tags trong item projection để UI hiển thị.
 - [ ] Không thay đổi business rule hoặc migration lịch sử.

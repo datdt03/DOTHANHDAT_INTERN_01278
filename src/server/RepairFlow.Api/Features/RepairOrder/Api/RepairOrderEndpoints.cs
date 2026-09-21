@@ -140,7 +140,8 @@ public static class RepairOrderEndpoints
                     : new CredentialIntakeCommand(
                         item.Credential.Status,
                         item.Credential.Value,
-                        item.Credential.Consent))).ToArray(),
+                        item.Credential.Consent),
+                item.TagIds)).ToArray(),
             request.RepairOrder.IntakeNotes,
             request.ExpectedCompletedAt,
             request.IntakeStaffId,

@@ -3,10 +3,13 @@ using System.Data.Common;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using NpgsqlTypes;
 using RepairFlow.Api.Features.Customer.Domain;
 using RepairFlow.Api.Features.RepairOrder.Application;
 using RepairFlow.Api.Features.RepairOrder.Domain;
+using RepairFlow.Api.Features.RepairTag.Domain;
 using RepairFlow.Api.Infrastructure.Database;
+using RepairTagEntity = RepairFlow.Api.Features.RepairTag.Domain.RepairTag;
 using CustomerEntity = RepairFlow.Api.Features.Customer.Domain.Customer;
 using RepairOrderEntity = RepairFlow.Api.Features.RepairOrder.Domain.RepairOrder;
 
@@ -52,6 +55,12 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
             }
             else
             {
+                await EnsureTagsBelongToWorkspaceAsync(
+                    connection,
+                    transaction,
+                    workspaceId,
+                    data.RepairItems.SelectMany(item => item.TagIds ?? []).Distinct().ToArray(),
+                    cancellationToken);
                 var customer = await ResolveCustomerAsync(connection, transaction, workspaceId, data, cancellationToken);
                 var devices = new List<(Guid Id, RepairItemIntakeData Data)>();
                 foreach (var item in data.RepairItems)
@@ -106,6 +115,7 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
                         index + 1,
                         devices[index].Id,
                         devices[index].Data,
+                        data.CreatedBy,
                         now,
                         cancellationToken));
                 }
@@ -386,6 +396,7 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
         int itemIndex,
         Guid deviceId,
         RepairItemIntakeData item,
+        Guid createdBy,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
@@ -422,6 +433,21 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
         AddParameter(command, "created_at", now);
         await command.ExecuteNonQueryAsync(cancellationToken);
 
+        foreach (var tagId in item.TagIds ?? [])
+        {
+            await using var tagCommand = CreateCommand(connection, """
+                INSERT INTO repair_order_item_tags
+                    (repair_order_item_id, tag_id, created_by, created_at)
+                VALUES
+                    (@item_id, @tag_id, @created_by, @created_at);
+                """, transaction);
+            AddParameter(tagCommand, "item_id", itemId);
+            AddParameter(tagCommand, "tag_id", tagId);
+            AddParameter(tagCommand, "created_by", createdBy);
+            AddParameter(tagCommand, "created_at", now);
+            await tagCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+
         return new RepairOrderItem(
             itemId,
             orderId,
@@ -442,7 +468,37 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
             credential?.ReceivedAt,
             credential?.ExpiresAt,
             null,
-            now);
+            now,
+            []);
+    }
+
+    private static async Task EnsureTagsBelongToWorkspaceAsync(
+        DbConnection connection,
+        DbTransaction transaction,
+        Guid workspaceId,
+        IReadOnlyList<Guid> tagIds,
+        CancellationToken cancellationToken)
+    {
+        if (tagIds.Count == 0)
+        {
+            return;
+        }
+
+        await using var command = CreateCommand(connection, """
+            SELECT count(*)
+            FROM workspace_tags
+            WHERE workspace_id = @workspace_id
+              AND id = ANY(@tag_ids);
+            """, transaction);
+        AddParameter(command, "workspace_id", workspaceId);
+        AddUuidArrayParameter(command, "tag_ids", tagIds);
+        var availableCount = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        if (availableCount != tagIds.Count)
+        {
+            throw new RepairIntakeConflictException(
+                "TAG_WORKSPACE_MISMATCH",
+                "One or more tags do not belong to the active workspace.");
+        }
     }
 
     private static async Task InsertAssignmentAsync(
@@ -701,7 +757,53 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
                 reader.GetFieldValue<DateTimeOffset>(19)));
         }
 
+        for (var index = 0; index < items.Count; index++)
+        {
+            items[index] = items[index] with
+            {
+                Tags = await ReadItemTagsAsync(
+                    connection,
+                    workspaceId,
+                    items[index].Id,
+                    cancellationToken)
+            };
+        }
+
         return items;
+    }
+
+    private static async Task<IReadOnlyList<RepairTagEntity>> ReadItemTagsAsync(
+        DbConnection connection,
+        Guid workspaceId,
+        Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(connection, """
+            SELECT wt.id, wt.workspace_id, wt.name, wt.normalized_name,
+                   wt.created_by, wt.created_at, wt.updated_at
+            FROM repair_order_item_tags oit
+            INNER JOIN workspace_tags wt ON wt.id = oit.tag_id
+            WHERE wt.workspace_id = @workspace_id
+              AND oit.repair_order_item_id = @item_id
+            ORDER BY wt.normalized_name, wt.id;
+            """);
+        AddParameter(command, "workspace_id", workspaceId);
+        AddParameter(command, "item_id", itemId);
+        var tags = new List<RepairTagEntity>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            tags.Add(new RepairTagEntity(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetGuid(4),
+                reader.GetFieldValue<DateTimeOffset>(5),
+                reader.GetFieldValue<DateTimeOffset>(6)));
+        }
+
+        return tags;
     }
 
     private static async Task<IReadOnlyList<Assignment>> ReadAssignmentsAsync(
@@ -880,6 +982,22 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
         var parameter = command.CreateParameter();
         parameter.ParameterName = name;
         parameter.Value = value ?? DBNull.Value;
+        command.Parameters.Add(parameter);
+    }
+
+    private static void AddUuidArrayParameter(
+        DbCommand command,
+        string name,
+        IReadOnlyList<Guid> values)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = values.ToArray();
+        if (parameter is NpgsqlParameter npgsqlParameter)
+        {
+            npgsqlParameter.NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Uuid;
+        }
+
         command.Parameters.Add(parameter);
     }
 }
