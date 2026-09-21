@@ -134,6 +134,8 @@ export function canAccessRoute(
   let baseRoute = cleanRoute;
   if (cleanRoute.startsWith('#/customers/')) {
     baseRoute = '#/customers';
+  } else if (cleanRoute.startsWith('#/orders/')) {
+    baseRoute = '#/orders';
   } else if (cleanRoute.startsWith('#/repair-intake')) {
     baseRoute = '#/repair-intake/new';
   }
@@ -148,14 +150,17 @@ export function getRouteTitle(rawHash: string, role?: UserRole): string {
   if (clean.startsWith('#/customers')) {
     return 'Khách hàng';
   }
+  if (clean.startsWith('#/orders')) {
+    return 'Phiếu sửa chữa';
+  }
   if (clean.startsWith('#/repair-intake')) {
     return 'Tiếp nhận sửa chữa';
   }
   switch (clean) {
     case '#/dashboard':
-      return 'Tổng quan vận hành';
+      return 'Tổng quan';
     case '#/today':
-      return 'Tổng quan hôm nay';
+      return 'Hôm nay';
     case '#/lookup':
       return 'Tra cứu tiến độ';
     case '#/my-work':

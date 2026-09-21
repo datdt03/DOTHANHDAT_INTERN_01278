@@ -1,4 +1,5 @@
 import { getRoleCapabilities, type RoleCapabilities, type UserRole } from '../api/access-api';
+import type { ReactNode } from 'react';
 import {
   IconClose,
   IconCustomers,
@@ -15,6 +16,7 @@ import {
   IconStore,
   IconToday,
   IconWorkflow,
+  IconPlus,
 } from './icons';
 import { BrandMark, IconButton } from './ui-primitives';
 
@@ -39,6 +41,7 @@ export interface AppSidebarProps {
   currentRole?: UserRole;
   capabilities?: RoleCapabilities | null;
   onLogout?: () => void;
+  roleContextSwitcher?: ReactNode;
 }
 
 function normalizeHash(hash?: string): string {
@@ -91,6 +94,7 @@ export function AppSidebar({
   currentRole = 'manager',
   capabilities: projectedCapabilities,
   onLogout,
+  roleContextSwitcher,
 }: AppSidebarProps) {
   const capabilities = projectedCapabilities || getRoleCapabilities(currentRole);
   const navItems = capabilities.navigationItems;
@@ -165,6 +169,13 @@ export function AppSidebar({
                 <small>Cửa hàng hiện tại</small>
                 <strong>{storeName}</strong>
               </div>
+            </div>
+          )}
+
+          {!isCollapsed && roleContextSwitcher && (
+            <div className="sidebar-role-context-section">
+              <span className="nav-section-label">Ngữ cảnh làm việc</span>
+              {roleContextSwitcher}
             </div>
           )}
 

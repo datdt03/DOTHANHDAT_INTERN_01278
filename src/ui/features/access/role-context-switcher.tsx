@@ -5,7 +5,17 @@ import { getRoleTitle } from '../../shared/api/access-api';
 import { IconCheck, IconChevronDown, IconShield } from '../../shared/components/icons';
 import './role-context-switcher.css';
 
-export function RoleContextSwitcher() {
+export interface RoleContextSwitcherProps {
+  inSidebar?: boolean;
+  className?: string;
+  onRoleSwitched?: () => void;
+}
+
+export function RoleContextSwitcher({
+  inSidebar = false,
+  className = '',
+  onRoleSwitched,
+}: RoleContextSwitcherProps = {}) {
   const { currentUser, sessionStatus, errorMessage, switchRole } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,10 +58,11 @@ export function RoleContextSwitcher() {
 
     await switchRole(role);
     setIsOpen(false);
+    onRoleSwitched?.();
   };
 
   return (
-    <div className="rf-role-context" ref={containerRef}>
+    <div className={`rf-role-context ${inSidebar ? 'rf-role-context--sidebar' : ''} ${className}`.trim()} ref={containerRef}>
       <button
         type="button"
         className="rf-role-context__trigger"

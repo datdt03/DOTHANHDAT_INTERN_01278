@@ -5,9 +5,11 @@ import {
   AppFooter,
   AppHeader,
   AppSidebar,
+  MobileFab,
 } from '../shared/components';
 import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
+import { RoleContextSwitcher } from '../features/access/role-context-switcher';
 import '../shared/styles/app-shell.css';
 
 interface InternalShellProps {
@@ -89,6 +91,12 @@ export function InternalShell({}: InternalShellProps) {
         userInitials={currentUser?.initials}
         currentRole={currentRole}
         onLogout={logout}
+        roleContextSwitcher={
+          <RoleContextSwitcher
+            inSidebar
+            onRoleSwitched={() => setMobileNavOpen(false)}
+          />
+        }
       />
 
       <div className="app-main">
@@ -101,6 +109,7 @@ export function InternalShell({}: InternalShellProps) {
           userName={currentUser?.name}
           userRole={currentUser?.roleTitle}
           userInitials={currentUser?.initials}
+          actions={<RoleContextSwitcher />}
         />
 
         {/* Main Content Outlet with Notification/Feedback Slot */}
@@ -127,6 +136,8 @@ export function InternalShell({}: InternalShellProps) {
 
         <AppFooter />
       </div>
+
+      <MobileFab />
     </div>
   );
 }

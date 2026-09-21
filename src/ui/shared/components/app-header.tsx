@@ -104,12 +104,6 @@ export function AppHeader({
             <span className="notification-count">{notificationCount}</span>
           )}
         </IconButton>
-
-        {userInitials && (
-          <div className="topbar-user" title={userName ? `${userName} (${userRole})` : undefined}>
-            <div className="avatar" aria-label={userName}>{userInitials}</div>
-          </div>
-        )}
       </div>
     </header>
   );

@@ -15,4 +15,5 @@ export * from './progress-stepper';
 export * from './empty-state';
 export * from './forbidden-state';
 export * from './icons';
+export * from './mobile-fab';
 export * from './centered-placeholder-page';

@@ -280,6 +280,7 @@ export function RepairItemStep({
             <FormGroup label="Loại thiết bị *" htmlFor={`type-${currentItem.localId}`}>
               <FormSelect
                 id={`type-${currentItem.localId}`}
+                icon={<IconDevices size={16} />}
                 value={currentItem.deviceType}
                 onChange={(e) => handleFieldChange(currentIndex, 'deviceType', e.target.value)}
               >
@@ -471,6 +472,7 @@ export function RepairItemStep({
               <FormGroup label="Trạng thái khóa thiết bị" htmlFor={`cred-status-${currentItem.localId}`}>
                 <FormSelect
                   id={`cred-status-${currentItem.localId}`}
+                  icon={<IconShield size={16} />}
                   value={currentItem.credentialStatus}
                   onChange={(e) => handleFieldChange(currentIndex, 'credentialStatus', e.target.value)}
                 >

@@ -4,15 +4,16 @@ import {
   AppFooter,
   AppHeader,
   AppSidebar,
+  MobileFab,
 } from '../shared/components';
 import { ForbiddenState } from '../shared/components/forbidden-state';
 import { CenteredPlaceholderPage } from '../shared/components/centered-placeholder-page';
 import { CustomerRecordsArea } from '../features/customer-records-area/customer-records-area';
 import { RepairIntakeWorkflow } from '../features/repair-intake-workflow/repair-intake-workflow';
+import { RepairOrderArea } from '../features/repair-order-area/repair-order-area';
 import type { AreaMountContext, C2AreaId } from './area-boundary';
 import { getRoleCapabilities } from '../shared/api/access-api';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
-import { DashboardPlaceholder } from '../features/dashboard/dashboard-placeholder';
 import { RoleContextSwitcher } from '../features/access/role-context-switcher';
 import {
   canAccessRoute,
@@ -88,29 +89,30 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       return <ComponentShowcaseView />;
     }
 
+    // Common C2 area mount helpers
+    const handleNavigate = (area: C2AreaId, resourceId?: string) => {
+      if (area === 'device-area') {
+        window.location.hash = resourceId ? `#/devices/${resourceId}` : '#/devices';
+      } else if (area === 'repair-order-area') {
+        window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
+      } else if (area === 'customer-records-area') {
+        window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
+      } else if (area === 'repair-intake-workflow') {
+        window.location.hash = '#/repair-intake/new';
+      }
+    };
+
+    const areaContext: AreaMountContext = {
+      workspaceId: currentUser?.workspaceId || 'ws-main',
+      activeRole: currentRole,
+      roles: currentUser?.roles || [currentRole],
+      capabilities: capabilities || getRoleCapabilities(currentRole),
+    };
+
     // 3. Customer Records Area (Fully developed in C2-002)
     if (cleanHash.startsWith('#/customers')) {
       const customerMatch = cleanHash.match(/^#\/customers\/([A-Za-z0-9-]+)$/);
       const customerId = customerMatch ? customerMatch[1] : undefined;
-
-      const areaContext: AreaMountContext = {
-        workspaceId: currentUser?.workspaceId || 'ws-main',
-        activeRole: currentRole,
-        roles: currentUser?.roles || [currentRole],
-        capabilities: capabilities || getRoleCapabilities(currentRole),
-      };
-
-      const handleNavigate = (area: C2AreaId, resourceId?: string) => {
-        if (area === 'device-area') {
-          window.location.hash = resourceId ? `#/devices/${resourceId}` : '#/devices';
-        } else if (area === 'repair-order-area') {
-          window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
-        } else if (area === 'customer-records-area') {
-          window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
-        } else if (area === 'repair-intake-workflow') {
-          window.location.hash = '#/repair-intake/new';
-        }
-      };
 
       return (
         <CustomerRecordsArea
@@ -125,25 +127,6 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
 
     // 4. Repair Intake Workflow (C2-002 Revision 3 Primary Task-First Flow)
     if (cleanHash.startsWith('#/repair-intake')) {
-      const areaContext: AreaMountContext = {
-        workspaceId: currentUser?.workspaceId || 'ws-main',
-        activeRole: currentRole,
-        roles: currentUser?.roles || [currentRole],
-        capabilities: capabilities || getRoleCapabilities(currentRole),
-      };
-
-      const handleNavigate = (area: C2AreaId, resourceId?: string) => {
-        if (area === 'device-area') {
-          window.location.hash = resourceId ? `#/devices/${resourceId}` : '#/devices';
-        } else if (area === 'repair-order-area') {
-          window.location.hash = resourceId ? `#/orders/${resourceId}` : '#/orders';
-        } else if (area === 'customer-records-area') {
-          window.location.hash = resourceId ? `#/customers/${resourceId}` : '#/customers';
-        } else if (area === 'repair-intake-workflow') {
-          window.location.hash = '#/repair-intake/new';
-        }
-      };
-
       return (
         <RepairIntakeWorkflow
           context={areaContext}
@@ -154,21 +137,27 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       );
     }
 
-    // 5. Role-aware Dashboard Overview (Manager Overview, Receptionist Today, Technician My Work)
-    if (!cleanHash || cleanHash === '#/dashboard' || cleanHash === '#/today' || cleanHash === '#/my-work') {
+    // 5. Repair Order Area (C2-004)
+    if (cleanHash.startsWith('#/orders')) {
+      const orderMatch = cleanHash.match(/^#\/orders\/([A-Za-z0-9-]+)$/);
+      const orderId = orderMatch ? orderMatch[1] : undefined;
+
       return (
-        <DashboardPlaceholder
-          role={currentRole}
-          userName={currentUser?.name}
-          roleTitle={currentUser?.roleTitle}
+        <RepairOrderArea
+          context={areaContext}
+          onNavigate={handleNavigate}
+          initialOrderId={orderId}
+          previewMode={previewMode}
+          standalone={false}
         />
       );
     }
 
-    // 6. All other routes not yet developed -> Minimalist Centered Placeholder
+    // 5. All in-development routes (Overview, Work Queue, Devices, Staff, etc.) -> Standardized Centered Placeholder (matching Hình 3)
     return (
       <CenteredPlaceholderPage
-        title={activeNav || 'Trang đang phát triển'}
+        title={activeNav || 'Tính năng'}
+        subtitle="Tính năng đang trong lộ trình phát triển"
       />
     );
   };
@@ -190,6 +179,12 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
         currentRole={currentRole}
         capabilities={capabilities}
         onLogout={logout}
+        roleContextSwitcher={
+          <RoleContextSwitcher
+            inSidebar
+            onRoleSwitched={() => setMobileNavOpen(false)}
+          />
+        }
       />
 
       <div className="app-main">
@@ -221,6 +216,9 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
 
         <AppFooter />
       </div>
+
+      {/* Floating Action Button (FAB) for Mobile Quick Intake */}
+      <MobileFab visible={canAccessRoute('#/repair-intake/new', currentRole, capabilities)} />
     </div>
   );
 }

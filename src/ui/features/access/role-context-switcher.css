@@ -107,17 +107,82 @@
 }
 
 @media (max-width: 768px) {
-  .rf-role-context__trigger-copy {
+  .rf-role-context:not(.rf-role-context--sidebar) .rf-role-context__trigger-copy {
     display: none;
   }
 
-  .rf-role-context__trigger {
+  .rf-role-context:not(.rf-role-context--sidebar) .rf-role-context__trigger {
     width: 38px;
     justify-content: center;
     padding: 0;
   }
 
-  .rf-role-context__menu {
+  .rf-role-context:not(.rf-role-context--sidebar) .rf-role-context__menu {
     right: -8px;
   }
 }
+
+/* Sidebar Drawer Role Switcher (Mobile touch-friendly & perfectly aligned) */
+.rf-role-context--sidebar {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.rf-role-context--sidebar .rf-role-context__trigger {
+  width: 100% !important;
+  min-height: 38px;
+  padding: 6px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: var(--rf-surface, #ffffff) !important;
+  border: 1px solid var(--rf-border, #cbd5e1) !important;
+  border-radius: var(--rf-radius-md, 8px) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box !important;
+  transition: all 0.15s ease;
+}
+
+.rf-role-context--sidebar .rf-role-context__trigger:hover {
+  border-color: var(--rf-primary, #0284c7) !important;
+  background: #f8fafc !important;
+}
+
+.rf-role-context--sidebar .rf-role-context__trigger > svg {
+  flex-shrink: 0;
+  color: var(--rf-primary, #0284c7);
+}
+
+.rf-role-context--sidebar .rf-role-context__trigger-copy {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1;
+  min-width: 0;
+  margin: 0 10px;
+  text-align: left !important;
+}
+
+.rf-role-context--sidebar .rf-role-context__trigger-copy strong {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--rf-text-main, #0f172a);
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.2 !important;
+}
+
+.rf-role-context--sidebar .rf-role-context__label {
+  display: none !important;
+}
+
+.rf-role-context--sidebar .rf-role-context__menu {
+  position: static !important;
+  width: 100% !important;
+  margin-top: 6px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  border: 1px solid var(--rf-border, #cbd5e1);
+  box-sizing: border-box !important;
+}
+
