@@ -28,6 +28,7 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
     '#/devices',
     '#/staff-assignments',
     '#/workflow-config',
+    '#/tags',
     '#/settings',
     '#/today',
     '#/lookup',
@@ -43,6 +44,7 @@ export const ROLE_ALLOWED_ROUTES: Record<UserRole, readonly string[]> = {
     '#/devices',
     '#/staff-assignments',
     '#/workflow-config',
+    '#/tags',
     '#/settings',
     '#/today',
     '#/lookup',
@@ -126,6 +128,14 @@ export function canAccessRoute(
     if (cleanRoute === '#/settings' && !capabilities.canManageSettings) {
       return false;
     }
+    if (cleanRoute === '#/tags' && !capabilities.canManageWorkspaceTags) {
+      return false;
+    }
+  }
+
+  // Tags management is strictly restricted to manager and owner
+  if (cleanRoute === '#/tags' && normalizedRole !== 'manager' && normalizedRole !== 'owner') {
+    return false;
   }
 
   const allowedList = ROLE_ALLOWED_ROUTES[normalizedRole];
@@ -177,6 +187,8 @@ export function getRouteTitle(rawHash: string, role?: UserRole): string {
       return 'Nhân sự & phân công';
     case '#/workflow-config':
       return 'Quy trình cửa hàng';
+    case '#/tags':
+      return 'Quản lý nhãn';
     case '#/settings':
       return 'Quản trị hệ thống';
     case '#/reception-queue':

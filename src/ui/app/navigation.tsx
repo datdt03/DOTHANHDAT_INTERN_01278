@@ -11,6 +11,7 @@ import { CenteredPlaceholderPage } from '../shared/components/centered-placehold
 import { CustomerRecordsArea } from '../features/customer-records-area/customer-records-area';
 import { RepairIntakeWorkflow } from '../features/repair-intake-workflow/repair-intake-workflow';
 import { RepairOrderArea } from '../features/repair-order-area/repair-order-area';
+import { TagManagementPage } from '../features/tag-management/tag-management-page';
 import type { AreaMountContext, C2AreaId } from './area-boundary';
 import { getRoleCapabilities } from '../shared/api/access-api';
 import { ComponentShowcaseView } from '../features/showcase/component-showcase-view';
@@ -153,7 +154,17 @@ export function RoleAwareNavigationShell({ previewMode = false }: RoleAwareNavig
       );
     }
 
-    // 5. All in-development routes (Overview, Work Queue, Devices, Staff, etc.) -> Standardized Centered Placeholder (matching Hình 3)
+    // 6. Tag Management Area (Dedicated #/tags for Manager / Owner)
+    if (cleanHash === '#/tags') {
+      return (
+        <TagManagementPage
+          context={areaContext}
+          previewMode={previewMode}
+        />
+      );
+    }
+
+    // 7. All in-development routes (Overview, Work Queue, Devices, Staff, etc.) -> Standardized Centered Placeholder (matching Hình 3)
     return (
       <CenteredPlaceholderPage
         title={activeNav || 'Tính năng'}

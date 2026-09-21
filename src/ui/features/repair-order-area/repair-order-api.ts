@@ -1,6 +1,7 @@
 import { runtimeConfig } from '../../config/runtime-config';
 import { createApiClient, ApiClientError, type ApiClient } from '../../shared/api/api-client';
 import { MOCK_CUSTOMERS } from '../../mocks/customer-mock-data';
+import type { TagDto, RepairItemTagsResponseDto } from '../../shared/api/repair-tag-api';
 
 export interface AssignmentDto {
   id: string;
@@ -47,6 +48,7 @@ export interface RepairOrderItemDto {
   credentialReceivedAt: string | null;
   credentialExpiresAt: string | null;
   credentialDestroyedAt: string | null;
+  tags?: TagDto[];
 }
 
 export interface CustomerSummaryDto {
@@ -76,6 +78,7 @@ export interface RepairOrderSummaryDto {
   primaryDeviceName: string;
   extraDevicesCount: number;
   assignedStaffName: string | null;
+  tags?: TagDto[];
 }
 
 export interface RepairOrderDetailDto {
@@ -294,6 +297,11 @@ export function formatPresetValue(val?: string | null, fallback = '—'): string
 export interface RepairOrderApi {
   listOrders(query?: RepairOrderListQuery): Promise<RepairOrderListResult>;
   getOrder(orderId: string, options?: { signal?: AbortSignal }): Promise<RepairOrderDetailDto>;
+  replaceItemTags(
+    orderId: string,
+    itemId: string,
+    tagIds: string[],
+  ): Promise<RepairItemTagsResponseDto>;
 }
 
 interface ServerRepairOrderResponse {
@@ -396,11 +404,13 @@ export class RealRepairOrderAdapter implements RepairOrderApi {
 
       let primaryDeviceName = raw.customerDescription || 'Thiết bị tiếp nhận';
       let extraDevicesCount = 0;
+      let tags: TagDto[] | undefined = undefined;
 
       if (raw.repairItems && raw.repairItems.length > 0) {
         const first = raw.repairItems[0];
         primaryDeviceName = `${first.brand} ${first.model}`.trim();
         extraDevicesCount = Math.max(0, raw.repairItems.length - 1);
+        tags = first.tags;
       }
 
       return {
@@ -422,6 +432,7 @@ export class RealRepairOrderAdapter implements RepairOrderApi {
         primaryDeviceName,
         extraDevicesCount,
         assignedStaffName: primaryAssignment?.staffProfileName || null,
+        tags,
       };
     });
 
@@ -478,6 +489,26 @@ export class RealRepairOrderAdapter implements RepairOrderApi {
       openOrderWarnings: raw.openOrderWarnings || null,
       repairItems: raw.repairItems || [],
     };
+  }
+
+  async replaceItemTags(
+    orderId: string,
+    itemId: string,
+    tagIds: string[],
+  ): Promise<RepairItemTagsResponseDto> {
+    const response = await this.client.request<{
+      data: RepairItemTagsResponseDto;
+      meta?: { requestId?: string };
+    }>(`/api/repair-orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}/tags`, {
+      method: 'PUT',
+      body: JSON.stringify({ tagIds }),
+    });
+
+    if (!response.data) {
+      throw new ApiClientError('Không nhận được kết quả gán nhãn.', 500, 'empty_response');
+    }
+
+    return response.data;
   }
 }
 
@@ -547,6 +578,10 @@ export class MockRepairOrderAdapter implements RepairOrderApi {
           credentialReceivedAt: '2026-09-20T08:30:00Z',
           credentialExpiresAt: '2026-10-20T08:30:00Z',
           credentialDestroyedAt: null,
+          tags: [
+            { id: 'tag-mock-1', name: 'Android' },
+            { id: 'tag-mock-3', name: 'Màn hình lỗi' },
+          ],
         },
         {
           id: 'item-002',
@@ -567,6 +602,9 @@ export class MockRepairOrderAdapter implements RepairOrderApi {
           credentialReceivedAt: '2026-09-20T08:30:00Z',
           credentialExpiresAt: '2026-10-20T08:30:00Z',
           credentialDestroyedAt: null,
+          tags: [
+            { id: 'tag-mock-2', name: 'iOS' },
+          ],
         },
       ],
     },
@@ -642,6 +680,10 @@ export class MockRepairOrderAdapter implements RepairOrderApi {
           credentialReceivedAt: '2026-09-19T14:15:00Z',
           credentialExpiresAt: '2026-10-19T14:15:00Z',
           credentialDestroyedAt: null,
+          tags: [
+            { id: 'tag-mock-1', name: 'Android' },
+            { id: 'tag-mock-4', name: 'Pin chai' },
+          ],
         },
       ],
     },
@@ -936,6 +978,7 @@ export class MockRepairOrderAdapter implements RepairOrderApi {
         primaryDeviceName,
         extraDevicesCount,
         assignedStaffName: primaryAssignment?.staffProfileName || null,
+        tags: firstItem?.tags,
       };
     });
 
@@ -957,6 +1000,57 @@ export class MockRepairOrderAdapter implements RepairOrderApi {
       throw new ApiClientError('Không tìm thấy phiếu sửa chữa yêu cầu.', 404, 'not_found');
     }
     return found;
+  }
+
+  async replaceItemTags(
+    orderId: string,
+    itemId: string,
+    tagIds: string[],
+  ): Promise<RepairItemTagsResponseDto> {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const order = this.mockDetails.find(
+      (o) => o.id === orderId || o.orderCode.toLowerCase() === orderId.toLowerCase(),
+    );
+    if (!order) {
+      throw new ApiClientError('Không tìm thấy phiếu sửa chữa.', 404, 'not_found');
+    }
+
+    if (order.status !== 'received') {
+      throw new ApiClientError(
+        'Nhãn thiết bị đã bị khóa sau khi phiếu chuyển sang giai đoạn kỹ thuật.',
+        409,
+        'TAG_ASSIGNMENT_LOCKED',
+      );
+    }
+
+    const item = order.repairItems.find((it) => it.id === itemId || String(it.itemIndex) === itemId);
+    if (!item) {
+      throw new ApiClientError('Không tìm thấy thiết bị yêu cầu.', 404, 'not_found');
+    }
+
+    const nameMap: Record<string, string> = {
+      'tag-mock-1': 'Android',
+      'tag-mock-2': 'iOS',
+      'tag-mock-3': 'Màn hình lỗi',
+      'tag-mock-4': 'Pin chai',
+      'tag-mock-5': 'Vào nước',
+      'tag-mock-6': 'Máy đơ treo',
+      'tag-mock-7': 'Ưu tiên cao',
+    };
+
+    const updatedTags: TagDto[] = tagIds.map((id) => ({
+      id,
+      name: nameMap[id] || `Nhãn ${id.substring(0, 6)}`,
+    }));
+
+    item.tags = updatedTags;
+
+    return {
+      repairOrderId: order.id,
+      repairItemId: item.id,
+      orderStatus: order.status,
+      tags: updatedTags,
+    };
   }
 }
 

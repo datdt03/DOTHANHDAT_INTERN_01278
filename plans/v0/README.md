@@ -27,7 +27,7 @@ Stack C0 hiện đã được nghiệm thu trên runtime .NET, React/Vite và da
 | --- | --- | --- | --- |
 | C0 | Migrate runtime sang ASP.NET Core/.NET và React/Vite/TypeScript | DONE | [C0 acceptance evidence](./c0-runtime-stack-migration/c0-003-acceptance-evidence.md) |
 | C1 | Access, authentication, authorization và application shell | DONE | [c1-007-shared-integration-acceptance.md](./c1-access-and-application-shell/c1-007-shared-integration-acceptance.md) |
-| C2 | Customer, device và repair order | IN PROGRESS — c2-000/c2-001/c2-004 DONE; c2-002 → c2-005 → c2-006 → c2-007 → c2-008 → c2-009 READY | [C2 area-first implementation plan](./c2/README.md) |
+| C2 | Customer, device và repair order | IN PROGRESS — c2-000/c2-001/c2-004/c2-005/c2-006 DONE; c2-002/c2-007/c2-008/c2-009 READY | [C2 area-first implementation plan](./c2/README.md) |
 | C3 | Intake checklist và evidence | PLANNED | Chưa tạo task chi tiết |
 | C4 | Diagnosis và quotation draft | PLANNED | Chưa tạo task chi tiết |
 | C5 | Quotation publishing và customer decision | PLANNED | Chưa tạo task chi tiết |

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type {
   CreateRepairIntakePayload,
   RepairIntakeApi,
@@ -6,6 +6,7 @@ import type {
 } from './repair-intake-api';
 import type { CustomerIntakeSelection } from './customer-intake-step';
 import type { RepairItemDraft } from './repair-item-step';
+import { getRepairTagAdapter, type RepairTagApi } from '../../shared/api/repair-tag-api';
 import {
   CardPanel,
   CardPanelHeader,
@@ -48,6 +49,8 @@ interface IntakeReviewStepProps {
   onBackToItems: () => void;
   onResetWorkflow: () => void;
   onNavigateToOrder?: (orderId: string) => void;
+  tagApi?: RepairTagApi;
+  previewMode?: boolean;
 }
 
 export function IntakeReviewStep({
@@ -59,7 +62,25 @@ export function IntakeReviewStep({
   onBackToItems,
   onResetWorkflow,
   onNavigateToOrder,
+  tagApi,
+  previewMode = false,
 }: IntakeReviewStepProps) {
+  const resolvedTagApi = useMemo(
+    () => tagApi || getRepairTagAdapter(previewMode),
+    [tagApi, previewMode],
+  );
+  const [tagMap, setTagMap] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    resolvedTagApi
+      .searchTags({ includeUnused: true })
+      .then((tags) => {
+        const m = new Map<string, string>();
+        tags.forEach((t) => m.set(t.id, t.name));
+        setTagMap(m);
+      })
+      .catch(() => {});
+  }, [resolvedTagApi]);
   const [intakeNotes, setIntakeNotes] = useState('');
   const [expectedCompletedAt, setExpectedCompletedAt] = useState(() => getDefaultExpectedCompletionDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,6 +132,7 @@ export function IntakeReviewStep({
         handoverCondition: item.handoverCondition.trim() || null,
         accessories: item.accessories.trim() || null,
         itemNotes: item.itemNotes.trim() || null,
+        tagIds: item.tagIds || [],
         credential:
           item.credentialStatus === 'not_required'
             ? null
@@ -188,6 +210,11 @@ export function IntakeReviewStep({
                   {createdItems.map((it, idx) => (
                     <li key={it.id || idx}>
                       <strong>{it.brand} {it.model}</strong> ({it.deviceType}) — {it.reportedIssue}
+                      {it.tags && it.tags.length > 0 && (
+                        <span style={{ color: 'var(--rf-text-muted, #64748b)', marginLeft: '0.5rem' }}>
+                          [Nhãn: {it.tags.map((t) => t.name).join(' · ')}]
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -258,6 +285,11 @@ export function IntakeReviewStep({
                         <td>
                           <strong>{item.brand} {item.model}</strong>
                           <div style={{ fontSize: '11px', color: '#64748b' }}>({item.deviceType})</div>
+                          {item.tags && item.tags.length > 0 && (
+                            <div style={{ fontSize: '11px', color: '#334155', marginTop: '2px' }}>
+                              Nhãn: {item.tags.map((t) => t.name).join(' · ')}
+                            </div>
+                          )}
                         </td>
                         <td>{item.serialNumber || '—'}</td>
                         <td>{item.reportedIssue}</td>
@@ -406,6 +438,15 @@ export function IntakeReviewStep({
                         </span>
                       )}
                     </div>
+
+                    {it.tagIds && it.tagIds.length > 0 && (
+                      <div style={{ marginBottom: '0.5rem', fontSize: '0.8125rem' }}>
+                        <span style={{ color: 'var(--rf-text-muted, #64748b)' }}>Nhãn: </span>
+                        <span style={{ fontWeight: 500, color: 'var(--rf-text-main, #0f172a)' }}>
+                          {it.tagIds.map((id) => tagMap.get(id) || id).join(' · ')}
+                        </span>
+                      </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', fontSize: '0.875rem' }}>
                       <div>

@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using NpgsqlTypes;
 using RepairFlow.Api.Features.RepairOrder.Application;
 using RepairFlow.Api.Features.RepairOrder.Domain;
 using RepairFlow.Api.Features.RepairTag.Domain;
@@ -428,6 +429,22 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
         command.Parameters.Add(parameter);
     }
 
+    private static void AddUuidArrayParameter(
+        DbCommand command,
+        string name,
+        IReadOnlyList<Guid> values)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = values.ToArray();
+        if (parameter is NpgsqlParameter npgsqlParameter)
+        {
+            npgsqlParameter.NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Uuid;
+        }
+
+        command.Parameters.Add(parameter);
+    }
+
     private static RepairOrderEntity ReadOrder(DbDataReader reader)
     {
         if (!RepairOrderStatusCodec.TryParse(reader.GetString(5), out var status))
@@ -545,84 +562,103 @@ public sealed class RepairOrderRepository : IRepairOrderRepository
         AddParameter(command, "workspace_id", workspaceId);
         AddParameter(command, "order_id", orderId);
         var items = new List<RepairOrderItem>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
         {
-            if (!RepairOrderStatusCodec.TryParse(reader.GetString(4), out var status))
+            while (await reader.ReadAsync(cancellationToken))
             {
-                throw new InvalidOperationException("The database contains an unsupported repair-item status.");
-            }
+                if (!RepairOrderStatusCodec.TryParse(reader.GetString(4), out var status))
+                {
+                    throw new InvalidOperationException("The database contains an unsupported repair-item status.");
+                }
 
-            items.Add(new RepairOrderItem(
-                reader.GetGuid(0),
-                reader.GetGuid(1),
-                reader.GetInt32(2),
-                reader.GetGuid(3),
-                status,
-                reader.GetString(5),
-                reader.GetString(6),
-                reader.GetString(7),
-                reader.IsDBNull(8) ? null : reader.GetString(8),
-                reader.IsDBNull(9) ? null : reader.GetString(9),
-                reader.GetString(10),
-                reader.IsDBNull(11) ? null : reader.GetString(11),
-                reader.IsDBNull(12) ? null : reader.GetString(12),
-                reader.IsDBNull(13) ? null : reader.GetString(13),
-                reader.GetString(14),
-                reader.GetBoolean(15),
-                reader.IsDBNull(16) ? null : reader.GetFieldValue<DateTimeOffset>(16),
-                reader.IsDBNull(17) ? null : reader.GetFieldValue<DateTimeOffset>(17),
-                reader.IsDBNull(18) ? null : reader.GetFieldValue<DateTimeOffset>(18),
-                reader.GetFieldValue<DateTimeOffset>(19)));
+                items.Add(new RepairOrderItem(
+                    reader.GetGuid(0),
+                    reader.GetGuid(1),
+                    reader.GetInt32(2),
+                    reader.GetGuid(3),
+                    status,
+                    reader.GetString(5),
+                    reader.GetString(6),
+                    reader.GetString(7),
+                    reader.IsDBNull(8) ? null : reader.GetString(8),
+                    reader.IsDBNull(9) ? null : reader.GetString(9),
+                    reader.GetString(10),
+                    reader.IsDBNull(11) ? null : reader.GetString(11),
+                    reader.IsDBNull(12) ? null : reader.GetString(12),
+                    reader.IsDBNull(13) ? null : reader.GetString(13),
+                    reader.GetString(14),
+                    reader.GetBoolean(15),
+                    reader.IsDBNull(16) ? null : reader.GetFieldValue<DateTimeOffset>(16),
+                    reader.IsDBNull(17) ? null : reader.GetFieldValue<DateTimeOffset>(17),
+                    reader.IsDBNull(18) ? null : reader.GetFieldValue<DateTimeOffset>(18),
+                    reader.GetFieldValue<DateTimeOffset>(19)));
+            }
         }
+
+        var tagsByItemId = await ReadItemTagsAsync(
+            connection,
+            workspaceId,
+            items.Select(item => item.Id).ToArray(),
+            cancellationToken);
 
         for (var index = 0; index < items.Count; index++)
         {
             items[index] = items[index] with
             {
-                Tags = await ReadItemTagsAsync(
-                    connection,
-                    workspaceId,
-                    items[index].Id,
-                    cancellationToken)
+                Tags = tagsByItemId.TryGetValue(items[index].Id, out var tags) ? tags : []
             };
         }
 
         return items;
     }
 
-    private static async Task<IReadOnlyList<RepairTagEntity>> ReadItemTagsAsync(
+    private static async Task<IReadOnlyDictionary<Guid, IReadOnlyList<RepairTagEntity>>> ReadItemTagsAsync(
         DbConnection connection,
         Guid workspaceId,
-        Guid itemId,
+        IReadOnlyList<Guid> itemIds,
         CancellationToken cancellationToken)
     {
+        if (itemIds.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<RepairTagEntity>>();
+        }
+
         await using var command = CreateCommand(connection, """
-            SELECT wt.id, wt.workspace_id, wt.name, wt.normalized_name,
+            SELECT oit.repair_order_item_id,
+                   wt.id, wt.workspace_id, wt.name, wt.normalized_name,
                    wt.created_by, wt.created_at, wt.updated_at
             FROM repair_order_item_tags oit
             INNER JOIN workspace_tags wt ON wt.id = oit.tag_id
             WHERE wt.workspace_id = @workspace_id
-              AND oit.repair_order_item_id = @item_id
-            ORDER BY wt.normalized_name, wt.id;
+              AND oit.repair_order_item_id = ANY(@item_ids)
+            ORDER BY oit.repair_order_item_id, wt.normalized_name, wt.id;
             """);
         AddParameter(command, "workspace_id", workspaceId);
-        AddParameter(command, "item_id", itemId);
-        var tags = new List<RepairTagEntity>();
+        AddUuidArrayParameter(command, "item_ids", itemIds);
+        var tagsByItemId = new Dictionary<Guid, List<RepairTagEntity>>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
+            var itemId = reader.GetGuid(0);
+            if (!tagsByItemId.TryGetValue(itemId, out var tags))
+            {
+                tags = [];
+                tagsByItemId[itemId] = tags;
+            }
+
             tags.Add(new RepairTagEntity(
-                reader.GetGuid(0),
                 reader.GetGuid(1),
-                reader.GetString(2),
+                reader.GetGuid(2),
                 reader.GetString(3),
-                reader.GetGuid(4),
-                reader.GetFieldValue<DateTimeOffset>(5),
-                reader.GetFieldValue<DateTimeOffset>(6)));
+                reader.GetString(4),
+                reader.GetGuid(5),
+                reader.GetFieldValue<DateTimeOffset>(6),
+                reader.GetFieldValue<DateTimeOffset>(7)));
         }
 
-        return tags;
+        return tagsByItemId.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<RepairTagEntity>)pair.Value);
     }
 
     private static RepairOrderStatus ParseStatus(string value) =>

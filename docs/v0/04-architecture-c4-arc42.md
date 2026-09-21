@@ -132,8 +132,10 @@ Các container cần giữ ranh giới rõ:
 - **ASP.NET Core Web API (.NET)**: session, permission, workflow, quote, decision,
   audit và response envelope.
 - **PostgreSQL**: dữ liệu nghiệp vụ, status history và audit log.
-- **Object Storage**: ảnh/tài liệu private; trạng thái vẫn là `PROPOSED` cho
-  đến khi policy file và deployment được chốt.
+- **Object Storage**: ảnh/tài liệu private. C2 dùng một private
+  S3-compatible Object Storage; local development dùng MinIO qua Docker
+  volume, còn provider production được cấu hình qua endpoint/credentials và
+  không hard-code vào feature.
 
 ### 5.2. C4 Component View — Backend/API
 
@@ -246,7 +248,7 @@ Browser
   └─ React + Vite Web UI (static assets)
        └─ HTTPS / JSON ── ASP.NET Core Web API (.NET)
                               ├─ PostgreSQL 18 Alpine
-                              └─ Object Storage (PROPOSED)
+                              └─ Private S3-compatible Object Storage
 ```
 
 PostgreSQL local vẫn chạy bằng Docker Compose. Target topology trên đã được
@@ -286,6 +288,32 @@ Các quyết định kiến trúc đã có baseline:
 - Versioned SQL migrations.
 - Transaction cho các thao tác workflow quan trọng.
 
+### ADR-C2-EVIDENCE-STORAGE — DECIDED 2026-09-21
+
+- Không lưu binary ảnh trong PostgreSQL `bytea` và không lưu ảnh trong thư mục
+  local của API làm nguồn chính. PostgreSQL chỉ lưu metadata và `object_key`.
+- Storage boundary dùng S3-compatible API. Local target dùng MinIO với bucket
+  private `repairflow-private`; production có thể dùng MinIO hoặc managed
+  S3-compatible provider mà không đổi contract của feature.
+- API giữ service credential của storage ở server-side configuration. Browser
+  không nhận credential storage.
+- API kiểm tra workspace, quyền, trạng thái khóa, MIME, extension, kích thước
+  và checksum trước khi ghi metadata.
+- Object key không dùng tên file gốc làm đường dẫn chính. Dùng UUID evidence,
+  ví dụ `workspaces/{workspaceId}/repair-orders/{orderId}/items/{itemId}/evidence/before-repair/{evidenceId}.{extension}`.
+- Upload là backend-mediated trong C2 vì ảnh tối đa 1 MB; API stream file vào
+  storage, server tự tính SHA-256, sau đó ghi metadata. Nếu ghi metadata lỗi,
+  API phải dọn object vừa tạo và không để evidence record mồ côi.
+- Read trả safe metadata và signed GET URL ngắn hạn; không trả public URL dài
+  hạn hoặc storage credential. Presigned URL chỉ được tạo sau khi API đã kiểm
+  tra quyền đọc.
+
+Các nguồn kỹ thuật dùng để kiểm chứng pattern này: [AWS S3 presigned
+URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html),
+[AWS S3 checksum validation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity-upload.html),
+[MinIO S3-compatible API](https://min.io/docs/minio/linux/index.html) và
+[MinIO temporary presigned URLs](https://min.io/docs/minio/linux/reference/minio-mc/mc-share.html).
+
 Các thay đổi mới sau khi đóng baseline phải được ghi nhận như change decision và
 cập nhật đồng bộ vào requirements, API, database, UI và test.
 
@@ -315,8 +343,9 @@ chi tiết sẽ bổ sung sau.
 - Business API target trên .NET chưa triển khai; UI vẫn dùng mock.
 - C0 target runtime và migration runner cần được dựng lại trên .NET.
 - Shared fixture và UI adapter boundary còn thiếu.
-- Object Storage/deployment/backup production policy chưa hoàn tất; backup
-  baseline của MVP đã được chốt.
+- Production provider, topology, replication và backup riêng của Object
+  Storage chưa được chốt; C2 chỉ chốt private S3-compatible contract và local
+  MinIO baseline. Database backup baseline của MVP vẫn giữ nguyên.
 - Chưa có production topology, monitoring/observability và rollback runbook.
 
 Các khoảng trống còn lại là engineering work sau khi Gate D0 đã đóng, không phải

@@ -49,7 +49,7 @@ public sealed class RepairTagRepository : IRepairTagRepository
                 wt.id;
             """);
         AddParameter(command, "workspace_id", workspaceId);
-        AddParameter(command, "query", normalizedQuery);
+        AddTextParameter(command, "query", normalizedQuery);
         AddParameter(command, "include_unused", includeUnused);
 
         var tags = new List<RepairTagEntity>();
@@ -546,6 +546,19 @@ public sealed class RepairTagRepository : IRepairTagRepository
         var parameter = command.CreateParameter();
         parameter.ParameterName = name;
         parameter.Value = value ?? DBNull.Value;
+        command.Parameters.Add(parameter);
+    }
+
+    private static void AddTextParameter(DbCommand command, string name, string? value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = (object?)value ?? DBNull.Value;
+        if (parameter is NpgsqlParameter npgsqlParameter)
+        {
+            npgsqlParameter.NpgsqlDbType = NpgsqlDbType.Text;
+        }
+
         command.Parameters.Add(parameter);
     }
 

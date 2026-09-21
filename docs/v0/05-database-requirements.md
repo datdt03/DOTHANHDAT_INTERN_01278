@@ -187,10 +187,11 @@ erDiagram
     WORKSPACES ||--o{ REPAIR_ORDERS : contains
     CUSTOMERS ||--o{ REPAIR_ORDERS : requests
     DEVICES ||--o{ REPAIR_ORDERS : enters
+    REPAIR_ORDERS ||--o{ REPAIR_ORDER_ITEMS : contains
+    REPAIR_ORDER_ITEMS ||--o{ REPAIR_EVIDENCE : documents
 
     REPAIR_ORDERS ||--o{ REPAIR_ORDER_STAFF : assigns
     USERS ||--o{ REPAIR_ORDER_STAFF : performs
-    REPAIR_ORDERS ||--o{ REPAIR_EVIDENCE : documents
     REPAIR_ORDERS ||--o{ DIAGNOSES : has
     REPAIR_ORDERS ||--o{ QUOTES : receives
     QUOTES ||--o{ QUOTE_ITEMS : contains
@@ -344,6 +345,31 @@ Phiếu sửa chữa là entity trung tâm của toàn bộ nghiệp vụ.
 
 Khi truy vấn phiếu, backend phải kiểm tra cả `workspace_id` của phiếu, khách hàng, thiết bị và người dùng liên quan.
 
+### 5.6.1. `repair_order_items`
+
+Một order có thể có nhiều thiết bị được bàn giao. Evidence của C2 phải gắn với
+item cụ thể để không lẫn ảnh giữa các thiết bị.
+
+| Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | Không | — | PK |
+| `workspace_id` | `uuid` | Không | — | FK → `workspaces.id` |
+| `repair_order_id` | `uuid` | Không | — | FK → `repair_orders.id` |
+| `customer_id` | `uuid` | Không | — | Snapshot/FK theo item |
+| `device_id` | `uuid` | Không | — | Device được bàn giao cho item |
+| `item_index` | `integer` | Không | — | Thứ tự ổn định trong order |
+| `status` | `varchar(32)` | Không | `'received'` | Trạng thái xử lý của item |
+| `reported_issue` | `text` | Không | — | Lỗi khách mô tả |
+| `handover_condition` | `text` | Có | `NULL` | Mô tả tổng tình trạng nhiều dòng |
+| `evidence_locked_at` | `timestamptz` | Có | `NULL` | Mốc Technician xác nhận nhận bàn giao |
+| `evidence_locked_by` | `uuid` | Có | `NULL` | User/Technician xác nhận khóa |
+| `created_at` | `timestamptz` | Không | `now()` | Thời điểm tạo item |
+
+`evidence_locked_at` và `evidence_locked_by` chỉ khóa thao tác ảnh
+`before_repair`; chúng không tự chuyển status item hoặc order sang
+`diagnosing`. Full intake baseline vẫn tuân theo rule khóa khi order chuyển
+`received` → `diagnosing`.
+
 ### 5.7. `repair_order_staff`
 
 Lưu người tham gia theo từng trách nhiệm, thay cho việc chỉ có một `assigned_technician_id`.
@@ -376,19 +402,23 @@ Lưu metadata của ảnh/tài liệu. Nội dung file nằm trong Object Storag
 | Cột | Kiểu | Null | Mặc định | Ràng buộc và ý nghĩa |
 | --- | --- | --- | --- | --- |
 | `id` | `uuid` | Không | — | PK |
-| `repair_order_id` | `uuid` | Không | — | FK → `repair_orders.id` |
+| `workspace_id` | `uuid` | Không | — | FK → `workspaces.id` |
+| `repair_order_item_id` | `uuid` | Không | — | FK → `repair_order_items.id`; bắt buộc để định danh thiết bị |
 | `stage` | `varchar(24)` | Không | — | Giai đoạn của bằng chứng |
 | `object_key` | `varchar(512)` | Không | — | Khóa object storage, nguồn tham chiếu chính |
-| `file_url` | `text` | Có | `NULL` | URL dẫn xuất hoặc legacy; không lưu signed URL lâu dài |
-| `file_name` | `varchar(255)` | Không | — | Tên file gốc hiển thị |
+| `original_filename` | `varchar(255)` | Không | — | Tên file gốc hiển thị, không dùng làm object key |
 | `mime_type` | `varchar(120)` | Không | — | MIME type đã kiểm tra |
-| `file_size` | `bigint` | Không | — | Kích thước byte, phải lớn hơn 0 |
-| `checksum` | `varchar(128)` | Không | — | Hash kiểm tra tính toàn vẹn |
-| `description` | `text` | Có | `NULL` | Mô tả ảnh/tài liệu |
-| `captured_by` | `uuid` | Không | — | FK → `users.id` |
-| `captured_at` | `timestamptz` | Không | `now()` | Thời điểm chụp/tải lên |
+| `size` | `bigint` | Không | — | Kích thước byte, `0 < size <= 1048576` |
+| `checksum` | `varchar(128)` | Không | — | SHA-256 do server tính |
+| `created_by` | `uuid` | Không | — | FK → `users.id` |
+| `created_at` | `timestamptz` | Không | `now()` | Thời điểm upload |
+| `deleted_at` | `timestamptz` | Có | `NULL` | Soft delete trước khi item bị khóa |
 
-Không xóa cứng bản ghi này trong luồng nghiệp vụ thông thường. Nếu cần ẩn file, bổ sung trạng thái lưu trữ ở migration riêng.
+Trong C2 `stage` chỉ nhận `before_repair`, MIME/extension chỉ nhận
+`image/jpeg`, `image/png` và mỗi item tối đa 5 evidence chưa bị xóa. Không lưu
+caption, `shot_type` hoặc `important flag`. Không hard-delete metadata trong
+luồng nghiệp vụ thông thường; object vật lý được cleanup sau soft delete.
+Không lưu signed URL lâu dài trong database.
 
 ### 5.9. `diagnoses`
 
@@ -817,8 +847,11 @@ erDiagram
 | `repair_orders` | `created_by` | `users` | N:1 | `RESTRICT` | Không mất người tạo |
 | `repair_order_staff` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Có thể archive phiếu thay vì xóa |
 | `repair_order_staff` | `user_id` | `users` | N:1 | `RESTRICT` | Nhân viên inactive vẫn còn lịch sử |
-| `repair_evidence` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Không cascade xóa bằng chứng |
-| `repair_evidence` | `captured_by` | `users` | N:1 | `RESTRICT` | Giữ người chụp |
+| `repair_order_items` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Giữ item theo order |
+| `repair_order_items` | `evidence_locked_by` | `users` | N:1 | `RESTRICT` | Giữ người xác nhận nhận bàn giao |
+| `repair_evidence` | `repair_order_item_id` | `repair_order_items` | N:1 | `RESTRICT` | Không cascade xóa bằng chứng |
+| `repair_evidence` | `workspace_id` | `workspaces` | N:1 | `RESTRICT` | Tenant boundary |
+| `repair_evidence` | `created_by` | `users` | N:1 | `RESTRICT` | Giữ người upload |
 | `diagnoses` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Có thể chẩn đoán lại |
 | `diagnoses` | `diagnosed_by` | `users` | N:1 | `RESTRICT` | Giữ người chẩn đoán |
 | `quotes` | `repair_order_id` | `repair_orders` | N:1 | `RESTRICT` | Giữ mọi phiên bản |
@@ -876,7 +909,7 @@ devices(workspace_id, serial_number)
 repair_order_staff(user_id, repair_order_id)
 repair_order_staff(repair_order_id, responsibility)
 
-repair_evidence(repair_order_id, stage, captured_at)
+repair_evidence(repair_order_item_id, stage, created_at)
 diagnoses(repair_order_id, created_at)
 quotes(repair_order_id, version DESC)
 quote_items(quote_id, sort_order)

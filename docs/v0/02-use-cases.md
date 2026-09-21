@@ -367,7 +367,7 @@ Owner/Manager là người dùng có access session trong MVP; Receptionist/Tech
 | Actor chính | Owner/Manager hoặc Receptionist/Technician account được phân công. |
 | Trigger | Mở tab hiện trạng sau khi tạo phiếu hoặc bấm “Hoàn tất hiện trạng”. |
 | Tiền điều kiện | Order ở `received`; có customer/device; user có quyền sửa intake. |
-| Dữ liệu vào | Checklist ngoại hình/chức năng, accessories, power state, note, ảnh mặt trước/sau/cạnh/vùng hỏng, caption/important flag. |
+| Dữ liệu vào | Mô tả tổng tình trạng ngoại quan nhiều dòng, tối đa 5 ảnh JPG/JPEG/PNG cho từng repair item. Hướng dẫn mặt trước/sau/cạnh/vùng hỏng chỉ là gợi ý. |
 | Hậu điều kiện thành công | Tạo checklist `intake`, evidence `before_repair`, gắn captured_by/captured_at; order đủ điều kiện sang `diagnosing`. |
 | Quy tắc liên quan | BR-03, BR-14, BR-15. |
 
@@ -379,8 +379,8 @@ Owner/Manager là người dùng có access session trong MVP; Receptionist/Tech
 | 2 | User | Chọn kết quả từng mục. | Mỗi mục có giá trị rõ ràng: tốt, lỗi, không kiểm tra hoặc ghi chú; không dùng giá trị mơ hồ. |
 | 3 | User | Ghi scratches/dents/cracks/missing accessories. | Note gắn với order; giữ nguyên những gì có trước sửa. |
 | 4 | User | Chụp/upload ảnh. | Kiểm tra MIME, extension, size, checksum; lưu object storage private và metadata DB. |
-| 5 | User | Ghi chú từng ảnh/đánh dấu ảnh quan trọng. | Evidence stage `before_repair`, captured_by và captured_at. |
-| 6 | User | Xác nhận đã kiểm đủ và lưu checklist. | Validate các mục tối thiểu và số ảnh theo policy cửa hàng. |
+| 5 | User | Xem lại danh sách ảnh và mô tả tổng tình trạng. | Evidence stage `before_repair`, captured_by và captured_at; không có caption riêng từng ảnh trong C2. |
+| 6 | User | Xác nhận đã kiểm đủ và lưu hiện trạng. | Validate mô tả tổng không rỗng và tối đa 5 ảnh/item; Technician nhận bàn giao sẽ khóa thêm/xóa ảnh. |
 | 7 | System | Hoàn tất transaction intake. | Ghi checklist completed, status history/audit; mở CTA “Bắt đầu chẩn đoán”. |
 
 #### Luồng thay thế và ngoại lệ
@@ -388,7 +388,7 @@ Owner/Manager là người dùng có access session trong MVP; Receptionist/Tech
 | Mã | Điều kiện | Xử lý |
 | --- | --- | --- |
 | A1 | Thiếu checklist bắt buộc | Không hoàn tất; hiển thị rõ mục còn thiếu và thông báo “Chưa hoàn tất hiện trạng”. |
-| A2 | Thiếu ảnh tối thiểu hoặc ảnh upload lỗi | Cho retry từng file; không coi ảnh URL ngoài là evidence đã lưu. |
+| A2 | Thiếu ảnh tối thiểu hoặc ảnh upload lỗi | Cho retry từng file; không coi ảnh URL ngoài là evidence đã lưu; tối đa 5 ảnh/item. |
 | A3 | File sai loại/quá lớn/checksum không hợp lệ | Từ chối file, không tạo record rác; audit nếu policy yêu cầu. |
 | A4 | Thiết bị không bật được | Ghi “không thể kiểm tra” kèm lý do, không đánh dấu là “tốt”. |
 | A5 | User không còn quyền hoặc order đã đổi trạng thái | Từ chối update; reload trạng thái hiện tại, không overwrite dữ liệu mới. |

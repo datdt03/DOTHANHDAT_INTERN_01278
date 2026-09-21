@@ -51,6 +51,12 @@ public sealed class ExceptionHandlingMiddleware
                 "bad_request",
                 exception.Message);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogDebug(
+                "Request {RequestId} was canceled by the client.",
+                RequestIdMiddleware.GetRequestId(context));
+        }
         catch (Exception exception) when (!context.Response.HasStarted)
         {
             _logger.LogError(exception, "Unhandled API exception.");

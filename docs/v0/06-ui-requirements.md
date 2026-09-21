@@ -444,14 +444,21 @@ Suggested checks:
 - Additional notes.
 
 The MVP requires at least one condition photo before intake can be completed.
-There is no upper limit on the number of photos. Photos display as thumbnails,
-support captions, and can be marked important. The UI may guide the user to
-capture the front, back, edges, and damaged area without requiring every angle.
+Each repair item accepts at most five `JPG/JPEG` or `PNG` photos, with a limit
+of 1 MB per photo. Photos display as thumbnails; C2 does not require a caption
+or important flag per photo. The item has one required multi-line overall
+condition description. The UI may guide the user to capture the front, back,
+edges, and damaged area without requiring every angle.
 
 The initial photo capture entry point may be shown in Stage 2 for the person
-receiving the device. C3 remains responsible for persisting and validating the
-evidence, enforcing the minimum-photo rule, and deciding when the order may
-move to diagnosis.
+receiving the device. C2-007 provides persistence/access primitives and locks
+photo changes when a Technician explicitly accepts handover for that item. C3
+remains responsible for detailed checklist completion and deciding when the
+order may move to diagnosis.
+
+Before Technician handover acceptance, a user who can process the repair order
+may add or remove photos; users who can view the order may view them. After the
+item is locked, the UI is read-only for those photos.
 
 If the minimum checklist or evidence is incomplete, show:
 

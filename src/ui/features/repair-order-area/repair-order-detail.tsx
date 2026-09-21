@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import type {
   RepairOrderApi,
   RepairOrderDetailDto,
@@ -29,12 +29,20 @@ import {
   IconCustomers,
   IconClock,
 } from '../../shared/components/icons';
+import { RepairItemTagPicker } from '../repair-intake-workflow/repair-item-tag-picker';
+import '../repair-intake-workflow/repair-tag-picker.css';
+import { getRepairTagAdapter, type RepairTagApi } from '../../shared/api/repair-tag-api';
+import { ApiClientError } from '../../shared/api/api-client';
 
 export interface RepairOrderDetailProps {
   orderId: string;
   api: RepairOrderApi;
   onBack: () => void;
   previewMode?: boolean;
+  canAssignTags?: boolean;
+  canCreateTags?: boolean;
+  canManageTags?: boolean;
+  tagApi?: RepairTagApi;
 }
 
 function formatDateTime(isoString?: string | null): string {
@@ -83,12 +91,48 @@ export function RepairOrderDetail({
   orderId,
   api,
   onBack,
+  previewMode = false,
+  canAssignTags = true,
+  canCreateTags = false,
+  canManageTags = false,
+  tagApi,
 }: RepairOrderDetailProps): ReactNode {
+  const resolvedTagApi = useMemo(
+    () => tagApi || getRepairTagAdapter(previewMode),
+    [tagApi, previewMode],
+  );
+
   const [order, setOrder] = useState<RepairOrderDetailDto | null>(null);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | undefined>();
   const [copiedPhone, setCopiedPhone] = useState(false);
+
+  // Tag assignment edit state
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [editTagIds, setEditTagIds] = useState<string[]>([]);
+  const [isSavingTags, setIsSavingTags] = useState(false);
+  const [tagAssignmentError, setTagAssignmentError] = useState<string | null>(null);
+  const [tagAssignmentSuccess, setTagAssignmentSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsEditingTags(false);
+    setTagAssignmentError(null);
+    setTagAssignmentSuccess(null);
+  }, [selectedItemIndex]);
+
+  const handleStartEditTags = (initialTags?: { id: string }[]) => {
+    setEditTagIds((initialTags || []).map((t) => t.id));
+    setTagAssignmentError(null);
+    setTagAssignmentSuccess(null);
+    setIsEditingTags(true);
+  };
+
+  const handleCancelEditTags = () => {
+    setIsEditingTags(false);
+    setTagAssignmentError(null);
+  };
 
   const handleCopyPhone = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -101,12 +145,13 @@ export function RepairOrderDetail({
     });
   };
 
-  const fetchDetail = () => {
+  const fetchDetail = (signal?: AbortSignal) => {
     setIsLoading(true);
     setError(null);
+    setErrorStatus(undefined);
 
     api
-      .getOrder(orderId)
+      .getOrder(orderId, { signal })
       .then((data) => {
         setOrder(data);
         if (data.repairItems && data.repairItems.length > 0) {
@@ -114,6 +159,8 @@ export function RepairOrderDetail({
         }
       })
       .catch((err: unknown) => {
+        if (signal?.aborted) return;
+        setErrorStatus(err instanceof ApiClientError ? err.status : undefined);
         setError(
           err instanceof Error && err.message
             ? err.message
@@ -121,12 +168,52 @@ export function RepairOrderDetail({
         );
       })
       .finally(() => {
+        if (signal?.aborted) return;
         setIsLoading(false);
       });
   };
 
+  const handleSaveTagAssignment = async (itemId: string) => {
+    if (!order) return;
+    setIsSavingTags(true);
+    setTagAssignmentError(null);
+    setTagAssignmentSuccess(null);
+
+    try {
+      const result = await api.replaceItemTags(order.id, itemId, editTagIds);
+      setOrder((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          repairItems: prev.repairItems.map((it) =>
+            it.id === itemId ? { ...it, tags: result.tags } : it,
+          ),
+        };
+      });
+      setIsEditingTags(false);
+      setTagAssignmentSuccess('Đã cập nhật nhãn thiết bị thành công.');
+    } catch (err: unknown) {
+      if (err instanceof ApiClientError && err.code === 'TAG_ASSIGNMENT_LOCKED') {
+        setTagAssignmentError(
+          'Phiếu sửa chữa đã chuyển sang giai đoạn kỹ thuật hoặc đã bị khóa. Không thể thay đổi nhãn.',
+        );
+        setIsEditingTags(false);
+        fetchDetail();
+      } else {
+        setTagAssignmentError(
+          err instanceof Error ? err.message : 'Không thể cập nhật nhãn thiết bị.',
+        );
+      }
+    } finally {
+      setIsSavingTags(false);
+    }
+  };
+
   useEffect(() => {
-    fetchDetail();
+    const controller = new AbortController();
+    fetchDetail(controller.signal);
+
+    return () => controller.abort();
   }, [orderId, api]);
 
   if (isLoading) {
@@ -146,12 +233,19 @@ export function RepairOrderDetail({
   }
 
   if (error || !order) {
+    const errorTitle =
+      errorStatus === 404
+        ? 'Không tìm thấy phiếu sửa chữa'
+        : errorStatus === 403
+          ? 'Không có quyền truy cập'
+          : 'Không thể tải chi tiết phiếu sửa chữa';
+
     return (
       <div className="rf-order-detail-error">
-        <Alert variant="danger" title="Không tìm thấy phiếu sửa chữa">
+        <Alert variant="danger" title={errorTitle}>
           <p style={{ margin: '0 0 1rem 0' }}>{error || 'Phiếu sửa chữa không tồn tại hoặc bạn không có quyền truy cập.'}</p>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="button" className="rf-btn rf-btn--secondary rf-btn--sm" onClick={fetchDetail}>
+            <button type="button" className="rf-btn rf-btn--secondary rf-btn--sm" onClick={() => fetchDetail()}>
               <IconRefresh size={14} aria-hidden="true" />
               <span>Thử lại</span>
             </button>
@@ -442,13 +536,91 @@ export function RepairOrderDetail({
 
             {/* Slot for C2-006 Tagging & C2-008 Evidence */}
             <div className="rf-order-slots-container">
-              <div
-                className="rf-slot-placeholder rf-slot-placeholder--tags"
-                aria-label="Khu vực nhãn thẻ thiết bị (dành cho C2-006)"
-              >
-                <span className="rf-slot-placeholder__hint">
-                  [Nhãn thẻ phân loại & ưu tiên thiết bị — Sẽ được kết nối trong kế hoạch C2-006]
-                </span>
+              {/* C2-006 Workspace Device Tags Panel */}
+              <div className="rf-order-tags-panel" aria-label="Nhãn thẻ phân loại thiết bị">
+                <div className="rf-order-tags-panel__header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="rf-order-tags-panel__title">Nhãn thiết bị:</span>
+                    {!isEditingTags && (selectedItem.tags || []).length > 0 && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--rf-text-muted, #64748b)' }}>
+                        ({(selectedItem.tags || []).length} nhãn)
+                      </span>
+                    )}
+                  </div>
+
+                  {canAssignTags && order.status.toLowerCase() === 'received' && !isEditingTags && (
+                    <button
+                      type="button"
+                      className="rf-btn rf-btn--secondary rf-btn--sm"
+                      onClick={() => handleStartEditTags(selectedItem.tags)}
+                    >
+                      Chỉnh sửa nhãn
+                    </button>
+                  )}
+
+                  {order.status.toLowerCase() !== 'received' && (
+                    <span className="rf-order-tags-panel__lock-notice">
+                      Nhãn đã khóa sau khi phiếu chuyển sang giai đoạn kỹ thuật.
+                    </span>
+                  )}
+                </div>
+
+                {tagAssignmentError && (
+                  <Alert variant="danger">
+                    <p style={{ margin: 0 }}>{tagAssignmentError}</p>
+                  </Alert>
+                )}
+                {tagAssignmentSuccess && (
+                  <Alert variant="success">
+                    <p style={{ margin: 0 }}>{tagAssignmentSuccess}</p>
+                  </Alert>
+                )}
+
+                {isEditingTags ? (
+                  <div className="rf-order-tags-edit-box">
+                    <RepairItemTagPicker
+                      itemId={selectedItem.id}
+                      selectedTagIds={editTagIds}
+                      onTagsChange={(newTagIds: string[]) => setEditTagIds(newTagIds)}
+                      tagApi={resolvedTagApi}
+                      canCreate={canCreateTags}
+                      canManage={canManageTags}
+                      readOnly={false}
+                    />
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        className="rf-btn rf-btn--secondary rf-btn--sm"
+                        disabled={isSavingTags}
+                        onClick={handleCancelEditTags}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        className="rf-btn rf-btn--primary rf-btn--sm"
+                        disabled={isSavingTags}
+                        onClick={() => handleSaveTagAssignment(selectedItem.id)}
+                      >
+                        {isSavingTags ? 'Đang lưu...' : 'Lưu thay đổi'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rf-tag-chips" aria-label="Danh sách nhãn hiện tại của thiết bị">
+                    {(selectedItem.tags && selectedItem.tags.length > 0) ? (
+                      selectedItem.tags.map((tag) => (
+                        <span key={tag.id} className="rf-tag-chip rf-tag-chip--readonly">
+                          {tag.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: '0.8125rem', color: 'var(--rf-text-muted, #64748b)', fontStyle: 'italic' }}>
+                        Chưa có nhãn nào được gán cho thiết bị này.
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div

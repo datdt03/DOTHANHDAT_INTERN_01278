@@ -315,20 +315,46 @@ Mã phiếu `order_code` phải dễ đọc, duy nhất trong workspace và có 
 ```text
 repair_evidence
     id
-    repair_order_id
+    workspace_id
+    repair_order_item_id
     stage
-    file_url
     object_key
-    file_name
+    original_filename
     mime_type
-    file_size
+    size
     checksum
-    description
-    captured_by
-    captured_at
+    created_by
+    created_at
+    deleted_at
 ```
 
 `stage` gồm `before_repair`, `diagnosis`, `after_repair` và `handover`.
+Trong C2 chỉ triển khai `before_repair`; evidence gắn với từng
+`repair_order_item`, không gắn mơ hồ ở cấp order.
+
+### Quyết định C2 về ảnh ngoại quan
+
+**DECIDED — 2026-09-21**
+
+- Mỗi `repair_order_item` nhận tối đa 5 ảnh `JPG/JPEG` hoặc `PNG`.
+- Mỗi ảnh tối đa 1 MB. Không đặt thêm quota tổng độc lập cho order; tổng tối
+  đa được tính từ số item và giới hạn của từng item.
+- Mỗi item có một mô tả tổng tình trạng ngoại quan bắt buộc. Mô tả là text
+  nhiều dòng và dùng lại `handover_condition`; không tạo caption riêng cho ảnh.
+- Gợi ý chụp mặt trước, mặt sau, cạnh/cổng và vùng hư hỏng chỉ là hướng dẫn,
+  không phải checklist bắt buộc đủ mọi góc.
+- Người có quyền xem phiếu được xem evidence. Người có quyền xử lý phiếu được
+  upload hoặc xóa ảnh khi item chưa bị khóa.
+- Người tạo phiếu tiếp tục được upload/xóa ảnh khi chưa có Technician xác nhận
+  nhận bàn giao. Assignment Technician không tự khóa ảnh; thao tác xác nhận
+  nhận bàn giao mới là điểm khóa.
+- Khi Technician xác nhận nhận bàn giao một item, evidence của item đó bị khóa:
+  không upload, xóa hoặc ghi đè thêm. Khóa theo item, không khóa nhầm các item
+  khác trong cùng order.
+- Xóa ảnh trước khi khóa là xóa khỏi danh sách sử dụng nhưng không hard-delete
+  metadata/audit trong MVP. Object vật lý được dọn qua storage cleanup.
+- C2 chưa lưu `important flag`, caption, `shot_type`, EXIF/GPS hoặc bản chỉnh
+  sửa ảnh. Các nhu cầu này để plan sau.
 
 ### Chẩn đoán, báo giá và quyết định của khách
 
@@ -609,6 +635,9 @@ Một số luật cần áp dụng:
 
 ### 6.2. Hiệu chỉnh dữ liệu intake
 
+- Ảnh `before_repair` của từng item có một mốc khóa riêng khi Technician xác
+  nhận nhận bàn giao. Đây là khóa chỉnh sửa ảnh sớm hơn, không tự chuyển order
+  sang `diagnosing`.
 - Khi order đã chuyển từ `received` sang `diagnosing`, dữ liệu intake baseline
   được xem là đã khóa để bảo toàn bằng chứng ban đầu.
 - Intake baseline gồm Customer, device, lỗi khách mô tả, phụ kiện, tình trạng

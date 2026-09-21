@@ -7,7 +7,7 @@ Title: Backend/API cho nhãn dùng chung theo workspace, nhiều nhãn trên thi
 
 Owner: Codex
 
-Status: READY
+Status: DONE — implementation and verification complete
 
 Revision: 2
 
@@ -150,45 +150,57 @@ trạng thái khóa. Không dùng UI để quyết định nhãn đã bị khóa
 
 ## Implementation sequence
 
-- [ ] Audit schema/migration runner và freeze normalized-name policy.
-- [ ] Tạo migration workspace tag + item assignment.
-- [ ] Tạo feature-local domain/application/infrastructure/API; không tạo
+- [x] Audit schema/migration runner và freeze normalized-name policy.
+- [x] Tạo migration workspace tag + item assignment.
+- [x] Tạo feature-local domain/application/infrastructure/API; không tạo
       `Features/C2`, `C2Models.cs`, `IC2Repository.cs`.
-- [ ] Implement list/create/rename/delete guard.
-- [ ] Freeze name validation, duplicate response và search/sort semantics trong
+- [x] Implement list/create/rename/delete guard.
+- [x] Freeze name validation, duplicate response và search/sort semantics trong
       OpenAPI.
-- [ ] Mở rộng intake command, normalization và transaction assignment.
-- [ ] Implement assignment replacement cho repair item khi order còn `received`;
+- [x] Mở rộng intake command, normalization và transaction assignment.
+- [x] Implement assignment replacement cho repair item khi order còn `received`;
       khóa từ `diagnosing` trở đi.
-- [ ] Thêm tags vào order/item safe projections.
-- [ ] Cập nhật OpenAPI examples và structured errors.
-- [ ] Chạy migration clean/idempotent rerun.
+- [x] Thêm tags vào order/item safe projections.
+- [x] Cập nhật OpenAPI examples và structured errors.
+- [x] Chạy migration clean/idempotent rerun.
 
 ## Testing plan
 
-- [ ] Workspace A không đọc/sửa/xóa tag của workspace B.
-- [ ] Case/whitespace duplicate không tạo bản ghi thứ hai.
-- [ ] Một item có nhiều tag; assignment duplicate bị chặn.
-- [ ] Nhiều item dùng chung một tag.
-- [ ] Assignment có thể thêm/xóa trên item đã tạo khi order còn `received`.
-- [ ] Assignment bị khóa từ `diagnosing` trở đi và trả `409 TAG_ASSIGNMENT_LOCKED`.
-- [ ] Đổi tên giữ assignment.
-- [ ] Xóa tag đang được dùng trả `409 TAG_IN_USE`, dữ liệu vẫn còn.
-- [ ] Xóa tag không có reference hard-delete thành công.
-- [ ] Duplicate create/rename trả `409 TAG_NAME_EXISTS` và không tạo bản ghi thứ hai.
-- [ ] Tên dài hơn 64 ký tự, rỗng hoặc chứa control character bị từ chối.
-- [ ] Search exact/prefix/contains và sort theo normalized name ổn định.
-- [ ] Tag id workspace khác trong intake bị từ chối.
-- [ ] Permission/session/assignment denial và safe error envelope.
-- [ ] Existing c2-001 intake regression vẫn pass.
+- [x] Workspace A không đọc/sửa/xóa tag của workspace B.
+- [x] Case/whitespace duplicate không tạo bản ghi thứ hai.
+- [x] Một item có nhiều tag; assignment duplicate bị chặn.
+- [x] Nhiều item dùng chung một tag.
+- [x] Assignment có thể thêm/xóa trên item đã tạo khi order còn `received`.
+- [x] Assignment bị khóa từ `diagnosing` trở đi và trả `409 TAG_ASSIGNMENT_LOCKED`.
+- [x] Đổi tên giữ assignment.
+- [x] Xóa tag đang được dùng trả `409 TAG_IN_USE`, dữ liệu vẫn còn.
+- [x] Xóa tag không có reference hard-delete thành công.
+- [x] Duplicate create/rename trả `409 TAG_NAME_EXISTS` và không tạo bản ghi thứ hai.
+- [x] Tên dài hơn 64 ký tự, rỗng hoặc chứa control character bị từ chối.
+- [x] Search exact/prefix/contains và sort theo normalized name ổn định.
+- [x] Tag id workspace khác trong intake bị từ chối.
+- [x] Permission/session/assignment denial và safe error envelope.
+- [x] Existing c2-001 intake regression vẫn pass.
 
 ## Acceptance criteria
 
-- [ ] Nhân viên có quyền intake tạo và dùng tag tự do trong workspace.
-- [ ] Một repair item có nhiều tag.
-- [ ] Tag được dùng chung bởi các nhân viên cùng workspace.
-- [ ] Tag đang có reference không thể xóa.
-- [ ] Tag không có reference được xóa cứng.
-- [ ] Assignment của item chỉ sửa được trước giai đoạn kỹ thuật.
-- [ ] API trả tags trong item projection để UI hiển thị.
-- [ ] Không thay đổi business rule hoặc migration lịch sử.
+- [x] Nhân viên có quyền intake tạo và dùng tag tự do trong workspace.
+- [x] Một repair item có nhiều tag.
+- [x] Tag được dùng chung bởi các nhân viên cùng workspace.
+- [x] Tag đang có reference không thể xóa.
+- [x] Tag không có reference được xóa cứng.
+- [x] Assignment của item chỉ sửa được trước giai đoạn kỹ thuật.
+- [x] API trả tags trong item projection để UI hiển thị.
+- [x] Không thay đổi business rule hoặc migration lịch sử.
+
+## Completion evidence
+
+- Migration `20260921_0006__spec-v0__create-workspace-tags-and-assignments.sql`
+  tạo catalog tag theo workspace và bảng assignment với `ON DELETE RESTRICT`.
+- Backend feature `Features/RepairTag` cung cấp catalog CRUD, normalize/duplicate
+  policy, workspace isolation, hard-delete guard và assignment lifecycle lock.
+- Intake và order detail projections trả `tags[]`; item tag hydration dùng query
+  batch sau khi đóng reader thiết bị, tránh `NpgsqlOperationInProgressException`.
+- Nullable tag search parameter được khai báo kiểu PostgreSQL `text`; request
+  cancellation được phân loại riêng trong exception middleware.
+- Verification: `dotnet test` đạt `69/69`; OpenAPI/access/tag feature tests pass.

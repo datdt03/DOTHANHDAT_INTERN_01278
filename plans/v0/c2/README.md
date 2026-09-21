@@ -86,8 +86,8 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
 | 002 | [c2-002-antigravity-customer-area.md](./c2-002-antigravity-customer-area.md) | Antigravity | Một `repair-intake-workflow` ba giai đoạn | READY — replan |
 | 003 | [c2-003-antigravity-device-area.md](./c2-003-antigravity-device-area.md) | Antigravity | Historical supporting device/customer history views | SUPERSEDED - không triển khai |
 | 004 | [c2-004-antigravity-repair-order-area.md](./c2-004-antigravity-repair-order-area.md) | Antigravity | Order list/detail và entry point tiếp nhận | DONE |
-| 005 | [c2-005-codex-workspace-tag-api.md](./c2-005-codex-workspace-tag-api.md) | Codex | Workspace tag catalog và item assignments | READY |
-| 006 | [c2-006-antigravity-tag-ui.md](./c2-006-antigravity-tag-ui.md) | Antigravity | Multi-tag picker và tag management UI | READY |
+| 005 | [c2-005-codex-workspace-tag-api.md](./c2-005-codex-workspace-tag-api.md) | Codex | Workspace tag catalog và item assignments | DONE |
+| 006 | [c2-006-antigravity-tag-ui.md](./c2-006-antigravity-tag-ui.md) | Antigravity | Multi-tag picker và tag management UI | DONE |
 | 007 | [c2-007-codex-intake-evidence-foundation.md](./c2-007-codex-intake-evidence-foundation.md) | Codex | Evidence API/private storage cho ảnh ngoại quan | READY |
 | 008 | [c2-008-antigravity-intake-evidence-ui.md](./c2-008-antigravity-intake-evidence-ui.md) | Antigravity | Capture/upload nhiều ảnh và mô tả tổng | READY |
 | 009 | [c2-009-c2-vertical-acceptance.md](./c2-009-c2-vertical-acceptance.md) | Codex + Antigravity | Final C2 vertical acceptance | READY |

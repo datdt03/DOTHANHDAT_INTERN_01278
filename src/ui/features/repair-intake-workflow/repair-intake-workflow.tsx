@@ -5,6 +5,7 @@ import {
   generateIdempotencyKey,
   type RepairIntakeApi,
 } from './repair-intake-api';
+import { getRepairTagAdapter, type RepairTagApi } from '../../shared/api/repair-tag-api';
 import {
   CustomerIntakeStep,
   type CustomerIntakeSelection,
@@ -40,6 +41,10 @@ export function RepairIntakeWorkflow({
 }: RepairIntakeWorkflowProps) {
   const api: RepairIntakeApi = useMemo(
     () => getRepairIntakeAdapter(previewMode),
+    [previewMode]
+  );
+  const tagApi: RepairTagApi = useMemo(
+    () => getRepairTagAdapter(previewMode),
     [previewMode]
   );
 
@@ -174,6 +179,10 @@ export function RepairIntakeWorkflow({
               initialItems={items}
               onBack={() => setCurrentStep(0)}
               onProceed={handleProceedFromItems}
+              tagApi={tagApi}
+              canCreateTags={context.capabilities.canCreateWorkspaceTags}
+              canManageTags={context.capabilities.canManageWorkspaceTags}
+              previewMode={previewMode}
             />
           </>
         )}
@@ -188,6 +197,8 @@ export function RepairIntakeWorkflow({
             onBackToItems={() => setCurrentStep(1)}
             onResetWorkflow={handleResetWorkflow}
             onNavigateToOrder={handleNavigateToOrder}
+            tagApi={tagApi}
+            previewMode={previewMode}
           />
         )}
       </main>

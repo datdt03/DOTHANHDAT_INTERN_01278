@@ -1,0 +1,473 @@
+/* ==========================================================================
+   RepairFlow — Workspace Tag Picker & Manager Styles (C2-006)
+   Follows 85/15 Slate/Sky Blue palette, strict monochrome line SVG,
+   no emoji, accessible ARIA states, and 125%-150% zoom resilience.
+   ========================================================================== */
+
+/* Container */
+.rf-tag-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+.rf-tag-picker__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rf-tag-picker__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-tag-picker__hint {
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+}
+
+/* Neutral Tag Chips */
+.rf-tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 28px;
+}
+
+.rf-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.rf-tag-chip--readonly {
+  padding: 0.1875rem 0.5rem;
+  font-size: 0.75rem;
+  background-color: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.rf-tag-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.125rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.rf-tag-chip__remove:hover,
+.rf-tag-chip__remove:focus-visible {
+  background-color: #e2e8f0;
+  color: #0f172a;
+  outline: none;
+}
+
+/* Trigger button: [+ Thêm nhãn] */
+.rf-tag-picker__trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background-color: #ffffff;
+  color: var(--rf-primary, #0284c7);
+  border: 1px dashed var(--rf-primary, #0284c7);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.rf-tag-picker__trigger-btn:hover {
+  background-color: #f0f9ff;
+  border-color: #0369a1;
+  color: #0369a1;
+}
+
+.rf-tag-picker__trigger-btn:focus-visible {
+  outline: 2px solid var(--rf-primary, #0284c7);
+  outline-offset: 1px;
+}
+
+/* Combobox Box */
+.rf-tag-combobox {
+  position: relative;
+  width: 100%;
+}
+
+.rf-tag-combobox__input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  background: #ffffff;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: 6px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rf-tag-combobox__input-wrap:focus-within {
+  border-color: var(--rf-primary, #0284c7);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.rf-tag-combobox__input {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-tag-combobox__input::placeholder {
+  color: var(--rf-text-muted, #94a3b8);
+}
+
+.rf-tag-combobox__close-btn {
+  border: none;
+  background: transparent;
+  color: var(--rf-text-muted, #64748b);
+  cursor: pointer;
+  padding: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.rf-tag-combobox__close-btn:hover {
+  background: #f1f5f9;
+  color: var(--rf-text-main, #0f172a);
+}
+
+/* Popup Listbox */
+.rf-tag-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-tag-popup__header {
+  padding: 0.5rem 0.75rem 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--rf-text-muted, #64748b);
+  letter-spacing: 0.05em;
+  background: #fafafa;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.rf-tag-popup__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  overflow-y: auto;
+}
+
+.rf-tag-popup__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.84375rem;
+  color: var(--rf-text-main, #0f172a);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.rf-tag-popup__option--active {
+  background-color: #f0f9ff;
+  color: #0369a1;
+}
+
+.rf-tag-popup__option--selected {
+  font-weight: 600;
+}
+
+.rf-tag-popup__checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #94a3b8;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  background: #ffffff;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.rf-tag-popup__option--selected .rf-tag-popup__checkbox {
+  background: var(--rf-primary, #0284c7);
+  border-color: var(--rf-primary, #0284c7);
+  color: #ffffff;
+}
+
+/* Inline Create Option */
+.rf-tag-popup__create-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  color: var(--rf-primary, #0284c7);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.rf-tag-popup__create-item:hover,
+.rf-tag-popup__create-item--active {
+  background-color: #f0f9ff;
+  color: #0369a1;
+}
+
+.rf-tag-popup__empty-text {
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--rf-text-muted, #64748b);
+  text-align: center;
+}
+
+.rf-tag-popup__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.75rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+}
+
+.rf-tag-popup__manage-link {
+  border: none;
+  background: transparent;
+  color: var(--rf-primary, #0284c7);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.rf-tag-popup__manage-link:hover {
+  color: #0369a1;
+}
+
+/* Feedback messages */
+.rf-tag-notice {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.rf-tag-notice--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.rf-tag-notice--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Tag Manager Drawer / Modal */
+.rf-tag-manager-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.rf-tag-manager-modal {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--rf-border, #e2e8f0);
+}
+
+.rf-tag-manager-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--rf-border, #e2e8f0);
+  background: #f8fafc;
+}
+
+.rf-tag-manager-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-tag-manager-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rf-tag-manager-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84375rem;
+}
+
+.rf-tag-manager-table th {
+  text-align: left;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rf-text-muted, #64748b);
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.rf-tag-manager-table td {
+  padding: 0.5rem 0.625rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.rf-tag-manager-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.rf-tag-manager-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.rf-tag-manager-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--rf-border, #e2e8f0);
+  background: #f8fafc;
+  gap: 0.75rem;
+}
+
+.rf-tag-inline-rename {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.rf-tag-inline-rename input {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: 4px;
+}
+
+/* Order Detail Tag Section */
+.rf-order-tags-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.875rem 1rem;
+  background-color: #f8fafc;
+  border: 1px solid var(--rf-border, #e2e8f0);
+  border-radius: 8px;
+}
+
+.rf-order-tags-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rf-order-tags-panel__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--rf-text-main, #0f172a);
+}
+
+.rf-order-tags-panel__lock-notice {
+  font-size: 0.75rem;
+  color: var(--rf-text-muted, #64748b);
+  font-style: italic;
+}
+
+/* Mobile & Zoom resilience */
+@media (max-width: 640px) {
+  .rf-tag-manager-modal {
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}

@@ -17,6 +17,7 @@ import {
   IconToday,
   IconWorkflow,
   IconPlus,
+  IconTag,
 } from './icons';
 import { BrandMark, IconButton } from './ui-primitives';
 
@@ -73,6 +74,8 @@ function renderNavIcon(iconId: string) {
       return <IconLookup size={16} />;
     case 'inbox':
       return <IconInbox size={16} />;
+    case 'tags':
+      return <IconTag size={16} />;
     default:
       return <IconOverview size={16} />;
   }

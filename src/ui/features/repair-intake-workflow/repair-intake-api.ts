@@ -1,6 +1,7 @@
 import { runtimeConfig } from '../../config/runtime-config';
 import { createApiClient, ApiClientError, type ApiClient } from '../../shared/api/api-client';
 import { MOCK_CUSTOMERS, type MockCustomerRecord } from '../../mocks/customer-mock-data';
+import type { TagDto } from '../../shared/api/repair-tag-api';
 
 export interface CustomerDto {
   id: string;
@@ -34,6 +35,7 @@ export interface RepairItemIntakePayload {
   itemNotes?: string | null;
   credential?: CredentialIntakePayload | null;
   photos?: string[];
+  tagIds?: string[];
 }
 
 export interface CustomerIntakePayload {
@@ -77,6 +79,7 @@ export interface RepairItemDto {
   credentialExpiresAt: string | null;
   credentialDestroyedAt: string | null;
   photos?: string[];
+  tags?: TagDto[];
 }
 
 export interface RepairOrderDto {

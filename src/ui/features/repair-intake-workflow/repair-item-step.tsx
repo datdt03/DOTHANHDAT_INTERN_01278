@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   FormGroup,
   FormInput,
@@ -10,6 +10,8 @@ import {
   IconTools,
   IconShield,
 } from '../../shared/components';
+import { RepairItemTagPicker } from './repair-item-tag-picker';
+import { getRepairTagAdapter, type RepairTagApi } from '../../shared/api/repair-tag-api';
 
 export interface RepairItemDraft {
   localId: string;
@@ -25,12 +27,17 @@ export interface RepairItemDraft {
   credentialStatus: string;
   credentialValue: string;
   credentialConsent: boolean;
+  tagIds?: string[];
 }
 
-interface RepairItemStepProps {
+export interface RepairItemStepProps {
   initialItems?: RepairItemDraft[];
   onBack: () => void;
   onProceed: (items: RepairItemDraft[]) => void;
+  tagApi?: RepairTagApi;
+  canCreateTags?: boolean;
+  canManageTags?: boolean;
+  previewMode?: boolean;
 }
 
 export function createEmptyItem(index: number): RepairItemDraft {
@@ -48,6 +55,7 @@ export function createEmptyItem(index: number): RepairItemDraft {
     credentialStatus: 'not_required',
     credentialValue: '',
     credentialConsent: false,
+    tagIds: [],
   };
 }
 
@@ -55,7 +63,16 @@ export function RepairItemStep({
   initialItems,
   onBack,
   onProceed,
+  tagApi,
+  canCreateTags = true,
+  canManageTags = false,
+  previewMode = false,
 }: RepairItemStepProps) {
+  const resolvedTagApi = useMemo(
+    () => tagApi || getRepairTagAdapter(previewMode),
+    [tagApi, previewMode],
+  );
+
   const [items, setItems] = useState<RepairItemDraft[]>(() => {
     if (initialItems && initialItems.length > 0) {
       return initialItems;
@@ -92,7 +109,7 @@ export function RepairItemStep({
   const handleFieldChange = (
     index: number,
     field: keyof RepairItemDraft,
-    value: string | boolean
+    value: string | boolean | string[],
   ) => {
     setItems((prev) => {
       const updated = [...prev];
@@ -332,6 +349,18 @@ export function RepairItemStep({
                 onChange={(e) => handleFieldChange(currentIndex, 'identifier', e.target.value)}
               />
             </FormGroup>
+          </div>
+
+          {/* Tag Picker for this repair item (C2-006) */}
+          <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--rf-border, #e2e8f0)' }}>
+            <RepairItemTagPicker
+              itemId={currentItem.localId}
+              selectedTagIds={currentItem.tagIds || []}
+              onTagsChange={(newTagIds) => handleFieldChange(currentIndex, 'tagIds', newTagIds)}
+              tagApi={resolvedTagApi}
+              canCreate={canCreateTags}
+              canManage={canManageTags}
+            />
           </div>
         </div>
 

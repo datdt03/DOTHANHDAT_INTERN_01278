@@ -43,6 +43,10 @@ export interface RoleCapabilities {
   canHandover: boolean;
   isReadOnlyLookup: boolean;
   isAssignedOnly: boolean;
+  canReadWorkspaceTags: boolean;
+  canCreateWorkspaceTags: boolean;
+  canManageWorkspaceTags: boolean;
+  canAssignRepairItemTags: boolean;
   defaultRoute: string;
   navigationItems: NavigationItem[];
 }
@@ -109,6 +113,10 @@ export interface ServerAccessCapabilities {
   canWriteQualityCheck: boolean;
   canWriteHandover: boolean;
   writesRequireAssignment: boolean;
+  canReadWorkspaceTags?: boolean;
+  canCreateWorkspaceTags?: boolean;
+  canManageWorkspaceTags?: boolean;
+  canAssignRepairItemTags?: boolean;
 }
 
 // Preview accounts mirror the development access shape. The manager preview account
@@ -236,6 +244,33 @@ function mapServerCapabilities(
       !serverCapabilities.canWriteIntake &&
       !serverCapabilities.canWriteHandover,
     isAssignedOnly: serverCapabilities.writesRequireAssignment,
+    canReadWorkspaceTags:
+      serverCapabilities.canReadWorkspaceTags ??
+      (serverCapabilities.canViewWorkspaceOperations || serverCapabilities.canViewOperationalProjection),
+    canCreateWorkspaceTags:
+      serverCapabilities.canCreateWorkspaceTags ??
+      serverCapabilities.canWriteIntake,
+    canManageWorkspaceTags:
+      serverCapabilities.canManageWorkspaceTags ??
+      serverCapabilities.canManageWorkspace,
+    canAssignRepairItemTags:
+      serverCapabilities.canAssignRepairItemTags ??
+      serverCapabilities.canWriteIntake,
+    navigationItems: (() => {
+      const canManageTags =
+        serverCapabilities.canManageWorkspaceTags ??
+        serverCapabilities.canManageWorkspace;
+      if (canManageTags && !presentationDefaults.navigationItems.some((it) => it.route === '#/tags')) {
+        return [
+          ...presentationDefaults.navigationItems,
+          { label: 'Quản lý nhãn', route: '#/tags', icon: 'tags' },
+        ];
+      }
+      if (!canManageTags && presentationDefaults.navigationItems.some((it) => it.route === '#/tags')) {
+        return presentationDefaults.navigationItems.filter((it) => it.route !== '#/tags');
+      }
+      return presentationDefaults.navigationItems;
+    })(),
   };
 }
 
@@ -268,6 +303,10 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
         canHandover: true,
         isReadOnlyLookup: false,
         isAssignedOnly: false,
+        canReadWorkspaceTags: true,
+        canCreateWorkspaceTags: true,
+        canManageWorkspaceTags: true,
+        canAssignRepairItemTags: true,
         defaultRoute: '#/dashboard',
         navigationItems: [
           { label: 'Tổng quan', route: '#/dashboard', icon: 'overview' },
@@ -277,6 +316,7 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
           { label: 'Thiết bị và lịch sử', route: '#/devices', icon: 'devices' },
           { label: 'Nhân sự & phân công', route: '#/staff-assignments', icon: 'staff' },
           { label: 'Quy trình cửa hàng', route: '#/workflow-config', icon: 'workflow' },
+          { label: 'Quản lý nhãn', route: '#/tags', icon: 'tags' },
         ],
       };
     case 'receptionist':
@@ -291,6 +331,10 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
         canHandover: true,
         isReadOnlyLookup: true,
         isAssignedOnly: false,
+        canReadWorkspaceTags: true,
+        canCreateWorkspaceTags: true,
+        canManageWorkspaceTags: false,
+        canAssignRepairItemTags: true,
         defaultRoute: '#/today',
         navigationItems: [
           { label: 'Hôm nay', route: '#/today', icon: 'today' },
@@ -311,6 +355,10 @@ export function getRoleCapabilities(role: UserRole): RoleCapabilities {
         canHandover: false,
         isReadOnlyLookup: false,
         isAssignedOnly: true,
+        canReadWorkspaceTags: true,
+        canCreateWorkspaceTags: false,
+        canManageWorkspaceTags: false,
+        canAssignRepairItemTags: false,
         defaultRoute: '#/my-work',
         navigationItems: [
           { label: 'Hàng chờ công việc', route: '#/my-work', icon: 'queue' },

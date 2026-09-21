@@ -145,6 +145,10 @@ public sealed class AuthorizationTests
         Assert.True(response.Capabilities.CanViewOperationalProjection);
         Assert.True(response.Capabilities.CanWriteIntake);
         Assert.True(response.Capabilities.WritesRequireAssignment);
+        Assert.True(response.Capabilities.CanReadWorkspaceTags);
+        Assert.True(response.Capabilities.CanCreateWorkspaceTags);
+        Assert.False(response.Capabilities.CanManageWorkspaceTags);
+        Assert.True(response.Capabilities.CanAssignRepairItemTags);
         Assert.False(response.Capabilities.CanViewTechnicalDetails);
         Assert.False(response.Capabilities.CanViewAudit);
         Assert.DoesNotContain("token", response.Capabilities.ToString(), StringComparison.OrdinalIgnoreCase);

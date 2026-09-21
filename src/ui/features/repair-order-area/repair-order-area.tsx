@@ -104,6 +104,9 @@ export function RepairOrderArea({
             api={api}
             onBack={handleBackToList}
             previewMode={previewMode}
+            canAssignTags={context.capabilities.canAssignRepairItemTags}
+            canCreateTags={context.capabilities.canCreateWorkspaceTags}
+            canManageTags={context.capabilities.canManageWorkspaceTags}
           />
         ) : (
           <RepairOrderList
