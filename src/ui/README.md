@@ -18,6 +18,9 @@ Completion criteria: type-check/build pass, API access chỉ qua adapter, shell 
 - `shared/api/api-client.ts` is the only network boundary in the foundation. It
   currently checks `/health` and can be extended with typed endpoints later.
 - `config/runtime-config.ts` centralizes API URL, timeout, and preview mode.
+- `vite.config.ts` reads the root `.env` through `envDir`; UI and API local
+  endpoints therefore come from the same environment source as Docker Compose
+  and the server runner.
 - `app-shell.tsx` is a stable facade. The concrete implementations are split
   into `internal-shell.tsx`, `customer-link-shell.tsx`, and `status-screens.tsx`.
 - `shared/components/` contains the unified shared layout components (`AppHeader`, `AppSidebar`, `AppFooter`, `CustomerHeader`, `CustomerFooter`), monochrome SVG icon suite (`icons.tsx`), and primitives (`ui-primitives.tsx`: `BrandMark`, `PrimaryButton`, `SecondaryButton`, `IconButton`, `TextButton`, `StatusBadge`, `OrderCode`, `Card`, `SkeletonLoader`).
@@ -72,10 +75,11 @@ npm run build
 npm run dev
 ```
 
-The default dev URL is `http://localhost:5173`. Use
-`http://localhost:5173/?preview=1` while the backend health endpoint is not
-available. The normal mode checks `VITE_API_BASE_URL` (default:
-`http://localhost:5191`) before rendering the internal shell.
+The dev URL and API endpoint are configured in the root `.env` through
+`VITE_UI_HOST`, `VITE_UI_PORT`, and `VITE_API_BASE_URL`. With the sample values,
+open `http://127.0.0.1:5173/`. Use `?preview=1` while the backend health
+endpoint is not available. The normal mode checks `VITE_API_BASE_URL` before
+rendering the internal shell.
 
 ## Verification completed for this handoff
 

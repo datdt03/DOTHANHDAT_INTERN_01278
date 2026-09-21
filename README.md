@@ -624,6 +624,11 @@ has been checked against the real API health endpoint.
 Use [`.env.example`](.env.example) for local configuration. Never commit
 `.env`, real passwords, tokens, or customer data.
 
+The root `.env` is the single local environment source for PostgreSQL, the API,
+and the Vite UI. Docker Compose reads it automatically. The API is started
+through [`scripts/run-server.ps1`](scripts/run-server.ps1), which loads the same
+file into the process environment before launching .NET.
+
 ### Start PostgreSQL
 
 ```powershell
@@ -636,13 +641,13 @@ The database is ready when the container reports `healthy`.
 ### Run the target API
 
 ```powershell
-dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj --urls http://localhost:5191
+.\scripts\run-server.ps1
 ```
 
 ### Apply target database migrations
 
 ```powershell
-dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --migrate
+.\scripts\run-server.ps1 --migrate
 ```
 
 Migrations are SQL-first and must follow the naming and baseline rules in
@@ -654,8 +659,7 @@ After the migrations are applied, create or reset the three local test
 accounts with:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT = "Development"
-dotnet run --project src/server/RepairFlow.Api/RepairFlow.Api.csproj -- --seed-development-access
+.\scripts\run-server.ps1 --seed-development-access
 ```
 
 The command is Development-only and idempotent. It provisions Manager

@@ -79,10 +79,9 @@ Phải có tối thiểu một thiết bị. Có thể sửa, xóa một item tr
 không được để danh sách rỗng. Thứ tự các thiết bị phải ổn định trong review và
 request submit để nhân viên đối chiếu với vật lý đã nhận.
 
-Checklist chi tiết, evidence persistence/validation và intake completion thuộc
-C3. Amendment c2-008 bổ sung điểm thu ảnh hiện trạng ban đầu trong Giai đoạn 2;
-C2 chỉ giữ file tạm trong workflow và chuyển sang C3 evidence boundary sau khi
-order tồn tại, không tự hoàn tất evidence hoặc chuyển trạng thái.
+Checklist chi tiết, evidence completion/validation mở rộng và intake completion
+thuộc C3. Amendment c2-007/c2-008 bổ sung việc lưu private ảnh hiện trạng ban
+đầu sau khi order tồn tại; C2 không tự hoàn tất checklist hoặc chuyển trạng thái.
 
 ### Giai đoạn 3 — Tổng hợp và xác nhận
 
@@ -118,8 +117,8 @@ Sau thành công, hiển thị order code/trạng thái `received` và mở orde
 
 - Customer records page hoặc Device records page là primary intake path.
 - Device search/select theo customer.
-- C3 checklist chi tiết, evidence persistence/completion, server draft/resume và
-  transition; điểm thu ảnh ban đầu được bổ sung riêng bởi c2-008.
+- C3 checklist chi tiết, evidence completion, server draft/resume và transition;
+  capture/upload ảnh ban đầu được bổ sung riêng bởi c2-007/c2-008.
 - Diagnosis, quote, repair, QC, handover.
 - Customer public link/OTP.
 - Sửa/xóa lịch sử ngoài contract.

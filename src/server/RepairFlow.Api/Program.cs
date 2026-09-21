@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using RepairFlow.Api.Api.Middleware;
 using RepairFlow.Api.Api.Responses;
 using RepairFlow.Api.Features.Access.Api;
@@ -53,8 +54,39 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var postgresConnection = builder.Configuration.GetConnectionString("Postgres")
-    ?? throw new InvalidOperationException("ConnectionStrings:Postgres is required.");
+var configuredPostgresConnection = builder.Configuration.GetConnectionString("Postgres");
+string postgresConnection;
+if (!string.IsNullOrWhiteSpace(configuredPostgresConnection))
+{
+    postgresConnection = configuredPostgresConnection;
+}
+else
+{
+    var postgresHost = builder.Configuration["POSTGRES_HOST"] ?? "127.0.0.1";
+    var postgresPortText = builder.Configuration["POSTGRES_PORT"] ?? "5432";
+    var postgresDatabase = builder.Configuration["POSTGRES_DB"];
+    var postgresUsername = builder.Configuration["POSTGRES_USER"];
+    var postgresPassword = builder.Configuration["POSTGRES_PASSWORD"];
+
+    if (!int.TryParse(postgresPortText, out var postgresPort)
+        || string.IsNullOrWhiteSpace(postgresDatabase)
+        || string.IsNullOrWhiteSpace(postgresUsername)
+        || string.IsNullOrWhiteSpace(postgresPassword))
+    {
+        throw new InvalidOperationException(
+            "PostgreSQL configuration is required through ConnectionStrings:Postgres or POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD.");
+    }
+
+    var connectionBuilder = new NpgsqlConnectionStringBuilder
+    {
+        Host = postgresHost,
+        Port = postgresPort,
+        Database = postgresDatabase,
+        Username = postgresUsername,
+        Password = postgresPassword,
+    };
+    postgresConnection = connectionBuilder.ConnectionString;
+}
 
 builder.Services.AddDbContext<RepairFlowDbContext>(options =>
     options.UseNpgsql(postgresConnection));

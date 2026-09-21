@@ -117,6 +117,19 @@ Ký hiệu:
 | Timeline nghiệp vụ | Full | Full | Operational read-only toàn workspace | Assigned/relevant | Public subset |
 | Audit log và metadata bảo mật | Full | View theo policy | — | — | — |
 
+### 4.4. Quyền evidence ảnh ngoại quan C2
+
+- Quyền xem evidence kế thừa quyền xem repair order trong cùng workspace.
+- Quyền upload/xóa evidence yêu cầu actor có quyền xử lý/ghi trên repair order
+  hoặc item tương ứng; Technician phải còn assignment hợp lệ.
+- Người tạo intake được tiếp tục upload/xóa ảnh khi item chưa có mốc
+  `evidence_locked_at`.
+- Khi Technician xác nhận nhận bàn giao item, API từ chối upload/xóa ảnh của
+  item đó cho mọi actor trong luồng thường. Việc xác nhận nhận bàn giao là
+  event nghiệp vụ riêng, không suy ra chỉ từ việc assignment được tạo.
+- C2 chưa có public access cho evidence; customer link chỉ nhận ảnh khi C5
+  chốt public-scope policy.
+
 ### 4.1. Quy tắc riêng cho Receptionist
 
 Receptionist có hai phạm vi rõ ràng:

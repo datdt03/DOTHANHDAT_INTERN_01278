@@ -413,11 +413,10 @@ The form includes the fields frozen by the API/domain contract, such as:
 - Handover condition, received accessories and handover notes.
 - Customer-reported issue and intake notes.
 
-Detailed condition checklist, evidence persistence/validation and intake
-completion remain in the C3 boundary. The intake surface may collect initial
-condition photos during Stage 2 as local evidence candidates; c2-007/c2-008
-hand them to the C3 evidence boundary after the order exists. Stage 2 must not
-complete evidence or transition the order to `diagnosing`.
+Detailed condition checklist and intake completion remain in the C3 boundary.
+C2-007 persists the initial `before_repair` photos after the order exists, while
+c2-008 collects them in Stage 2 and hands them to that API. C2 does not decide
+checklist completion or transition the order to `diagnosing`.
 
 #### Stage 3: Review and confirm
 

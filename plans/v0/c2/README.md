@@ -72,9 +72,9 @@ Completion criteria: atomic intake API, một workflow UI ba giai đoạn, order
   tin bàn giao cơ bản cần để xác nhận phiếu.
 - C2 giữ customer-reported issue, device identity, phụ kiện/tình trạng bàn giao
   dạng thông tin ban đầu nếu contract đã có.
-- C2-007/C2-008 cung cấp điểm thu và handoff ảnh hiện trạng ban đầu trong
-  workflow. C3 sở hữu evidence persistence/validation, checklist chi tiết,
-  intake completion và điều kiện chuyển sang `diagnosing`.
+- C2-007/C2-008 cung cấp điểm thu, lưu trữ private và handoff ảnh hiện trạng
+  ban đầu trong workflow. C3 sở hữu checklist chi tiết, evidence completion,
+  policy validation mở rộng và điều kiện chuyển sang `diagnosing`.
 - C2 không tự tạo server-side draft hoặc chuyển trạng thái sang diagnosis.
 
 ## Work sequence
@@ -126,8 +126,8 @@ status transition.
 ## Out of scope
 
 - Customer/Device CRUD page là đường đi chính của intake.
-- C3 checklist chi tiết, evidence persistence/completion và intake transition;
-  initial photo capture/handoff được định nghĩa trong c2-007/c2-008.
+- C3 checklist chi tiết, evidence completion và intake transition; initial photo
+  capture/persistence/handoff được định nghĩa trong c2-007/c2-008.
 - C4 diagnosis, quotation và calculation.
 - C5 customer public link, OTP và customer decision.
 - C9 dashboard KPI và operational reporting đầy đủ.

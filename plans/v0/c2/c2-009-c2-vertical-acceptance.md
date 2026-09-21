@@ -8,7 +8,7 @@ Owner: Codex + Antigravity
 
 Status: READY
 
-Revision: 2
+Revision: 3
 
 Depends on: c2-002-antigravity-customer-area.md,
              c2-004-antigravity-repair-order-area.md,
@@ -76,12 +76,15 @@ Completion criteria: backend/API, tag lifecycle, UI intake/order, photo upload,
 ### Condition evidence
 
 - Một/nhiều ảnh cho từng item.
-- Caption từng ảnh optional.
+- Một đến tối đa 5 ảnh JPG/JPEG/PNG cho từng item, mỗi ảnh <= 1 MB.
 - Mô tả tổng tình trạng bắt buộc.
 - Gợi ý shot process không biến thành rule bắt buộc đủ mọi góc.
 - MIME/size/checksum/private storage/signed access.
 - Create order trước, upload sau.
 - Partial upload failure, per-photo retry, không tạo order thứ hai.
+- Retry cùng checksum/idempotency key không tạo evidence record mới.
+- Trước Technician handover acceptance có thể thêm/xóa; sau đó item read-only.
+- Evidence gắn đúng `repairOrderItemId`, không lẫn giữa nhiều item.
 - Không có public URL, localStorage photo, credential leak hoặc direct fetch.
 
 ### C2/C3 boundary
@@ -104,6 +107,8 @@ Completion criteria: backend/API, tag lifecycle, UI intake/order, photo upload,
 - [ ] Chạy lifecycle-lock checklist từ `diagnosing` trở đi.
 - [ ] Chạy photo capture/upload/retry/failure checklist trên target viewports.
 - [ ] Kiểm tra private access, signed URL expiry và no-leak conditions.
+- [ ] Kiểm tra local MinIO/private S3-compatible storage boundary và cleanup khi
+      metadata transaction lỗi.
 - [ ] Ghi acceptance evidence và C2/C3 handoff.
 - [ ] Chỉ mark C2 completion sau khi Codex backend gate và Antigravity UI gate
       đều có evidence pass.
@@ -125,7 +130,10 @@ workspace isolation và UI retry; build xanh một mình không đủ để mark
 - [ ] Nhân viên hoàn tất được intake một màn hình với một/nhiều item.
 - [ ] Mỗi item có thể dùng nhiều tag workspace và tag lifecycle đúng quy tắc.
 - [ ] Mỗi item có ít nhất một ảnh và mô tả tổng trước khi UI báo hoàn tất.
-- [ ] Ảnh có caption tùy chọn và guided capture flow.
+- [ ] Mỗi item có tối đa 5 ảnh JPG/JPEG/PNG, mỗi ảnh <= 1 MB và guided capture flow.
+- [ ] Evidence lưu qua private S3-compatible storage, metadata ở PostgreSQL,
+      read access bằng signed URL ngắn hạn.
+- [ ] Ảnh không bị sửa/xóa sau khi Technician xác nhận nhận bàn giao item.
 - [ ] Upload lỗi retry được mà không tạo order trùng.
 - [ ] Backend vẫn là authority cho quyền, workspace và status.
 - [ ] C2 không triển khai diagnosis hoặc transition sang `diagnosing`.

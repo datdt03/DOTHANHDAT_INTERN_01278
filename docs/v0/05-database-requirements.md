@@ -716,10 +716,14 @@ erDiagram
     }
     REPAIR_EVIDENCE {
         uuid id PK
-        uuid repair_order_id FK
-        uuid captured_by FK
+        uuid workspace_id FK
+        uuid repair_order_item_id FK
+        uuid created_by FK
         varchar stage
         varchar object_key
+        bigint size
+        varchar checksum
+        timestamptz deleted_at
     }
     DIAGNOSES {
         uuid id PK
