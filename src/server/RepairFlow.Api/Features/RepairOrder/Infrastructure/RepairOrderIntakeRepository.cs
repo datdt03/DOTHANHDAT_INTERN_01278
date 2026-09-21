@@ -714,7 +714,8 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
                    d.device_type, d.brand, d.model, d.serial_number, d.device_identifier,
                    roi.reported_issue, roi.handover_condition, roi.accessories, roi.item_notes,
                    roi.credential_status, roi.credential_consent, roi.credential_received_at,
-                   roi.credential_expires_at, roi.credential_destroyed_at, roi.created_at
+                   roi.credential_expires_at, roi.credential_destroyed_at, roi.created_at,
+                   roi.evidence_locked_at, roi.evidence_locked_by
             FROM repair_order_items roi
             INNER JOIN devices d
                 ON d.workspace_id = roi.workspace_id
@@ -755,7 +756,9 @@ public sealed class RepairOrderIntakeRepository : IRepairOrderIntakeRepository
                     reader.IsDBNull(16) ? null : reader.GetFieldValue<DateTimeOffset>(16),
                     reader.IsDBNull(17) ? null : reader.GetFieldValue<DateTimeOffset>(17),
                     reader.IsDBNull(18) ? null : reader.GetFieldValue<DateTimeOffset>(18),
-                    reader.GetFieldValue<DateTimeOffset>(19)));
+                    reader.GetFieldValue<DateTimeOffset>(19),
+                    EvidenceLockedAt: reader.IsDBNull(20) ? null : reader.GetFieldValue<DateTimeOffset>(20),
+                    EvidenceLockedBy: reader.IsDBNull(21) ? null : reader.GetGuid(21)));
             }
         }
 

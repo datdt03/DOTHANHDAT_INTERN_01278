@@ -95,6 +95,7 @@ builder.Services.AddCustomerFeature();
 builder.Services.AddDeviceFeature();
 builder.Services.AddRepairTagFeature();
 builder.Services.AddRepairOrderFeature();
+builder.Services.AddRepairEvidenceFeature(builder.Configuration);
 builder.Services
     .AddAuthentication(AccessAuthenticationDefaults.Scheme)
     .AddScheme<AuthenticationSchemeOptions, AccessAuthenticationHandler>(
@@ -169,6 +170,7 @@ app.MapAccessEndpoints();
 app.MapCustomerEndpoints();
 app.MapDeviceEndpoints();
 app.MapRepairOrderEndpoints();
+app.MapRepairEvidenceEndpoints();
 app.MapRepairTagEndpoints();
 
 if (app.Environment.IsEnvironment("Testing"))

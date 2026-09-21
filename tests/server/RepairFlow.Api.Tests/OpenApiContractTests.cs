@@ -42,7 +42,11 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
                      "/api/repair-orders/{orderId}/items/{itemId}/credential/destroy",
                      "/api/tags",
                      "/api/tags/{tagId}",
-                     "/api/repair-orders/{orderId}/items/{itemId}/tags"
+                     "/api/repair-orders/{orderId}/items/{itemId}/tags",
+                     "/api/repair-order-items/{itemId}/evidence",
+                     "/api/repair-order-items/{itemId}/evidence/{evidenceId}",
+                     "/api/evidence/{evidenceId}/access",
+                     "/api/repair-order-items/{itemId}/evidence-lock"
                  })
         {
             Assert.True(paths.TryGetProperty(path, out _), $"Missing OpenAPI path: {path}");
@@ -59,6 +63,10 @@ public sealed class OpenApiContractTests : IClassFixture<ApiTestFactory>
         var repairItemProperties = repairItemResponse.GetProperty("properties");
         Assert.False(repairItemProperties.TryGetProperty("value", out _));
         Assert.False(repairItemProperties.TryGetProperty("ciphertext", out _));
+        var evidenceResponse = schemas.GetProperty("RepairEvidenceResponse");
+        var evidenceProperties = evidenceResponse.GetProperty("properties");
+        Assert.False(evidenceProperties.TryGetProperty("objectKey", out _));
+        Assert.False(evidenceProperties.TryGetProperty("idempotencyKey", out _));
         var intakeOperation = document.RootElement
             .GetProperty("paths")
             .GetProperty("/api/repair-orders/intake")

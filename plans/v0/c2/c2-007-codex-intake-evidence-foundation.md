@@ -6,9 +6,9 @@ Title: Backend/API cho ảnh ngoại quan trước sửa chữa
 
 Owner: Codex
 
-Status: READY
+Status: IN PROGRESS
 
-Revision: 3
+Revision: 4
 
 Depends on: c2-001-codex-customer-device-order-api.md
 
@@ -91,7 +91,13 @@ repair_evidence
 - created_by
 - created_at
 - deleted_at nullable
+- deleted_by nullable
+- idempotency_key
 ```
+
+Implementation note: `idempotency_key` supports retry conflict detection and
+`deleted_by` preserves the actor for soft-delete audit. Item lock state is stored
+on `repair_order_items` as `evidence_locked_at`/`evidence_locked_by`.
 
 Mô tả tổng tình trạng dùng field `handoverCondition` hiện có của item. Khi
 client yêu cầu evidence upload, API phải trả lỗi rõ nếu item chưa có mô tả tổng;
@@ -160,17 +166,28 @@ Upload rules:
 
 ## Implementation sequence
 
-- [ ] Audit schema và migration runner.
-- [ ] Freeze DTO/error code/upload sequence.
-- [ ] Tạo feature-local evidence port/service/repository.
-- [ ] Add/configure local MinIO private bucket boundary without committing secrets.
-- [ ] Implement validation, private write, metadata transaction và cleanup.
-- [ ] Implement workspace/capability/assignment authorization.
-- [ ] Implement item handover-acceptance lock and lock-aware authorization.
-- [ ] Implement signed read access ngắn hạn.
-- [ ] Thêm migration nếu cần, clean run/idempotent rerun.
-- [ ] Viết OpenAPI, contract/security/regression tests.
-- [ ] Ghi handoff cho c2-008: tạo order trước, upload sau, retry từng ảnh.
+- [x] Audit schema và migration runner.
+- [x] Freeze DTO/error code/upload sequence.
+- [x] Tạo feature-local evidence port/service/repository.
+- [x] Add/configure local MinIO private bucket boundary without committing secrets.
+- [x] Implement validation, private write, metadata transaction và cleanup.
+- [x] Implement workspace/capability/assignment authorization.
+- [x] Implement item handover-acceptance lock and lock-aware authorization.
+- [x] Implement signed read access ngắn hạn.
+- [x] Thêm migration nếu cần, clean run/idempotent rerun.
+- [x] Viết OpenAPI, contract/security/regression tests.
+- [x] Ghi handoff cho c2-008: tạo order trước, upload sau, retry từng ảnh.
+
+## Current implementation evidence
+
+- `dotnet build src/server/RepairFlow.sln --no-restore`: pass.
+- `dotnet test tests/server/RepairFlow.Api.Tests/RepairFlow.Api.Tests.csproj
+  --no-restore`: 73/73 pass, including evidence validation, idempotency,
+  lock behavior, OpenAPI paths and secret/object-key projection checks.
+- Migration `20260921_0007` applied successfully and rerun idempotently.
+- `docker compose --env-file .env.example config --quiet`: pass.
+- Runtime MinIO upload/read/delete smoke test and c2-008 UI acceptance remain
+  pending; therefore this plan stays `IN PROGRESS`, not `DONE`.
 
 ## Testing plan
 

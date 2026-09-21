@@ -122,6 +122,27 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
                 isManagement ||
                 (role == AccessRole.Receptionist &&
                  HasResponsibility(AssignmentResponsibility.Intake)),
+            AccessAction.RepairEvidenceRead =>
+                isManagement ||
+                role == AccessRole.Receptionist ||
+                (role == AccessRole.Technician && hasAssignment),
+            AccessAction.RepairEvidenceWrite =>
+                isManagement ||
+                (role == AccessRole.Receptionist &&
+                 HasResponsibility(AssignmentResponsibility.Intake)) ||
+                (role == AccessRole.Technician &&
+                 HasResponsibility(
+                     AssignmentResponsibility.Intake,
+                     AssignmentResponsibility.Diagnosis,
+                     AssignmentResponsibility.PrimaryTechnician,
+                     AssignmentResponsibility.Repairer,
+                     AssignmentResponsibility.QualityChecker)),
+            AccessAction.RepairEvidenceLock =>
+                isManagement ||
+                (role == AccessRole.Technician &&
+                 HasResponsibility(
+                     AssignmentResponsibility.PrimaryTechnician,
+                     AssignmentResponsibility.Repairer)),
             _ => false
         };
 
@@ -137,13 +158,17 @@ public sealed class AccessAuthorizationPolicy : IAccessAuthorizationPolicy
             AccessAction.CustomerRead or
             AccessAction.DeviceRead or
             AccessAction.RepairOrderRead or
-            AccessAction.RepairItemTagWrite;
+            AccessAction.RepairItemTagWrite or
+            AccessAction.RepairEvidenceRead or
+            AccessAction.RepairEvidenceWrite or
+            AccessAction.RepairEvidenceLock;
         var assignmentRequired = role switch
         {
             AccessRole.Receptionist => request.Action is
                 AccessAction.IntakeWrite or
                 AccessAction.HandoverWrite or
-                AccessAction.RepairItemTagWrite,
+                AccessAction.RepairItemTagWrite or
+                AccessAction.RepairEvidenceWrite,
             AccessRole.Technician => assignmentScopedAction,
             _ => false
         };

@@ -29,7 +29,10 @@ public enum AccessAction
     WorkspaceTagRead,
     WorkspaceTagCreate,
     WorkspaceTagManage,
-    RepairItemTagWrite
+    RepairItemTagWrite,
+    RepairEvidenceRead,
+    RepairEvidenceWrite,
+    RepairEvidenceLock
 }
 
 public enum AssignmentResponsibility
@@ -117,6 +120,9 @@ public static class AccessPolicies
     public const string WorkspaceTagCreate = "repairflow.access.workspace-tag-create";
     public const string WorkspaceTagManage = "repairflow.access.workspace-tag-manage";
     public const string RepairItemTagWrite = "repairflow.access.repair-item-tag-write";
+    public const string RepairEvidenceRead = "repairflow.access.repair-evidence-read";
+    public const string RepairEvidenceWrite = "repairflow.access.repair-evidence-write";
+    public const string RepairEvidenceLock = "repairflow.access.repair-evidence-lock";
 
     public static IReadOnlyDictionary<string, AccessAction> Definitions { get; } =
         new Dictionary<string, AccessAction>(StringComparer.Ordinal)
@@ -145,7 +151,10 @@ public static class AccessPolicies
             [WorkspaceTagRead] = AccessAction.WorkspaceTagRead,
             [WorkspaceTagCreate] = AccessAction.WorkspaceTagCreate,
             [WorkspaceTagManage] = AccessAction.WorkspaceTagManage,
-            [RepairItemTagWrite] = AccessAction.RepairItemTagWrite
+            [RepairItemTagWrite] = AccessAction.RepairItemTagWrite,
+            [RepairEvidenceRead] = AccessAction.RepairEvidenceRead,
+            [RepairEvidenceWrite] = AccessAction.RepairEvidenceWrite,
+            [RepairEvidenceLock] = AccessAction.RepairEvidenceLock
         };
 }
 

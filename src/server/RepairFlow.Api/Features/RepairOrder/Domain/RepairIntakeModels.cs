@@ -25,7 +25,9 @@ public sealed record RepairOrderItem(
     DateTimeOffset? CredentialExpiresAt,
     DateTimeOffset? CredentialDestroyedAt,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<RepairTagEntity>? Tags = null);
+    IReadOnlyList<RepairTagEntity>? Tags = null,
+    DateTimeOffset? EvidenceLockedAt = null,
+    Guid? EvidenceLockedBy = null);
 
 public sealed record RepairIntakeResult(
     CustomerEntity Customer,
